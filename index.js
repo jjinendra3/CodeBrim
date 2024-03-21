@@ -28,7 +28,6 @@ const redisClient = redis.createClient({url:process.env.REDIS});
 app.listen(5000, () => {
   console.log("Striver Let's Goooo! Yayaaaayyyy");
 });
-
 app.post("/submit", async (req, res) => {
   try {
     const createTableQuery = `
@@ -45,7 +44,7 @@ app.post("/submit", async (req, res) => {
     await connection.query(createTableQuery);
     const inserter = `
       INSERT INTO users (username, prefer_code_lang, stdin, src_code, stdout, time)
-      VALUES (?, ?, ?, ?, ?)`;
+      VALUES (?, ?, ?, ?, ?, ?)`;
     const values = [
       req.body.username,
       req.body.lang,
@@ -67,11 +66,8 @@ app.post("/submit", async (req, res) => {
   if(result[0].count>=1){
     return res.send({s:false,message:"Username already exists."})
   }
-
-
-
-     await connection.query(inserter, values);
-     const ok= await new Promise((resolve, reject) => {
+    await connection.query(inserter, values);
+    const ok = await new Promise((resolve, reject) => {
       connection.query(`SELECT * FROM users`, (err, res) => {
         if (err) {
           reject(err);
@@ -80,16 +76,12 @@ app.post("/submit", async (req, res) => {
         }
       });
     });
-
-
     await redisClient.connect();
     await redisClient.set("cachedData", JSON.stringify(ok));
     const cachedData = await redisClient.get("cachedData");
     await redisClient.quit();
     const parsedData = await JSON.parse(cachedData);
     return res.send({ s: true, parsedData });
-
-
 
   } catch (error) {
     await redisClient.quit();
