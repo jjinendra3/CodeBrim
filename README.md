@@ -7,4 +7,4 @@ To check all the previous commits from the start of project please refer [Tuf_Fr
   - Redis
 ### Backend hosted on render.com
 
-### Visit assignment website [here](tuf-jinendrajain.netlify.app)
+### Visit assignment website [here](http://tuf-jinendrajain.netlify.app)
