@@ -32,23 +32,26 @@ app.listen(5000, () => {
 app.post("/submit", async (req, res) => {
   try {
     const createTableQuery = `
-      CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        username VARCHAR(255) NOT NULL UNIQUE,
-        prefer_code_lang VARCHAR(255) NOT NULL,
-        stdin VARCHAR(255) NOT NULL,
-        src_code VARCHAR(255) NOT NULL,
-        time DATETIME NOT NULL
-      )`;
+    CREATE TABLE IF NOT EXISTS users (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      username VARCHAR(255) NOT NULL UNIQUE,
+      prefer_code_lang VARCHAR(255) NOT NULL,
+      stdin TEXT NOT NULL,
+      src_code TEXT NOT NULL,
+      stdout TEXT,
+      time DATETIME NOT NULL
+    );
+    `;
     await connection.query(createTableQuery);
     const inserter = `
-      INSERT INTO users (username, prefer_code_lang, stdin, src_code, time)
+      INSERT INTO users (username, prefer_code_lang, stdin, src_code, stdout, time)
       VALUES (?, ?, ?, ?, ?)`;
     const values = [
       req.body.username,
       req.body.lang,
       req.body.stdin,
       req.body.code,
+      req.body.stdout,
       req.body.time,
     ];
     
