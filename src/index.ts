@@ -3,13 +3,51 @@ import * as fs from "fs";
 const { exec } = require("child_process");
 import cors from "cors";
 import { PrismaClient } from "@prisma/client";
-import { SimpleGit, simpleGit } from "simple-git";
+import { simpleGit } from "simple-git";
 import path from "path";
+import { v4 as uuidv4 } from "uuid";
 const prisma = new PrismaClient();
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.get("/newcompiler/:lang", async (req, res) => {
+  //make seperate user for git clone purpose
+  try {
+    const Id: string = uuidv4().replace(/-/g, "");
+    const newId: string = Id.slice(5, 10);
+    const lang: string = req.params.lang;
+    const response = await prisma.user.create({
+      data: {
+        id: newId,
+        lang: lang,
+      },
+    });
+    const filename: string =
+      "main." +
+      (lang === "python" || lang === "nodejs"
+        ? lang === "python"
+          ? "py"
+          : "js"
+        : lang);
+    await prisma.files.create({
+      data: {
+        filename: filename,
+        content: "",
+        path: "./",
+        user: {
+          connect: {
+            id: newId,
+          },
+        },
+      },
+    });
+    return res.send({ success: 1, output: response });
+  } catch (error) {
+    return res.send({ success: 0, message: "Error in creating new porject" });
+  }
+});
 
 app.get("/wake-up", async (req, res) => {
   try {
@@ -50,7 +88,7 @@ function runImage(lang: string, stdin: string) {
     child.stdin.end();
   });
 }
-//first finish the mvp for ideone clone
+
 app.post("/runcode", async (req: any, res: any) => {
   const lang: string = req.body.lang;
   let ext: string;
@@ -78,10 +116,11 @@ app.post("/runcode", async (req: any, res: any) => {
               index - 24,
             )
           : originalString;
-      await prisma.user.create({
+      await prisma.user.update({
+        where: {
+          id: req.body.id,
+        },
         data: {
-          lang: lang,
-          code: req.body.code,
           stdin: req.body.stdin,
           stderr: copiedString,
         },
@@ -92,10 +131,11 @@ app.post("/runcode", async (req: any, res: any) => {
         sender: copiedString,
       });
     }
-    await prisma.user.create({
+    await prisma.user.update({
+      where: {
+        id: req.body.id,
+      },
       data: {
-        lang: lang,
-        code: req.body.code,
         stdin: req.body.stdin,
         stderr: "Failure in compiling the code, please try again later.",
       },
@@ -108,20 +148,22 @@ app.post("/runcode", async (req: any, res: any) => {
   }
   try {
     const Runner: any = await runImage(lang, req.body.stdin);
-    await prisma.user.create({
+    await prisma.user.update({
+      where: {
+        id: req.body.id,
+      },
       data: {
-        lang: lang,
-        code: req.body.code,
         stdin: req.body.stdin,
         stdout: Runner,
       },
     });
     return res.send({ success: 1, stdout: Runner });
   } catch (error: any) {
-    await prisma.user.create({
+    await prisma.user.update({
+      where: {
+        id: req.body.id,
+      },
       data: {
-        lang: lang,
-        code: req.body.code,
         stdin: req.body.stdin,
         stderr: error.stderr,
       },
@@ -134,6 +176,7 @@ app.post("/runcode", async (req: any, res: any) => {
     });
   }
 });
+
 
 app.get("/code-snippet/:id", async (req, res) => {
   const user = await prisma.user.findMany({
@@ -152,16 +195,19 @@ app.get("/code-snippet/:id", async (req, res) => {
   return res.send({ success: 1, user, files });
 });
 
+
 function isValidGitUrl(url: string): boolean {
   const gitUrlRegex = /^(git|https?):\/\/[^\s/$.?#].[^\s]*$/;
   return gitUrlRegex.test(url);
 }
+
 interface FileData {
   filename: string;
   content?: string;
   path: string;
   userId?: string;
 }
+
 async function processFolder(
   folderPath: string,
   userId: string,
@@ -200,6 +246,7 @@ async function processFolder(
   return files;
 }
 
+
 function deleteFolderRecursive(folderPath: string): void {
   if (fs.existsSync(folderPath)) {
     fs.readdirSync(folderPath).forEach((file) => {
@@ -215,8 +262,8 @@ function deleteFolderRecursive(folderPath: string): void {
   }
 }
 
+
 app.post("/gitclone", async (req, res) => {
-  //for projects
   const url: string = req.body.url;
   const snippet_id: string = req.body.id;
   if (!isValidGitUrl(url)) {
@@ -238,5 +285,3 @@ app.post("/gitclone", async (req, res) => {
 app.listen(5000, () => {
   return console.log(`Express is listening at http://localhost:5000`);
 });
-
-//todo: change the database (give less attributes to user, make a route for new project (add project route)), also better the route distributuion,divide it

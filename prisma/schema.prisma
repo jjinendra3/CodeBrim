@@ -17,7 +17,6 @@ model User {
   id       String   @id @default(cuid())
   datetime DateTime @default(now())
   lang     String
-  code     String//remove this since now its a file system
   stdin    String?
   stdout   String?
   stderr   String?
