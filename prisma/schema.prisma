@@ -14,10 +14,23 @@ datasource db {
 }
 
 model User {
-  id     String  @id @default(cuid())
-  lang   String
-  code   String
-  stdin  String?
-  stdout String?
-  stderr String?
+  id       String   @id @default(cuid())
+  datetime DateTime @default(now())
+  lang     String
+  code     String//remove this since now its a file system
+  stdin    String?
+  stdout   String?
+  stderr   String?
+  edit     Boolean  @default(false)
+  password String?
+  files    Files[]
+}
+
+model Files {
+  id       String  @id @default(cuid())
+  filename String
+  content  String?
+  path     String
+  user     User?   @relation(fields: [userId], references: [id])
+  userId   String?
 }
