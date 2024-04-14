@@ -5,6 +5,7 @@ import Context from "@/ContextAPI";
 import { usePathname } from 'next/navigation';
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
+import Modal from "@/components/Modal";
 
 const Form = () => {
   const context = useContext(Context);
@@ -14,6 +15,11 @@ const Form = () => {
   const [stdin, setstdin] = useState("");
   const [stdout, setstdout] = useState("");
   const [code, setcode] = useState("");
+  const [stderr, setstderr] = useState("");
+  const [mod, setmod] = useState(false);
+  const [repolink,setrepolink]=useState("");
+  const [commitmsg, setcommitmsg] = useState("commit");
+  const [branch, setbranch] = useState("main");
   const pathname = usePathname();
   const router=useRouter();
   const [fileindex, setfileindex] = useState(0); //used to tell which file is highlighted and active
@@ -36,16 +42,17 @@ const Form = () => {
     }
   }
   async function ok(pathname: string){
-    const response=await context.code_getter(pathname);
+      const response=await context.code_getter(pathname);
+     
   }
   useEffect(() => {
     try {
-     
     setcode(context.files[fileindex].content);
     setstdin(context.files[fileindex].stdin);
     setstdout(context.files[fileindex].stdout); 
+    setstderr(context.files[fileindex].sdterr); 
     } catch (error) {
-      toast.error("Error in fetching code snippet, please try again later!")
+      toast.error("Error in fetching this code snippet, please try again later!")
       router.push('/');
     }
   }, [fileindex, setfileindex,context.files]);
@@ -70,6 +77,7 @@ const Form = () => {
 
   return (
     <Context.Provider value={context}>
+      {mod && <Modal setmod={setmod} setrepolink={setrepolink} setcommitmsg={setcommitmsg} setbranch={setbranch}/>}
       <div className="flex-row">
         <div className="flex">
           <div className="w-1/8">
@@ -77,14 +85,14 @@ const Form = () => {
               Language: {context.language}
             </div>
             <div className="flex justify-evenly text-sm mt-2">
-              <div
+              <button
                 className="bg-orange-400 text-black rounded-lg p-1 font-bold"
                 onClick={async () => {
                   await context.newFile();
                 }}
               >
                 Add File +
-              </div>
+              </button>
             </div>
             <div className="flex-row mt-4 space-y-4">
               {context.files.length !== 0 &&
@@ -92,7 +100,7 @@ const Form = () => {
                   return (
                     <div className="flex p-1 text-white" key={file.id}>
                       <div
-                        className={`${file.id === context.files[fileindex].id ? "bg-blue-400" : "bg-green-400"} flex-1 px-1`}
+                        className={`${file.id === context.files[fileindex].id ? "bg-blue-400" : "bg-green-400"} flex-1 px-1 rounded-md`}
                         onClick={() => {
                           for (let i = 0; i < context.files.length; i++) {
                             if (file.id === context.files[i].id) {
@@ -104,7 +112,7 @@ const Form = () => {
                       >
                         {file.filename}
                       </div>
-                      <div className="bg-red-700 flex-2 px-1">Delete</div>
+                      <button className="bg-red-700 flex-2 px-1 rounded-md">Delete</button>
                     </div>
                   );
                 })}
@@ -113,15 +121,18 @@ const Form = () => {
           <div className="flex-1 bg-gray-900 text-white w-7/8">
             <div className="h-6 w-full flex justify-end ">
               <div className="space-x-4 pr-8 flex">
-                <div className="bg-blue-800 text-center px-1 text-white font-bold">
+                <button className="bg-blue-800 text-center px-1 text-white font-bold" onClick={()=>{
+                  setmod(true);
+                  context.gitpush("<valid git link here>",commitmsg,branch);
+                }}>
                   Git Controls
-                </div>
-                <div
+                </button>
+                <button
                   className="bg-blue-800 text-center px-1 text-white font-bold"
                   onClick={context.saver}
                 >
                   Save/Share
-                </div>
+                </button>
               </div>
             </div>
             <div className="">
@@ -182,7 +193,7 @@ const Form = () => {
                 theme="vs-dark"
                 width="100%"
                 onMount={handlestdDidMount}
-                value={std === true ? stdin!==null?stdin:"" : stdout!==null?stdout:""}
+                value={std === true ? stdin : (stdout !== "" ? stdout : stderr)}
                 onChange={std === true ? handlestdinChange : undefined}
                 options={{ readOnly: !std }}
               />

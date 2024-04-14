@@ -60,7 +60,8 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
         throw response.data.error
       }
       setlanguage(response.data.user.lang);
-      setFiles(response.data.user.files)
+      setFiles(response.data.user.files);
+      setid(response.data.user.id);
       toast.update(id, {
         render: `Data Fetched!`,
         type: "success",
@@ -147,7 +148,27 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       return error;
     }
   };
-
+  const gitpush = async (link: string,commitmsg:string,branch:string) => {
+    const ids = toast.loading("Please wait... Pushing your code to git now!", { autoClose: false });
+    try {
+      saver();
+      const response = await axios.post( `http://localhost:5000/gitpush/${id}`, {
+        url:link,
+        commitmsg:commitmsg,
+        branch:branch
+      });
+      toast.update(ids, { render: "Code Pushed!", type: "success", isLoading: false, autoClose: 1000 });
+      return response;
+    } catch (error) {
+      toast.update(ids, {
+        render: "Code Not pushed! Please try again later in sometime",
+        type: "error",
+        isLoading: false,
+        autoClose: 1000,
+      });
+      return error;
+    }
+  }
   return (
     <Context.Provider
       value={{
@@ -161,6 +182,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
         newFile,
         saver,
         newproject,
+        gitpush
       }}
     >
       {children}

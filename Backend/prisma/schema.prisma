@@ -25,10 +25,10 @@ model User {
 model Files {
   id       String  @id @default(cuid())
   filename String
-  content  String?
-  stdin    String?
-  stdout   String?
-  stderr   String?
+  content  String  @default("")
+  stdin    String  @default("")
+  stdout   String  @default("")
+  stderr   String  @default("")
   user     User?   @relation(fields: [userId], references: [id])
   userId   String?
 }

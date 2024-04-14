@@ -12,7 +12,7 @@ const handleInputChange = (event:any) => {
   return (
     <Context.Provider value={context}>
       <div className="min-h-screen flex flex-col p-8 font-sans bg-gray-900 text-white">
-        <h1 className="text-4xl font-semibold">Codebrim</h1>
+        <h1 className="text-4xl font-semibold">CodeBrim</h1>
         <h6 className="text-md font-semibold mb-8 ml-2">Compiler on the Go!</h6>
         <div className="w-1/2 mx-auto">
           <div className="flex-row justify-around items-center  mx-auto ml-28">
@@ -116,7 +116,7 @@ const handleInputChange = (event:any) => {
               onClick={() => {
                 context.newProject("nodejs");
               }}
-              className="styled-button text-red-600 hover:bg-purple-600 hover:text-white hover:border-purple-600"
+              className="styled-button  hover:bg-purple-600 hover:text-white hover:border-purple-600 text-white"
             >
               Node.js Project
             </a>

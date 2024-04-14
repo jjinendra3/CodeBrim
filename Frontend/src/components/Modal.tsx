@@ -1,252 +1,85 @@
-function Modal() {
+export default function Modal({setmod, setrepolink,setcommitmsg,setbranch}: {setmod: any, setrepolink: any,setcommitmsg:any,setbranch:any}) {
+  const handleInputChange = (event:any) => {
+    setrepolink(event.target.value);
+  };
+  const handleInputChange1 = (event:any) => {
+    setcommitmsg(event.target.value);
+  };
+  const handleInputChange2 = (event:any) => {
+    setbranch(event.target.value);
+  };
+  const resetInputs = () => {
+    setrepolink("");
+    setcommitmsg("commit");
+    setbranch("main");
+  }
+
   return (
-    <div className="flex md:flex-row flex-col items-start justify-center px-6 py-8 w-full">
-      <button
-        className="focus:underline focus:text-gray-600 hover:text-gray-600 focus:outline-none text-gray-800 cursor-pointer text-xs sm:ml-10 md:hidden"
-        onClick={()=>{
-            
-        }}
-      >
-        Popover
-      </button>
-      <button
-        className="focus:underline focus:text-gray-600 hover:text-gray-600 focus:outline-none text-gray-800 cursor-pointer mt-16 hidden md:block"
-        onClick={()=>{
-
-        }}
-      >
-        Popover
-      </button>
-
-      <div
-        id="popover"
-        className="transition duration-150 ease-in-out md:mt-0 mt-8 top-0 left-0 sm:ml-10 md:ml-10 w-10/12 md:w-1/2"
-      >
-        <div className="w-full bg-white rounded shadow-2xl">
-          <div className="relative bg-gray-200 rounded-t py-4 px-4 xl:px-8">
-            <svg
-              className="hidden md:block absolute -ml-5 -mb-10 left-0 bottom-0"
-              width="30px"
-              height="30px"
-              viewBox="0 0 9 16"
-              version="1.1"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <g
-                id="Page-1"
-                stroke="none"
-                strokeWidth="1"
-                fill="none"
-                fillRule="evenodd"
+  
+  <><div className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none ">
+          <div className="relative  my-6 mx-auto max-w-3xl bg-blue-500 p-5  rounded-lg w-1/3 text-text-col ">
+            <div className="text-2xl font-extrabold text-center mb-4">
+              Git Controls
+            </div>
+            <div className="flex flex-col ">
+              <div className="mb-4 font-bold text-center">Please make the repository public before hitting Submit.</div>
+            <label
+                htmlFor="role"
+                className="text-xs mb-1 font-bold align-left"
               >
-                <g
-                  id="Tooltips-"
-                  transform="translate(-874.000000, -1029.000000)"
-                  fill="#FFFFFF"
-                >
-                  <g
-                    id="Group-3-Copy-16"
-                    transform="translate(850.000000, 975.000000)"
-                  >
-                    <g id="Group-2" transform="translate(24.000000, 0.000000)">
-                      <polygon
-                        id="Triangle"
-                        transform="translate(4.500000, 62.000000) rotate(-90.000000) translate(-4.500000, -62.000000) "
-                        points="4.5 57.5 12.5 66.5 -3.5 66.5"
-                      ></polygon>
-                    </g>
-                  </g>
-                </g>
-              </g>
-            </svg>
-            <svg
-              className="absolute top-0 -mt-5 block md:hidden"
-              xmlns="http://www.w3.org/2000/svg"
-              width="26"
-              height="23"
-              viewBox="0 0 26 23"
-              fill="none"
-            >
-              <path
-                id="Polygon 2"
-                d="M13 0L25.9904 22.5H0.00961876L13 0Z"
-                fill="#e5e7eb"
+                Repository Link
+              </label>
+              <input
+                type="text"
+                onChange={handleInputChange}
+                className="w-full px-2 py-2 mb-2 border border-bg2-col rounded focus:outline-none bg-bg1-col"
               />
-            </svg>
-            <input
-              className="px-7 w-96 py-2 bg-gray-100 text-base text-gray-600 font-normal leading-normal tracking-normal opacity-50"
-              placeholder="Add person by name or title"
-            />
-          </div>
-          <div className="w-full h-full px-4 xl:px-8 pt-3 pb-5">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center">
-                <div className="mr-4 w-12 h-12 rounded shadow">
-                  <img
-                    className="w-full h-full overflow-hidden object-cover object-center rounded"
-                    src="https://tuk-cdn.s3.amazonaws.com/assets/components/popovers/p_1_0.png"
-                    alt="avatar"
-                  />
-                </div>
-                <div>
-                  <h3 className="mb-2 sm:mb-1 text-gray-800 text-base font-normal leading-4">
-                    Andres Berlin
-                  </h3>
-                  <p className="text-gray-600 text-xs leading-3">
-                    Manager Sales
-                  </p>
-                </div>
-              </div>
-              <div className="relative font-normal text-xs sm:text-sm flex items-center text-gray-600">
-                <select
-                  aria-label="select access"
-                  className="cursor-pointer focus:text-indigo-600 hover:text-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 rounded-md focus:ring-indigo-600 w-full appearance-none pr-8 py-1 pl-2"
-                >
-                  <option>Can view</option>
-                  <option>Can edit</option>
-                </select>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="pointer-events-none absolute right-0 mr-2 icon icon-tabler icon-tabler-chevron-down"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                  fill="none"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path stroke="none" d="M0 0h24v24H0z"></path>
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-              </div>
-            </div>
-            <div className="py-6 flex justify-between items-center">
-              <div className="flex items-center">
-                <div className="mr-4 w-12 h-12 rounded shadow">
-                  <img
-                    className="w-full h-full overflow-hidden object-cover object-center rounded"
-                    src="https://tuk-cdn.s3.amazonaws.com/assets/components/popovers/p_1_1.png"
-                    alt="avatar"
-                  />
-                </div>
-                <div>
-                  <h3 className="mb-2 sm:mb-1 text-gray-800 text-base font-normal leading-4">
-                    Andres Berlin
-                  </h3>
-                  <p className="text-gray-600 text-xs leading-3">
-                    Manager Sales
-                  </p>
-                </div>
-              </div>
-              <div className="relative font-normal text-xs sm:text-sm flex items-center text-gray-600">
-                <select
-                  aria-label="select access"
-                  className="cursor-pointer focus:text-indigo-600 hover:text-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 rounded-md focus:ring-indigo-600  w-full appearance-none pr-8 py-1 pl-2"
-                >
-                  <option>Can edit</option>
-                  <option>Can view</option>
-                </select>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="pointer-events-none absolute right-0 mr-2 icon icon-tabler icon-tabler-chevron-down"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                  fill="none"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path stroke="none" d="M0 0h24v24H0z"></path>
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-              </div>
-            </div>
-            <div className="flex justify-between items-center">
-              <div className="flex items-center">
-                <div className="mr-4 w-12 h-12 rounded shadow">
-                  <img
-                    className="w-full h-full overflow-hidden object-cover object-center rounded"
-                    src="https://images.unsplash.com/photo-1570211776045-af3a51026f4a?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=500&q=80"
-                    alt="avatar"
-                  />
-                </div>
-                <div>
-                  <h3 className="mb-2 sm:mb-1 text-gray-800 text-base font-normal leading-4">
-                    Andres Berlin
-                  </h3>
-                  <p className="text-gray-600 text-xs leading-3">
-                    Manager Sales
-                  </p>
-                </div>
-              </div>
-              <div className="relative font-normal text-xs sm:text-sm flex items-center text-gray-600">
-                <select
-                  aria-label="select access"
-                  className="cursor-pointer focus:text-indigo-600 hover:text-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 rounded-md focus:ring-indigo-600 w-full appearance-none pr-8 py-1 pl-2"
-                >
-                  <option>Can view</option>
-                  <option>Can edit</option>
-                </select>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="pointer-events-none absolute right-0 mr-2 icon icon-tabler icon-tabler-chevron-down"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  strokeWidth="1.5"
-                  stroke="currentColor"
-                  fill="none"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path stroke="none" d="M0 0h24v24H0z"></path>
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-              </div>
-            </div>
-            <hr className="my-5 border-t border-gray-200" />
-            <label className="text-gray-600 text-xs font-normal">
-              Anyone with a link can view
+               <label
+                htmlFor="role"
+                className="text-xs mb-1 font-bold align-left"
+              >
+                Commit Message
+              </label>
+              <input
+                type="text"
+                onChange={handleInputChange1}
+                className="w-full px-2 py-2 mb-2 border border-bg2-col rounded focus:outline-none bg-bg1-col"
+              /> <label
+              htmlFor="role"
+              className="text-xs mb-1 font-bold align-left"
+            >
+              Branch Name
             </label>
-            <div className="flex items-stretch mt-2">
-              <div className="relative w-full">
-                <div className="absolute text-gray-500 flex items-center px-2 border-r h-full">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="icon icon-tabler icon-tabler-link"
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    strokeWidth="1.5"
-                    stroke="currentColor"
-                    fill="none"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path stroke="none" d="M0 0h24v24H0z" />
-                    <path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5" />
-                    <path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5" />
-                  </svg>
-                </div>
-                <input
-                  id="link"
-                  className="pr-24 text-gray-600 bg-gray-100 focus:outline-none focus:border focus:border-indigo-700 font-normal w-full h-10 flex items-center pl-12 text-sm border-gray-300 rounded border"
-                  value="https://alphad.co/Q4XY3HWXN95"
-                />
-                <button className="focus:ring-2 focus:ring-offset-2 rounded-md focus:ring-indigo-600 absolute right-0 top-0 transition duration-150 ease-in-out hover:bg-indigo-600 focus:outline-none bg-indigo-700 rounded-r text-white px-5 h-10 text-sm">
-                  Copy
+            <input
+              type="text"
+              placeholder="main"
+              onChange={handleInputChange2}
+              className="w-full px-2 py-2 mb-2 border border-bg2-col rounded focus:outline-none bg-bg1-col"
+            />
+              <div className="flex flex-row space-x-4 mx-auto my-4">
+                <button
+                  className="bg-red-900 text-white rounded-lg px-4 py-2 font-bold"
+                  onClick={() => {
+                    resetInputs();
+                    setmod(false);
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="bg-blue-900 text-white rounded-lg px-4 py-2 font-bold"
+                  onClick={() => {
+                    resetInputs();
+                    setmod(false);
+                  }}
+                >
+                  Submit
                 </button>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
+        <div className="opacity-25 fixed inset-0 z-40 bg-black"></div></>
+    
   );
 }
-
-export default Modal;

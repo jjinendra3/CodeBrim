@@ -1,2 +1,2 @@
-a=input()
+a=7
 print(a)

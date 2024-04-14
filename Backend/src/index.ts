@@ -168,9 +168,7 @@ app.post("/runcode", async (req: any, res: any) => {
   fs.writeFileSync(`./dock/${lang}/main.${ext}`, req.body.files.content);
   try {
     await buildDockerImage(lang);
-  } catch (error: any) {
-    const err=error.toString();
-return res.json({ success: 0,error:err });;
+  } catch (error:any) {
     if (lang === "cpp" || lang === "java" || lang === "c") {
       const originalString = error.stderr;
       const firststring = "[4/4]";
@@ -227,8 +225,6 @@ return res.json({ success: 0,error:err });;
     });
     return res.send({ success: 1, stdout: Runner });
   } catch (error: any) {
-    const err=error.toString();
-return res.json({ success: 0,error:err });;
     await prisma.files.update({
       where: {
         id: req.body.files.id,
@@ -262,9 +258,7 @@ app.get("/code-snippet/:id", async (req, res) => {
     }
     return res.send({ success: 1,  user:user[0] });
   } catch (error:any) {
-    const err=error.toString();
-return res.json({ success: 0,error:err });;
-    return res.send({success:0,error:error});
+return res.json({ success: 0,error:error });;
   }
  
 });
@@ -344,11 +338,66 @@ app.post("/gitclone", async (req, res) => {
     await deleteFolderRecursive(foldername);
     return res.send({ success: 1, response });
   } catch (error:any) {
-    const err=error.toString();
-return res.json({ success: 0,error:err });;
-    return res.send({ success: 1, message: error });
+return res.json({ success: 0,error:error });
   }
 });
+
+
+app.post("/gitpush/:id", async (req, res) => {
+  try {
+    if(!isValidGitUrl(req.body.url)){
+      return res.send({ success: 0, error: "Please enter a valid git repository link" })
+    }
+    const user = await prisma.user.findMany({
+      where: {
+        id: req.params.id,
+      },
+      include:{
+        files:true
+      }
+    });
+    if(user.length===0){
+      throw new Error("No Such Code Snipper Found!");
+    }
+    const files = user[0].files;
+    const foldername: string = user[0].id;
+    if (!fs.existsSync(foldername)) {
+      fs.mkdirSync(foldername);
+    }
+    for (const file of files) {
+      fs.writeFileSync(`${foldername}/${file.filename}`, file.content);
+    }
+    const git = simpleGit(foldername);
+    await git.init();
+    await git.add(".");
+    await git.commit(req.body.commitmsg);
+    let flag=0;
+    await git.getRemotes(true, (err, remotes) => {
+      if (err) {
+        throw err;
+      }
+    
+      const originExists = remotes.some(remote => remote.name === 'origin');
+    
+      if (originExists) {
+        flag=0;
+      } else {
+        flag=1;
+      }
+    });
+    if(flag===1){
+    await git.addRemote("origin", req.body.url);
+  }
+    await git.push("origin", req.body.branch);
+    if (fs.existsSync(foldername)) {
+      fs.rmdirSync(`${foldername}`);
+    }
+    return res.send({ success: 1 });
+  }catch (error:any) {
+    const err=error.toString();
+    return res.json({ success: 0,error:err });
+  }
+} );
 
 app.listen(5000, () => {
   return console.log(`Express is listening at http://localhost:5000`);
