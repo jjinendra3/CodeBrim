@@ -12,13 +12,79 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.get("/wake-up", async (req, res) => {
+  try {
+    const users = await prisma.user.findMany({
+      where:{
+        id:"32ea9"
+      },
+      include: {
+        files: true,
+      },
+    });
+    return res.json({ success: 1, users });
+  } catch (error:any) {
+    const err=error.toString();
+return res.json({ success: 0,error:err });
+  }
+});
+
+app.get("/reset", async (req, res) => {
+  try {
+    await prisma.user.deleteMany();
+    await prisma.files.deleteMany();
+    return res.send({ success: 1 });
+  } catch (error:any) {
+    const err=error.toString();
+return res.json({ success: 0,error:err });
+  }
+});
+
+app.post("/project-save", async (req, res) => {
+  try {
+    for (let i = 0; i < req.body.files.length; i++) {
+      const obj = req.body.files[i];
+      if (obj.id[0] !== "c") {
+        //creating uuid in frontend aand cuid in backend(prisma)
+        await prisma.files.create({
+          data: {
+            filename: obj.filename,
+            content: obj.content,
+            user: {
+              connect: {
+                id: req.body.projectid,
+              },
+            },
+          },
+        });
+        continue;
+      }
+      await prisma.files.update({
+        where: {
+          id: obj.id,
+        },
+        data: {
+          filename: obj.filename,
+          content: obj.content,
+          stdin: obj.stdin,
+          stdout: obj.stdout,
+          stderr: obj.stderr,
+        },
+      });
+    }
+    return res.send({success:1})
+  
+  } catch (error) {
+    return res.send({success:0,error:error});
+  }
+ });
+
 app.get("/newcompiler/:lang", async (req, res) => {
-  //make seperate user for git clone purpose
   try {
     const Id: string = uuidv4().replace(/-/g, "");
     const newId: string = Id.slice(5, 10);
     const lang: string = req.params.lang;
-    const response = await prisma.user.create({
+    await prisma.user.create({
       data: {
         id: newId,
         lang: lang,
@@ -31,11 +97,10 @@ app.get("/newcompiler/:lang", async (req, res) => {
           ? "py"
           : "js"
         : lang);
-    await prisma.files.create({
+    const newfile = await prisma.files.create({
       data: {
         filename: filename,
         content: "",
-        path: "./",
         user: {
           connect: {
             id: newId,
@@ -43,17 +108,15 @@ app.get("/newcompiler/:lang", async (req, res) => {
         },
       },
     });
-    return res.send({ success: 1, output: response });
-  } catch (error) {
-    return res.send({ success: 0, message: "Error in creating new porject" });
-  }
-});
-
-app.get("/wake-up", async (req, res) => {
-  try {
-    return res.json({ success: 1 });
-  } catch (error) {
-    return res.json({ success: 0 });
+    const finder = await prisma.user.findMany({
+      where: {
+        id: newId,
+      },
+    });
+    return res.send({ success: 1, output: finder, newfile });
+  } catch (error:any) {
+    const err=error.toString();
+    return res.send({ success: 0, error: err });
   }
 });
 
@@ -83,26 +146,31 @@ function runImage(lang: string, stdin: string) {
         resolve(stdout);
       },
     );
-    stdin = stdin === undefined ? (stdin = "") : stdin;
+    stdin = stdin === undefined|| stdin===null ? (stdin = "") : stdin;
     child.stdin.write(stdin);
     child.stdin.end();
   });
 }
 
 app.post("/runcode", async (req: any, res: any) => {
+  //run project save then run code
   const lang: string = req.body.lang;
   let ext: string;
-  if (lang === "cpp" || lang === "c" || lang === "java") {
+  if (lang === "cpp" || lang === "c" || lang === "java" || lang === "go") {
     ext = lang;
   } else if (lang === "python") {
     ext = "py";
+  } else if (lang === "rust") {
+    ext = "rs";
   } else {
-    return res.send({ success: 0, message: "Language not chosen" });
+    return res.send({ success: 0, error: "Language not chosen" });
   }
-  fs.writeFileSync(`./dock/${lang}/main.${ext}`, req.body.code);
+  fs.writeFileSync(`./dock/${lang}/main.${ext}`, req.body.files.content);
   try {
     await buildDockerImage(lang);
   } catch (error: any) {
+    const err=error.toString();
+return res.json({ success: 0,error:err });;
     if (lang === "cpp" || lang === "java" || lang === "c") {
       const originalString = error.stderr;
       const firststring = "[4/4]";
@@ -116,12 +184,12 @@ app.post("/runcode", async (req: any, res: any) => {
               index - 24,
             )
           : originalString;
-      await prisma.user.update({
+      await prisma.files.update({
         where: {
-          id: req.body.id,
+          id: req.body.files.id,
         },
         data: {
-          stdin: req.body.stdin,
+          stdin: req.body.files.stdin,
           stderr: copiedString,
         },
       });
@@ -131,12 +199,12 @@ app.post("/runcode", async (req: any, res: any) => {
         sender: copiedString,
       });
     }
-    await prisma.user.update({
+    await prisma.files.update({
       where: {
-        id: req.body.id,
+        id: req.body.files.id,
       },
       data: {
-        stdin: req.body.stdin,
+        stdin: req.body.files.stdin,
         stderr: "Failure in compiling the code, please try again later.",
       },
     });
@@ -147,24 +215,26 @@ app.post("/runcode", async (req: any, res: any) => {
     });
   }
   try {
-    const Runner: any = await runImage(lang, req.body.stdin);
-    await prisma.user.update({
+    const Runner: any = await runImage(lang, req.body.files.stdin);
+    await prisma.files.update({
       where: {
-        id: req.body.id,
+        id: req.body.files.id,
       },
       data: {
-        stdin: req.body.stdin,
+        stdin: req.body.files.stdin,
         stdout: Runner,
       },
     });
     return res.send({ success: 1, stdout: Runner });
   } catch (error: any) {
-    await prisma.user.update({
+    const err=error.toString();
+return res.json({ success: 0,error:err });;
+    await prisma.files.update({
       where: {
-        id: req.body.id,
+        id: req.body.files.id,
       },
       data: {
-        stdin: req.body.stdin,
+        stdin: req.body.files.stdin,
         stderr: error.stderr,
       },
     });
@@ -177,24 +247,27 @@ app.post("/runcode", async (req: any, res: any) => {
   }
 });
 
-
 app.get("/code-snippet/:id", async (req, res) => {
-  const user = await prisma.user.findMany({
-    where: {
-      id: req.params.id,
-    },
-  });
-  const files = await prisma.files.findMany({
-    where: {
-      userId: req.params.id,
-    },
-  });
-  if (user.length === 0) {
-    return res.send({ success: 0, message: "No Such Code Snippet Found" });
+  try {
+    const user = await prisma.user.findMany({
+      where: {
+        id: req.params.id,
+      },
+      include:{
+        files:true
+      }
+    });
+    if(user.length===0){
+      throw new Error("No Such Code Snipper Found!");
+    }
+    return res.send({ success: 1,  user:user[0] });
+  } catch (error:any) {
+    const err=error.toString();
+return res.json({ success: 0,error:err });;
+    return res.send({success:0,error:error});
   }
-  return res.send({ success: 1, user, files });
+ 
 });
-
 
 function isValidGitUrl(url: string): boolean {
   const gitUrlRegex = /^(git|https?):\/\/[^\s/$.?#].[^\s]*$/;
@@ -204,7 +277,6 @@ function isValidGitUrl(url: string): boolean {
 interface FileData {
   filename: string;
   content?: string;
-  path: string;
   userId?: string;
 }
 
@@ -227,7 +299,6 @@ async function processFolder(
         data: {
           filename: item.name,
           content: content,
-          path: itemPath,
           user: {
             connect: {
               id: userId,
@@ -238,14 +309,12 @@ async function processFolder(
       files.push({
         filename: item.name,
         content,
-        path: itemPath,
         userId,
       });
     }
   }
   return files;
 }
-
 
 function deleteFolderRecursive(folderPath: string): void {
   if (fs.existsSync(folderPath)) {
@@ -258,16 +327,14 @@ function deleteFolderRecursive(folderPath: string): void {
       }
     });
     fs.rmdirSync(folderPath);
-    console.log(`Deleted folder: ${folderPath}`);
   }
 }
-
 
 app.post("/gitclone", async (req, res) => {
   const url: string = req.body.url;
   const snippet_id: string = req.body.id;
   if (!isValidGitUrl(url)) {
-    return res.send({ success: 0, message: "Invalid Git Repository link" });
+    return res.send({ success: 0, error: "Invalid Git Repository link" });
   }
   try {
     const projectname: string = url.slice(0, -4).slice(19).replace(/\//g, "-");
@@ -276,8 +343,9 @@ app.post("/gitclone", async (req, res) => {
     const response: Array<any> = await processFolder(foldername, snippet_id);
     await deleteFolderRecursive(foldername);
     return res.send({ success: 1, response });
-  } catch (error) {
-    console.log(error);
+  } catch (error:any) {
+    const err=error.toString();
+return res.json({ success: 0,error:err });;
     return res.send({ success: 1, message: error });
   }
 });

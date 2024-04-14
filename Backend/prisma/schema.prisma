@@ -17,9 +17,6 @@ model User {
   id       String   @id @default(cuid())
   datetime DateTime @default(now())
   lang     String
-  stdin    String?
-  stdout   String?
-  stderr   String?
   edit     Boolean  @default(false)
   password String?
   files    Files[]
@@ -29,7 +26,9 @@ model Files {
   id       String  @id @default(cuid())
   filename String
   content  String?
-  path     String
+  stdin    String?
+  stdout   String?
+  stderr   String?
   user     User?   @relation(fields: [userId], references: [id])
   userId   String?
 }
