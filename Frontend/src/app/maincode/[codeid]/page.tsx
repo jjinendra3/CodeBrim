@@ -2,27 +2,24 @@
 import React, { useState, useRef, useContext, useEffect } from "react";
 import Editor from "@monaco-editor/react";
 import Context from "@/ContextAPI";
-import { usePathname } from 'next/navigation';
-import { useRouter } from "next/navigation";
-import { toast } from "react-toastify";
+import { usePathname } from "next/navigation";
 import Modal from "@/components/Modal";
-
+import FileModal from "@/components/FileModal";
 const Form = () => {
   const context = useContext(Context);
   const editorRef = useRef<any>(null);
   const stdinRef = useRef<any>(null);
-  const [std, setstd] = useState(true);
-  const [stdin, setstdin] = useState("");
-  const [stdout, setstdout] = useState("");
-  const [code, setcode] = useState("");
-  const [stderr, setstderr] = useState("");
-  const [mod, setmod] = useState(false);
-  const [repolink,setrepolink]=useState("");
-  const [commitmsg, setcommitmsg] = useState("commit");
-  const [branch, setbranch] = useState("main");
+  const [std, setstd] = useState<boolean>(true);
+  const [mod, setmod] = useState<boolean>(false);
+  const [filemod, setfilemod] = useState<boolean>(false);
+  const [gitcontrols, setgitcontrols] = useState<any>({
+    repolink: "",
+    commitmsg: "commit",
+    branch: "main",
+  });
   const pathname = usePathname();
-  const router=useRouter();
   const [fileindex, setfileindex] = useState(0); //used to tell which file is highlighted and active
+  console.log(context.files);
   function handleCodeChange(value: string | undefined, event: any) {
     if (value) {
       context.setFiles((prevFiles: any) => {
@@ -41,21 +38,9 @@ const Form = () => {
       });
     }
   }
-  async function ok(pathname: string){
-      const response=await context.code_getter(pathname);
-     
+  async function ok(pathname: string) {
+    const response = await context.code_getter(pathname);
   }
-  useEffect(() => {
-    try {
-    setcode(context.files[fileindex].content);
-    setstdin(context.files[fileindex].stdin);
-    setstdout(context.files[fileindex].stdout); 
-    setstderr(context.files[fileindex].sdterr); 
-    } catch (error) {
-      toast.error("Error in fetching this code snippet, please try again later!")
-      router.push('/');
-    }
-  }, [fileindex, setfileindex,context.files]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -66,7 +51,7 @@ const Form = () => {
 
     fetchData();
   }, []);
-  
+
   function handlestdDidMount(stdin: any, monaco: any) {
     stdinRef.current = stdin;
   }
@@ -77,18 +62,26 @@ const Form = () => {
 
   return (
     <Context.Provider value={context}>
-      {mod && <Modal setmod={setmod} setrepolink={setrepolink} setcommitmsg={setcommitmsg} setbranch={setbranch}/>}
+      {mod && (
+        <Modal
+          setmod={setmod}
+          gitcontrols={gitcontrols}
+          setgitcontrols={setgitcontrols}
+          context={context}
+        />
+      )}
+      {filemod && <FileModal setfilemod={setfilemod} context={context} />}
       <div className="flex-row">
         <div className="flex">
           <div className="w-1/8">
             <div className="w-48 border-2 border-gray-300 text-white mt-8 p-1 text-sm">
-              Language: {context.language}
+              File Language: {context.files[fileindex].lang}
             </div>
             <div className="flex justify-evenly text-sm mt-2">
               <button
                 className="bg-orange-400 text-black rounded-lg p-1 font-bold"
                 onClick={async () => {
-                  await context.newFile();
+                  setfilemod(true);
                 }}
               >
                 Add File +
@@ -99,7 +92,7 @@ const Form = () => {
                 context.files.map((file: any) => {
                   return (
                     <div className="flex p-1 text-white" key={file.id}>
-                      <div
+                      <button
                         className={`${file.id === context.files[fileindex].id ? "bg-blue-400" : "bg-green-400"} flex-1 px-1 rounded-md`}
                         onClick={() => {
                           for (let i = 0; i < context.files.length; i++) {
@@ -111,8 +104,10 @@ const Form = () => {
                         }}
                       >
                         {file.filename}
-                      </div>
-                      <button className="bg-red-700 flex-2 px-1 rounded-md">Delete</button>
+                      </button>
+                      <button className="bg-red-700 flex-2 px-1 rounded-md">
+                        Delete
+                      </button>
                     </div>
                   );
                 })}
@@ -121,10 +116,18 @@ const Form = () => {
           <div className="flex-1 bg-gray-900 text-white w-7/8">
             <div className="h-6 w-full flex justify-end ">
               <div className="space-x-4 pr-8 flex">
-                <button className="bg-blue-800 text-center px-1 text-white font-bold" onClick={()=>{
-                  setmod(true);
-                  context.gitpush("<valid git link here>",commitmsg,branch);
-                }}>
+                <button
+                  className="bg-blue-800 text-center px-1 text-white font-bold"
+                  onClick={context.snipclone}
+                >
+                  Clone Project
+                </button>
+                <button
+                  className="bg-blue-800 text-center px-1 text-white font-bold"
+                  onClick={() => {
+                    setmod(true);
+                  }}
+                >
                   Git Controls
                 </button>
                 <button
@@ -140,8 +143,8 @@ const Form = () => {
                 height="70vh"
                 width="100%"
                 theme="vs-dark"
-                value={code}
-                language={context.language}
+                value={context.files[fileindex].code}
+                language={context.files[fileindex].lang}
                 onMount={handleEditorDidMount}
                 onChange={handleCodeChange}
               />
@@ -160,7 +163,11 @@ const Form = () => {
                     const response = await context.coderunner(index);
                     context.setFiles((prevFiles: any[]) => {
                       const updatedFiles = [...prevFiles];
-                      updatedFiles[index] = { ...updatedFiles[index], stdout: response.stdout, stderr: response.stderr }; 
+                      updatedFiles[index] = {
+                        ...updatedFiles[index],
+                        stdout: response.stdout,
+                        stderr: response.stderr,
+                      };
                       return updatedFiles;
                     });
                   } catch (error) {
@@ -193,7 +200,13 @@ const Form = () => {
                 theme="vs-dark"
                 width="100%"
                 onMount={handlestdDidMount}
-                value={std === true ? stdin : (stdout !== "" ? stdout : stderr)}
+                value={
+                  std === true
+                    ? context.files[fileindex].stdin
+                    : context.files[fileindex].stdout !== ""
+                      ? context.files[fileindex].stdout
+                      : context.files[fileindex].stderr
+                }
                 onChange={std === true ? handlestdinChange : undefined}
                 options={{ readOnly: !std }}
               />

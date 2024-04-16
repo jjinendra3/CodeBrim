@@ -1,13 +1,13 @@
 "use client";
 import { FaGithub } from "react-icons/fa";
-import { useContext,useState } from "react";
+import { useContext, useState } from "react";
 import Context from "@/ContextAPI";
 const IndexPage = () => {
-  const [inputValue, setInputValue] = useState<string>('');
+  const [inputValue, setInputValue] = useState<string>("");
 
-const handleInputChange = (event:any) => {
-  setInputValue(event.target.value);
-};
+  const handleInputChange = (event: any) => {
+    setInputValue(event.target.value);
+  };
   const context = useContext(Context);
   return (
     <Context.Provider value={context}>
@@ -28,10 +28,12 @@ const handleInputChange = (event:any) => {
                   className="mr-2 bg-gray-800 border border-gray-700 rounded-md py-1 px-1 text-white w-96"
                 />
               </div>
-              <button className="bg-gray-800 hover:bg-blue-700 text-white font-bold p-2 rounded-md" onClick={()=>{
-                
-                window.location.assign("maincode/"+inputValue)
-              }}>
+              <button
+                className="bg-gray-800 hover:bg-blue-700 text-white font-bold p-2 rounded-md"
+                onClick={() => {
+                  window.location.assign("maincode/" + inputValue);
+                }}
+              >
                 Let's Go!
               </button>
             </div>
@@ -40,17 +42,6 @@ const handleInputChange = (event:any) => {
             Create a New Project Here
           </h1>
           <div className="flex justify-around mt-8">
-            <div>
-              <a
-                href="#"
-                className="styled-button text-violet-400 w-32"
-                onClick={() => {
-                  context.newProject("c");
-                }}
-              >
-                C
-              </a>
-            </div>
             <div>
               <a
                 href="#"
@@ -73,7 +64,19 @@ const handleInputChange = (event:any) => {
                 Python
               </a>
             </div>
+            <div className="flex items-center justify-center">
+              <a
+                href="#"
+                className="styled-button text-violet-400 w-32 "
+                onClick={() => {
+                  context.newProject("javascript");
+                }}
+              >
+                Javascript
+              </a>
+            </div>
           </div>
+
           <div className="flex justify-around mt-4">
             <div>
               <a

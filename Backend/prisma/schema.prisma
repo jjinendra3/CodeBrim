@@ -16,8 +16,6 @@ datasource db {
 model User {
   id       String   @id @default(cuid())
   datetime DateTime @default(now())
-  lang     String
-  edit     Boolean  @default(false)
   password String?
   files    Files[]
 }
@@ -25,6 +23,7 @@ model User {
 model Files {
   id       String  @id @default(cuid())
   filename String
+  lang     String
   content  String  @default("")
   stdin    String  @default("")
   stdout   String  @default("")
