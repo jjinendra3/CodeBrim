@@ -53,20 +53,45 @@ app.get("/newcompiler/:lang", async (req, res) => {
     const Id: string = uuidv4().replace(/-/g, "");
     const newId: string = Id.slice(5, 10);
     const lang: string = req.params.lang;
+    let content: string = "";
+    switch (lang) {
+      case "cpp":
+        content = `#include <iostream> \nusing namespace std; \nint main() \n{ \n\tcout << "Hello World!"; \n\treturn 0; \n}`;
+        break;
+      case "python":
+        content = `print("Hello World!")`;
+        break;
+      case "javascript":
+        content = `console.log("Hello World!")`;
+        break;
+      case "rust":
+        content = `fn main() { \n\tprintln!("Hello World!"); \n}`;
+        break;
+      case "go":
+        content = `package main \nimport "fmt" \nfunc main() { \n\tfmt.Println("Hello World!") \n}`;
+        break;
+      case "java":
+        content = `class Main { \n\tpublic static void main(String[] args) { \n\t\tSystem.out.println("Hello World!"); \n\t} \n}`;
+        break;
+      default:
+        break;
+    }
     const filename: string =
       "main." +
       (lang === "python" || lang === "javascript"
         ? lang === "python"
           ? "py"
           : "js"
-        : lang);
+        : lang === "rust"
+          ? "rs"
+          : lang);
     const newUser = await prisma.user.create({
       data: {
         id: newId,
         files: {
           create: {
             filename: filename,
-            content: "",
+            content: content,
             lang: lang,
           },
         },

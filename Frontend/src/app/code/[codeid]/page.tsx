@@ -73,7 +73,7 @@ const Form = () => {
           context={context}
         />
       )}
-      {filemod && <FileModal setfilemod={setfilemod} context={context} />}
+      {filemod && <FileModal setfilemod={setfilemod} context={context} setfileindex={setfileindex}/>}
       <div className="flex-row ">
         <div className="flex">
           <div className="w-1/8 overflow-y-auto" style={{ overflowY: "auto" }}>

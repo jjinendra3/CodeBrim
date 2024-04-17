@@ -3,9 +3,11 @@ import { useState } from "react";
 export default function Modal({
   setfilemod,
   context,
+  setfileindex
 }: {
   setfilemod: any;
   context: any;
+  setfileindex:any;
 }) {
   const [filename, setfilename] = useState<string>("");
   const [language, setlanguage] = useState<string>("");
@@ -54,14 +56,7 @@ export default function Modal({
               </button>
               {isOpen && (
                 <div className="absolute right-0 mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 p-1 space-y-1">
-                  <input
-                    className="block w-full px-4 py-2 text-gray-800 border rounded-md  border-gray-300 focus:outline-none"
-                    type="text"
-                    placeholder="Search items"
-                    autoComplete="off"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+                  
                   {filteredItems.map((item) => (
                     <a
                       key={item}
@@ -138,6 +133,7 @@ export default function Modal({
                     }
                   }
                   context.newFile(filename, language);
+                  setfileindex(context.files.length);
                   setfilemod(false);
                 }}
               >
