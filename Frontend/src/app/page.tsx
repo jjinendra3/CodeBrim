@@ -115,14 +115,6 @@ const IndexPage = () => {
         </div>
         <div className="flex justify-center mt-16 ">
           <div className="flex-row">
-            <a
-              onClick={() => {
-                context.newProject("nodejs");
-              }}
-              className="styled-button  hover:bg-purple-600 hover:text-white hover:border-purple-600 text-white"
-            >
-              Node.js Project
-            </a>
             <div className="mt-12 bg-gray-700 w-48 flex space-x-2 p-2 rounded-md text-lg font-semibold justify-center ">
               <FaGithub className="mt-1" />
               <div className="align-middle">Clone</div>

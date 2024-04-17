@@ -37,13 +37,12 @@ app.post("/project-save", async (req, res) => {
         },
       });
     }
-    const files = await prisma.files.findMany
-    ({
+    const files = await prisma.files.findMany({
       where: {
         userId: req.body.projectid,
       },
     });
-    return res.send({ success: 1,files:files});
+    return res.send({ success: 1, files: files });
   } catch (error) {
     return res.send({ success: 0, error: error });
   }
@@ -56,7 +55,7 @@ app.get("/newcompiler/:lang", async (req, res) => {
     const lang: string = req.params.lang;
     const filename: string =
       "main." +
-      (lang === "python" || lang === "javascript" || lang === "nodejs"
+      (lang === "python" || lang === "javascript"
         ? lang === "python"
           ? "py"
           : "js"

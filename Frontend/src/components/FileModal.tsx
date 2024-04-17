@@ -68,8 +68,9 @@ export default function Modal({
                       href="#"
                       className="block px-4 py-2 text-gray-700 hover:bg-gray-100 active:bg-blue-100 cursor-pointer rounded-md"
                       onClick={() => {
-                        let name: string = item.charAt(0).toLowerCase() + item.slice(1);;
-                      
+                        let name: string =
+                          item.charAt(0).toLowerCase() + item.slice(1);
+
                         if (item === "Javascript") {
                           setext(".js");
                         } else if (item === "C++") {
@@ -102,16 +103,18 @@ export default function Modal({
             >
               FileName
             </label>
-            {language!=="" && <div className="bg-white ">
-              <input
-                type="text"
-                name="filename"
-                onChange={handleInputChange}
-                className="flex-grow px-2 py-2 rounded focus:outline-none bg-bg1-col"
-                style={{ minWidth: "50px", width: "auto" }}
-              />
-              {ext}
-            </div>}
+            {language !== "" && (
+              <div className="bg-white ">
+                <input
+                  type="text"
+                  name="filename"
+                  onChange={handleInputChange}
+                  className="flex-grow px-2 py-2 rounded focus:outline-none bg-bg1-col"
+                  style={{ minWidth: "50px", width: "auto" }}
+                />
+                {ext}
+              </div>
+            )}
             <div className="flex flex-row space-x-4 mx-auto my-4">
               <button
                 className="bg-red-900 text-white rounded-lg px-4 py-2 font-bold"
@@ -124,7 +127,7 @@ export default function Modal({
               <button
                 className="bg-blue-900 text-white rounded-lg px-4 py-2 font-bold"
                 onClick={() => {
-                  if(language==="" || filename===""){
+                  if (language === "" || filename === "") {
                     alert("Please select a language");
                     return;
                   }

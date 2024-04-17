@@ -1,8 +1,9 @@
-FROM rust:1.67
+FROM rust:1.49
 
-WORKDIR /usr/src/myapp
+WORKDIR /usr/src/app
+
 COPY . .
 
-RUN cargo install --path .
+RUN cargo build --release
 
-CMD ["main"]
+CMD ["./target/release/main"]

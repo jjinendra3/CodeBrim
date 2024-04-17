@@ -3,7 +3,7 @@ import prisma from "../db";
 const { exec } = require("child_process");
 import * as fs from "fs";
 const app = Router();
-
+const date = new Date();
 function buildDockerImage(lang: string) {
   return new Promise((resolve, reject) => {
     const dockerCommand = `docker build -t my-${lang}-app ./dock/${lang}`;
@@ -35,27 +35,43 @@ function runImage(lang: string, stdin: string) {
     child.stdin.end();
   });
 }
-
+function findClassName(javaCode: string): string | null {
+  const classRegex = /class\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{/g;
+  const match = classRegex.exec(javaCode);
+  return match ? match[1] : null;
+}
 app.post("/runcode", async (req: any, res: any) => {
   //run project save then run code
   const lang: string = req.body.files.lang;
   let ext: string;
-  if (lang === "cpp" || lang === "c" || lang === "java" || lang === "go") {
+  if (lang === "cpp" || lang === "java" || lang === "go") {
     ext = lang;
   } else if (lang === "python") {
     ext = "py";
   } else if (lang === "rust") {
     ext = "rs";
-  } else if (lang === "javascript" || lang === "nodejs") {
+  } else if (lang === "javascript") {
     ext = "js";
   } else {
     return res.send({ success: 0, error: "Language not chosen" });
   }
-  fs.writeFileSync(`./dock/${lang}/main.${ext}`, req.body.files.content);
+  if (lang === "java") {
+    const javafilename = findClassName(req.body.files.content);
+    fs.writeFileSync(
+      `./dock/java/Dockerfile`,
+      `FROM openjdk:11\nCOPY . /usr/src/myapp\nWORKDIR /usr/src/myapp\nRUN javac ${javafilename}.java\nCMD ["java", "${javafilename}"]`,
+    );
+    fs.writeFileSync(
+      `./dock/${lang}/${javafilename}.${ext}`,
+      req.body.files.content,
+    );
+  } else {
+    fs.writeFileSync(`./dock/${lang}/main.${ext}`, req.body.files.content);
+  }
   try {
     await buildDockerImage(lang);
   } catch (error: any) {
-    if (lang === "cpp" || lang === "java" || lang === "c") {
+    if (lang === "cpp" || lang === "java") {
       const originalString = error.stderr;
       const firststring = "[4/4]";
       const firstindex = originalString.indexOf(firststring);
@@ -74,13 +90,16 @@ app.post("/runcode", async (req: any, res: any) => {
         },
         data: {
           stdin: req.body.files.stdin,
-          stdout: copiedString,
+          stdout: date + ">>>\n" + copiedString,
         },
       });
       return res.send({
         success: 0,
-        error: "Failure in compiling the code, please try again later.",
-        sender: copiedString,
+        stdout:
+          date +
+          ">>>\n" +
+          "Failure in compiling the code, please try again later.",
+        sender: date + ">>>\n" + copiedString,
       });
     }
     await prisma.files.update({
@@ -89,13 +108,19 @@ app.post("/runcode", async (req: any, res: any) => {
       },
       data: {
         stdin: req.body.files.stdin,
-        stdout: "Failure in compiling the code, please try again later.",
+        stdout:
+          date +
+          ">>>\n" +
+          "Failure in compiling the code, please try again later.",
       },
     });
     return res.send({
       success: 0,
-      message: "Failure in compiling the code, please try again later.",
-      error,
+      stdout:
+        date +
+        ">>>\n" +
+        "Failure in compiling the code, please try again later.",
+      error: date + ">>>\n" + error,
     });
   }
   try {
@@ -106,25 +131,29 @@ app.post("/runcode", async (req: any, res: any) => {
       },
       data: {
         stdin: req.body.files.stdin,
-        stdout: Runner,
+        stdout: date + ">>>\n" + Runner,
       },
     });
-    return res.send({ success: 1, stdout: Runner });
+    return res.send({ success: 1, stdout: date + ">>>\n" + Runner });
   } catch (error: any) {
+    const err = error.stderr.toString();
     await prisma.files.update({
       where: {
         id: req.body.files.id,
       },
       data: {
         stdin: req.body.files.stdin,
-        stdout: error.stderr,
+        stdout: date + ">>>\n" + err,
       },
     });
     return res.send({
       success: 0,
-      stdout: error.stderr,
-      error: error.error,
-      message: "Failure in compiling the code, please try again later.",
+      stdout: date + ">>>\n" + error.stderr,
+      error: date + ">>>\n" + error.error,
+      message:
+        date +
+        ">>>\n" +
+        "Failure in compiling the code, please try again later.",
     });
   }
 });

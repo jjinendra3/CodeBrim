@@ -99,7 +99,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       const response = await axios.post("http://localhost:5000/code/runcode", {
         files: files[fileid],
       });
-      if(response.data.success === false){
+      if (response.data.success === false) {
         throw response.data.error;
       }
       toast.update(ids, {
