@@ -1,6 +1,6 @@
 services:
   - type: web
-    runtime: nodejs
+    runtime: node
     name: my-app
     buildCommand: |
       curl -fsSL https://get.docker.com -o get-docker.sh
