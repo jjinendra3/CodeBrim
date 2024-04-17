@@ -11,7 +11,7 @@ export default function Modal({
   const [language, setlanguage] = useState<string>("");
   const handleInputChange = (event: any) => {
     const { name, value } = event.target;
-    setfilename(value + `.${language}`);
+    setfilename(value + `${ext}`);
   };
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -21,7 +21,6 @@ export default function Modal({
   const filteredItems = items.filter((item) =>
     item.toLowerCase().includes(searchTerm.toLowerCase()),
   );
-
   return (
     <>
       <div className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none ">
@@ -69,7 +68,8 @@ export default function Modal({
                       href="#"
                       className="block px-4 py-2 text-gray-700 hover:bg-gray-100 active:bg-blue-100 cursor-pointer rounded-md"
                       onClick={() => {
-                        let name = item[0].toLowerCase();
+                        let name: string = item.charAt(0).toLowerCase() + item.slice(1);;
+                      
                         if (item === "Javascript") {
                           setext(".js");
                         } else if (item === "C++") {
@@ -102,7 +102,7 @@ export default function Modal({
             >
               FileName
             </label>
-            <div className="bg-white ">
+            {language!=="" && <div className="bg-white ">
               <input
                 type="text"
                 name="filename"
@@ -111,7 +111,7 @@ export default function Modal({
                 style={{ minWidth: "50px", width: "auto" }}
               />
               {ext}
-            </div>
+            </div>}
             <div className="flex flex-row space-x-4 mx-auto my-4">
               <button
                 className="bg-red-900 text-white rounded-lg px-4 py-2 font-bold"
@@ -124,6 +124,16 @@ export default function Modal({
               <button
                 className="bg-blue-900 text-white rounded-lg px-4 py-2 font-bold"
                 onClick={() => {
+                  if(language==="" || filename===""){
+                    alert("Please select a language");
+                    return;
+                  }
+                  for (let i in context.files) {
+                    if (context.files[i].filename === filename) {
+                      alert("File already exists");
+                      return;
+                    }
+                  }
                   context.newFile(filename, language);
                   setfilemod(false);
                 }}

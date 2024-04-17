@@ -9,7 +9,11 @@ const Form = () => {
   const context = useContext(Context);
   const editorRef = useRef<any>(null);
   const stdinRef = useRef<any>(null);
-  const [std, setstd] = useState<boolean>(true);
+  const [std, setstd] = useState<{
+    id: string;
+    std: boolean;
+  }>({ id: "", std: false });
+
   const [mod, setmod] = useState<boolean>(false);
   const [filemod, setfilemod] = useState<boolean>(false);
   const [gitcontrols, setgitcontrols] = useState<any>({
@@ -19,7 +23,6 @@ const Form = () => {
   });
   const pathname = usePathname();
   const [fileindex, setfileindex] = useState(0); //used to tell which file is highlighted and active
-  console.log(context.files);
   function handleCodeChange(value: string | undefined, event: any) {
     if (value) {
       context.setFiles((prevFiles: any) => {
@@ -71,9 +74,9 @@ const Form = () => {
         />
       )}
       {filemod && <FileModal setfilemod={setfilemod} context={context} />}
-      <div className="flex-row">
+      <div className="flex-row " >
         <div className="flex">
-          <div className="w-1/8">
+          <div className="w-1/8 overflow-y-auto"style={{overflowY:'auto'}} >
             <div className="w-48 border-2 border-gray-300 text-white mt-8 p-1 text-sm">
               File Language: {context.files[fileindex].lang}
             </div>
@@ -93,8 +96,9 @@ const Form = () => {
                   return (
                     <div className="flex p-1 text-white" key={file.id}>
                       <button
-                        className={`${file.id === context.files[fileindex].id ? "bg-blue-400" : "bg-green-400"} flex-1 px-1 rounded-md`}
+                        className={`${file.id === context.files[fileindex].id ? "bg-blue-400 border-2 border-white" : "bg-green-400"} flex-1 px-1 rounded-md`}
                         onClick={() => {
+                          setstd({id:context.files[fileindex].id,std:false});
                           for (let i = 0; i < context.files.length; i++) {
                             if (file.id === context.files[i].id) {
                               setfileindex(i);
@@ -113,7 +117,7 @@ const Form = () => {
                 })}
             </div>
           </div>
-          <div className="flex-1 bg-gray-900 text-white w-7/8">
+          <div className="flex-1 bg-gray-900 text-white w-7/8 coding">
             <div className="h-6 w-full flex justify-end ">
               <div className="space-x-4 pr-8 flex">
                 <button
@@ -143,7 +147,7 @@ const Form = () => {
                 height="70vh"
                 width="100%"
                 theme="vs-dark"
-                value={context.files[fileindex].code}
+                value={context.files[fileindex].content}
                 language={context.files[fileindex].lang}
                 onMount={handleEditorDidMount}
                 onChange={handleCodeChange}
@@ -156,7 +160,10 @@ const Form = () => {
                   try {
                     const index: number = fileindex;
                     const saver = await context.saver();
-                    setstd(false);
+                    if(saver.data.success===0){
+                      throw saver.data.error;
+                    }
+                    setstd({std:false,id:context.files[fileindex].id});
                     if (saver.success === 0) {
                       throw saver.success;
                     }
@@ -166,10 +173,9 @@ const Form = () => {
                       updatedFiles[index] = {
                         ...updatedFiles[index],
                         stdout: response.stdout,
-                        stderr: response.stderr,
                       };
                       return updatedFiles;
-                    });
+                    }); 
                   } catch (error) {
                     console.error(error);
                   }
@@ -178,17 +184,25 @@ const Form = () => {
                 Run
               </button>
               <button
-                className={`text-gray-700 text-sm font-bold ${std === true ? "bg-blue-400 underline" : "bg-red-400"} rounded-sm p-2`}
+                className={`text-gray-700 text-sm font-bold ${(std.std === true && std.id===context.files[fileindex].id) ? "bg-blue-400 underline" : "bg-red-400"} rounded-sm p-2`}
                 onClick={() => {
-                  setstd(true);
+                  setstd({
+                    id: context.files[fileindex].id,
+                    std: true,
+                  });
                 }}
               >
                 Stdin
               </button>
               <button
-                className={`text-gray-700 text-sm font-bold ${std === false ? "bg-blue-400 underline" : "bg-red-400"} rounded-sm p-2`}
+                className={`text-gray-700 text-sm font-bold ${(std.std === false && std.id===context.files[fileindex].id) ? "bg-blue-400 underline" : "bg-red-400"} rounded-sm p-2`}
                 onClick={() => {
-                  setstd(false);
+                  setstd(
+                    {
+                      id: context.files[fileindex].id,
+                      std: false,
+                    }
+                  );
                 }}
               >
                 Stdout
@@ -201,13 +215,11 @@ const Form = () => {
                 width="100%"
                 onMount={handlestdDidMount}
                 value={
-                  std === true
+                  (std.std === true && std.id===context.files[fileindex].id)
                     ? context.files[fileindex].stdin
-                    : context.files[fileindex].stdout !== ""
-                      ? context.files[fileindex].stdout
-                      : context.files[fileindex].stderr
+                    : context.files[fileindex].stdout
                 }
-                onChange={std === true ? handlestdinChange : undefined}
+                onChange={(std.std === true && std.id===context.files[fileindex].id) ? handlestdinChange : undefined}
                 options={{ readOnly: !std }}
               />
             </div>

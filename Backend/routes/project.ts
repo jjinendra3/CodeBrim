@@ -33,12 +33,17 @@ app.post("/project-save", async (req, res) => {
           content: obj.content,
           stdin: obj.stdin,
           stdout: obj.stdout,
-          stderr: obj.stderr,
           lang: obj.lang,
         },
       });
     }
-    return res.send({ success: 1 });
+    const files = await prisma.files.findMany
+    ({
+      where: {
+        userId: req.body.projectid,
+      },
+    });
+    return res.send({ success: 1,files:files});
   } catch (error) {
     return res.send({ success: 0, error: error });
   }

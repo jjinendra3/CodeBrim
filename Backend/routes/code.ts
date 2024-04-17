@@ -74,12 +74,12 @@ app.post("/runcode", async (req: any, res: any) => {
         },
         data: {
           stdin: req.body.files.stdin,
-          stderr: copiedString,
+          stdout: copiedString,
         },
       });
       return res.send({
         success: 0,
-        message: "Failure in compiling the code, please try again later.",
+        error: "Failure in compiling the code, please try again later.",
         sender: copiedString,
       });
     }
@@ -89,7 +89,7 @@ app.post("/runcode", async (req: any, res: any) => {
       },
       data: {
         stdin: req.body.files.stdin,
-        stderr: "Failure in compiling the code, please try again later.",
+        stdout: "Failure in compiling the code, please try again later.",
       },
     });
     return res.send({
@@ -117,13 +117,13 @@ app.post("/runcode", async (req: any, res: any) => {
       },
       data: {
         stdin: req.body.files.stdin,
-        stderr: error.stderr,
+        stdout: error.stderr,
       },
     });
     return res.send({
       success: 0,
-      stderr: error.stderr,
-      err: error.error,
+      stdout: error.stderr,
+      error: error.error,
       message: "Failure in compiling the code, please try again later.",
     });
   }

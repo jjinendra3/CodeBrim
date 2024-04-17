@@ -14,7 +14,6 @@ interface File {
   content: string;
   stdin: string;
   stdout: string;
-  stderr: string;
 }
 const CodeState: React.FC<CodeStateProps> = ({ children }) => {
   const router = useRouter();
@@ -24,7 +23,6 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       content: "",
       filename: "",
       id: "",
-      stderr: "",
       stdin: "",
       stdout: "",
     },
@@ -55,7 +53,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
         render: `${error}`,
         type: "error",
         isLoading: false,
-        autoClose: 1000,
+        autoClose: 2000,
       });
     }
     return;
@@ -101,6 +99,9 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       const response = await axios.post("http://localhost:5000/code/runcode", {
         files: files[fileid],
       });
+      if(response.data.success === false){
+        throw response.data.error;
+      }
       toast.update(ids, {
         render: "Code Ran successfully!",
         type: "success",
@@ -127,7 +128,6 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
         content: "",
         stdin: "",
         stdout: "",
-        stderr: "",
         lang: language,
       };
       setFiles((prevFiles) => [...prevFiles, newFile]);
@@ -159,6 +159,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
           projectid: id,
         },
       );
+      setFiles(response.data.files);
 
       toast.update(ids, {
         render: "Code Saved!",
