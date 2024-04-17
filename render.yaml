@@ -1,6 +1,8 @@
 services:
-  - name: my-app
-    startCommand: |
+  - type: web
+    runtime: nodejs
+    name: my-app
+    buildCommand: |
       curl -fsSL https://get.docker.com -o get-docker.sh
       sh get-docker.sh
-      cd Backend && npm start
+    startCommand: cd Backend && npm start
