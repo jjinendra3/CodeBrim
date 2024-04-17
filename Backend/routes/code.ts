@@ -123,9 +123,8 @@ app.post("/runcode", async (req: any, res: any) => {
         id: req.body.files.id,
       },
       data: {
-        stdin: req.body.files.stdin,
-        stdout:
-          date +
+        stdin: req.body.files.stdin===null?'':req.body.files.stdin,
+        stdout:date +
           ">>>\n" +
           "Failure in compiling the code, please try again later.",
       },
@@ -143,7 +142,8 @@ app.post("/runcode", async (req: any, res: any) => {
   try {
     console.log('running image')
     const Runner: any = await runImage(lang, req.body.files.stdin);
-    console.log('image ran')
+    console.log('image ran',Runner);
+
     await prisma.files.update({
       where: {
         id: req.body.files.id,
@@ -157,7 +157,7 @@ app.post("/runcode", async (req: any, res: any) => {
     return res.send({ success: 1, stdout: date + ">>>\n" + Runner });
   } catch (error: any) {
     const err = error.stderr.toString();
-    console.log(error,err,"running image error");
+    console.log(error,"running image error");
     await prisma.files.update({
       where: {
         id: req.body.files.id,

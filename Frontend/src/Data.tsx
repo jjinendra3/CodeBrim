@@ -35,7 +35,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
     const ids = toast.loading("Creating new Project...", { autoClose: false });
     try {
       const response = await axios.get(
-        `${BACKEND}/project/newcompiler/${lang}`,
+        `${"http://localhost:5000"}/project/newcompiler/${lang}`,
       );
       if (response.data.success === false) {
         throw response.data.error;
@@ -70,7 +70,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
     try {
       setid(ID);
       const response = await axios.get(
-        `${BACKEND}/project/code-snippet/${ID}`,
+        `${"http://localhost:5000"}/project/code-snippet/${ID}`,
       );
       if (response.data.success === false) {
         throw response.data.error;
@@ -100,7 +100,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       autoClose: false,
     });
     try {
-      const response = await axios.post(`${BACKEND}/code/runcode`, {
+      const response = await axios.post(`${"http://localhost:5000"}/code/runcode`, {
         files: files[fileid],
       });
       if (response.data.success === false) {
@@ -180,7 +180,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
     });
     try {
       const response = await axios.post(
-        `${BACKEND}/project/project-save`,
+        `${"http://localhost:5000"}/project/project-save`,
         {
           files,
           projectid: id,
@@ -215,7 +215,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
     try {
       saver();
       const response = await axios.post(
-        `${BACKEND}/git/gitpush/${id}`,
+        `${"http://localhost:5000"}/git/gitpush/${id}`,
         {
           url: link,
           commitmsg: commitmsg,
@@ -248,7 +248,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
     });
     try {
       const response = await axios.get(
-        `${BACKEND}/project/clone-snippet/${id}`,
+        `${"http://localhost:5000"}/project/clone-snippet/${id}`,
       );
       if (response.data.success === false) {
         throw response.data.error;
@@ -277,7 +277,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
   const wakeServer = async () => {
     const ids = toast.loading("Waking up the server...", { autoClose: false });
     try {
-      const response = await axios.get(`${BACKEND}/server/wake-up`);
+      const response = await axios.get(`${"http://localhost:5000"}/server/wake-up`);
       if (response.data.success === false) {
         throw response.data.error;
       }
