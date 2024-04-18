@@ -156,7 +156,6 @@ app.post("/runcode", async (req: any, res: any) => {
     console.log('updated');
     return res.send({ success: 1, stdout: date + ">>>\n" + Runner });
   } catch (error: any) {
-    const err = error.stderr.toString();
     console.log(error,"running image error");
     await prisma.files.update({
       where: {
@@ -164,10 +163,9 @@ app.post("/runcode", async (req: any, res: any) => {
       },
       data: {
         stdin: req.body.files.stdin,
-        stdout: date + ">>>\n" + err,
+        stdout: date + ">>>\n" + error.stderr,
       },
     });
-    console.log('updated',err);
     return res.send({
       success: 0,
       stdout: date + ">>>\n" + error.stderr,
