@@ -35,7 +35,7 @@ const IndexPage = () => {
                   window.location.assign("code/" + slicer);
                 }}
               >
-                Let's Go!
+                Let&apos;s Go!
               </button>
             </div>
           </div>
@@ -101,7 +101,6 @@ const IndexPage = () => {
                 Go
               </a>
             </div>
-            
           </div>
         </div>
         <div className="flex justify-center mt-16 ">

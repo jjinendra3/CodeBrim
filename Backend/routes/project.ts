@@ -44,7 +44,7 @@ app.post("/project-save", async (req, res) => {
     });
     return res.send({ success: 1, files: files });
   } catch (error) {
-    return res.send({ success: 0, error: error });
+    return res.send({ success: false, error: error });
   }
 });
 
@@ -64,7 +64,7 @@ app.get("/newcompiler/:lang", async (req, res) => {
       case "javascript":
         content = `console.log("Hello World!")`;
         break;
-      
+
       case "go":
         content = `package main \nimport "fmt" \nfunc main() { \n\tfmt.Println("Hello World!") \n}`;
         break;
@@ -99,7 +99,7 @@ app.get("/newcompiler/:lang", async (req, res) => {
     return res.send({ success: 1, output: newUser });
   } catch (error: any) {
     const err = error.toString();
-    return res.send({ success: 0, error: err });
+    return res.send({ success: false, error: err });
   }
 });
 
@@ -118,7 +118,7 @@ app.get("/code-snippet/:id", async (req, res) => {
     }
     return res.send({ success: 1, user: user[0] });
   } catch (error: any) {
-    return res.json({ success: 0, error: error });
+    return res.json({ success: false, error: error });
   }
 });
 
@@ -154,7 +154,7 @@ app.get("/clone-snippet/:id", async (req, res) => {
     });
     return res.send({ success: 1, output: newUser });
   } catch (error) {
-    return res.send({ success: 0, error: error });
+    return res.send({ success: false, error: error });
   }
 });
 
@@ -174,7 +174,7 @@ app.post("/set-password/:id", async (req, res) => {
     }
     return res.send({ success: 1, output: user });
   } catch (error) {
-    return res.send({ success: 0, error: error });
+    return res.send({ success: false, error: error });
   }
 });
 module.exports = app;

@@ -12,17 +12,16 @@ export default function Modal({
   const handleInputChange = (event: any) => {
     setgitcontrols({
       ...gitcontrols,
-      name: event.target.value,
+      [event.target.name]: event.target.value,
     });
   };
   const resetInputs = () => {
     setgitcontrols({
       repolink: "",
       commitmsg: "commit",
-      branch: "main",
+      branch: "master",
     });
   };
-  gitcontrols;
   return (
     <>
       <div className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none ">
@@ -40,6 +39,7 @@ export default function Modal({
             <input
               type="text"
               name="repolink"
+              id="repolink"
               onChange={handleInputChange}
               className="w-full px-2 py-2 mb-2 border border-bg2-col rounded focus:outline-none bg-bg1-col"
             />
@@ -57,7 +57,7 @@ export default function Modal({
             </label>
             <input
               type="text"
-              placeholder="main"
+              placeholder="master"
               name="branch"
               onChange={handleInputChange}
               className="w-full px-2 py-2 mb-2 border border-bg2-col rounded focus:outline-none bg-bg1-col"

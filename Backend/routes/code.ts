@@ -18,7 +18,7 @@ async function prismaupdate(id: string, stdin: string, stdout: string) {
     });
     return { success: 1 };
   } catch (error) {
-    return { success: 0, error: error };
+    return { success: false, error: error };
   }
 }
 
@@ -69,7 +69,7 @@ app.post("/runcode", async (req: any, res: any) => {
   } else if (lang === "javascript") {
     ext = "js";
   } else {
-    return res.send({ success: 0, error: "Language not chosen" });
+    return res.send({ success: false, error: "Language not chosen" });
   }
   if (lang === "java") {
     const javafilename = findClassName(req.body.files.content);
@@ -105,14 +105,14 @@ app.post("/runcode", async (req: any, res: any) => {
         req.body.files.stdin,
         date + ">>>\n" + copiedString,
       );
-      if (dbupdate.success === 0) {
+      if (dbupdate.success === false) {
         return res.send({
-          success: 0,
+          success: false,
           stdout: "Database Error",
         });
       }
       return res.send({
-        success: 0,
+        success: false,
         stdout: date + ">>>\n" + copiedString,
       });
     }
@@ -121,14 +121,14 @@ app.post("/runcode", async (req: any, res: any) => {
       req.body.files.stdin,
       date + ">>>\n" + "Failure in compiling the code, please try again later.",
     );
-    if (dbupdate.success === 0) {
+    if (dbupdate.success === false) {
       return res.send({
-        success: 0,
+        success: false,
         stdout: "Database Error",
       });
     }
     return res.send({
-      success: 0,
+      success: false,
       stdout:
         date +
         ">>>\n" +
@@ -143,15 +143,15 @@ app.post("/runcode", async (req: any, res: any) => {
       req.body.files.stdin,
       date + ">>>\n" + Runner,
     );
-    if (dbupdater.success === 0) {
+    if (dbupdater.success === false) {
       return res.send({
-        success: 0,
+        success: false,
         stdout: "Database Error",
       });
     }
     if (typeof Runner !== "string") {
       return res.send({
-        success: 0,
+        success: false,
         stdout: date + ">>>\n" + "Please try again later!",
       });
     }
@@ -167,14 +167,14 @@ app.post("/runcode", async (req: any, res: any) => {
           req.body.files.stdin,
           date + ">>>\n" + "Timeout Error",
         );
-        if (dbupdaterun.success === 0) {
+        if (dbupdaterun.success === false) {
           return res.send({
-            success: 0,
+            success: false,
             stdout: "Database Error",
           });
         }
         return res.send({
-          success: 0,
+          success: false,
           stdout: date + ">>>\n" + "Timeout Error",
         });
       }
@@ -185,14 +185,14 @@ app.post("/runcode", async (req: any, res: any) => {
       req.body.files.stdin,
       date + ">>>\n" + err,
     );
-    if (db.success === 0) {
+    if (db.success === false) {
       return res.send({
-        success: 0,
+        success: false,
         stdout: "Database Error",
       });
     }
     return res.send({
-      success: 0,
+      success: false,
       stdout: date + ">>>\n" + err,
     });
   }

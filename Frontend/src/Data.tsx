@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "react-toastify";
-const BACKEND=process.env.DATABASE;
+const BACKEND = process.env.NEXT_PUBLIC_DATABASE;
 interface CodeStateProps {
   children: React.ReactNode;
 }
@@ -69,9 +69,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
     });
     try {
       setid(ID);
-      const response = await axios.get(
-        `${BACKEND}/project/code-snippet/${ID}`,
-      );
+      const response = await axios.get(`${BACKEND}/project/code-snippet/${ID}`);
       if (response.data.success === false) {
         throw response.data.error;
       }
@@ -96,9 +94,9 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
   };
 
   const coderunner = async (fileid: number) => {
-    let save:any;
+    let save: any;
     try {
-       save= await saver();
+      save = await saver();
     } catch (error) {
       throw error;
     }
@@ -106,12 +104,9 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       autoClose: false,
     });
     try {
-      const response = await axios.post(
-        `${BACKEND}/code/runcode`,
-        {
-          files: save.data.files[fileid],
-        },
-      );
+      const response = await axios.post(`${BACKEND}/code/runcode`, {
+        files: save.data.files[fileid],
+      });
       if (response.data.success === false) {
         throw response.data.error;
       }
@@ -154,7 +149,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
         case "javascript":
           content = `console.log("Hello World!")`;
           break;
-        
+
         case "go":
           content = `package main \nimport "fmt" \nfunc main() { \n\tfmt.Println("Hello World!") \n}`;
           break;
@@ -194,13 +189,10 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       autoClose: false,
     });
     try {
-      const response = await axios.post(
-        `${BACKEND}/project/project-save`,
-        {
-          files,
-          projectid: id,
-        },
-      );
+      const response = await axios.post(`${BACKEND}/project/project-save`, {
+        files,
+        projectid: id,
+      });
       if (response.data.success === false) {
         throw response.data.error;
       }
@@ -229,14 +221,12 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
     });
     try {
       saver();
-      const response = await axios.post(
-        `${BACKEND}/git/gitpush/${id}`,
-        {
-          url: link,
-          commitmsg: commitmsg,
-          branch: branch,
-        },
-      );
+      const response = await axios.post(`${BACKEND}/git/gitpush/${id}`, {
+        url: link,
+        commitmsg: commitmsg,
+        branch: branch,
+      });
+      console.log(response);
       if (response.data.success === false) {
         throw response.data.error;
       }
@@ -292,9 +282,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
   const wakeServer = async () => {
     const ids = toast.loading("Waking up the server...", { autoClose: false });
     try {
-      const response = await axios.get(
-        `${BACKEND}/server/wake-up`,
-      );
+      const response = await axios.get(`${BACKEND}/server/wake-up`);
       if (response.data.success === false) {
         throw response.data.error;
       }

@@ -75,7 +75,7 @@ export default function Modal({
                           setext(".java");
                         } else if (item === "Go") {
                           setext(".go");
-                        } 
+                        }
                         if (name === "c++") {
                           name = "cpp";
                         }

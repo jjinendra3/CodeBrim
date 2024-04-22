@@ -9,7 +9,7 @@ app.get("/wake-up", async (req, res) => {
     return res.json({ success: 1, users });
   } catch (error: any) {
     const err = error.toString();
-    return res.json({ success: 0, error: err });
+    return res.json({ success: false, error: err });
   }
 });
 
@@ -20,7 +20,7 @@ app.get("/reset", async (req, res) => {
     return res.send({ success: 1 });
   } catch (error: any) {
     const err = error.toString();
-    return res.json({ success: 0, error: err });
+    return res.json({ success: false, error: err });
   }
 });
 module.exports = app;

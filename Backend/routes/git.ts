@@ -95,7 +95,7 @@ app.post("/gitclone", async (req, res) => {
   const url: string = req.body.url;
   const snippet_id: string = req.body.id;
   if (!isValidGitUrl(url)) {
-    return res.send({ success: 0, error: "Invalid Git Repository link" });
+    return res.send({ success: false, error: "Invalid Git Repository link" });
   }
   try {
     const projectname: string = url.slice(0, -4).slice(19).replace(/\//g, "-");
@@ -105,66 +105,64 @@ app.post("/gitclone", async (req, res) => {
     await deleteFolderRecursive(foldername);
     return res.send({ success: 1, response });
   } catch (error: any) {
-    return res.json({ success: 0, error: error });
+    return res.json({ success: false, error: error });
   }
 });
-
 app.post("/gitpush/:id", async (req, res) => {
   try {
-    if (!isValidGitUrl(req.body.url)) {
-      return res.send({
-        success: 0,
-        error: "Please enter a valid git repository link",
+      if (!isValidGitUrl(req.body.url)) {
+          throw new Error("Invalid Git Repository link");
+      }
+      const user = await prisma.user.findMany({
+          where: {
+              id: req.params.id,
+          },
+          include: {
+              files: true,
+          },
       });
-    }
-    const user = await prisma.user.findMany({
-      where: {
-        id: req.params.id,
-      },
-      include: {
-        files: true,
-      },
-    });
-    if (user.length === 0) {
-      throw new Error("No Such Code Snipper Found!");
-    }
-    const files = user[0].files;
-    const foldername: string = user[0].id;
-    if (!fs.existsSync(foldername)) {
-      fs.mkdirSync(foldername);
-    }
-    for (const file of files) {
-      fs.writeFileSync(`${foldername}/${file.filename}`, file.content);
-    }
-    const git = simpleGit(foldername);
-    await git.init();
-    await git.add(".");
-    await git.commit(req.body.commitmsg + "(Pushed using CodeBrim)");
-    let flag = 0;
-    await git.getRemotes(true, (err, remotes) => {
-      if (err) {
-        throw err;
+      if (!user) {
+          throw new Error("No Such Code Snippet Found!");
+      }
+      const files = user[0].files;
+      const foldername: string = user[0].id.toString();
+      if (!fs.existsSync(foldername)) {
+          fs.mkdirSync(foldername);
+      }
+      for (const file of files) {
+          fs.writeFileSync(`${foldername}/${file.filename}`, file.content);
+      }
+      const git = simpleGit(foldername);
+      await git.init();
+      await git.add(".");
+      await git.commit(req.body.commitmsg + " (Pushed using CodeBrim)");
+      
+      const branchName = req.body.branch;
+      const remoteUrl = req.body.url;
+      
+      await git.fetch();
+      const remoteExists = await git.listRemote(['--get-url', 'origin']).then((url) => url.trim() === remoteUrl);
+      if (!remoteExists) {
+          await git.addRemote("origin", remoteUrl);
       }
 
-      const originExists = remotes.some((remote) => remote.name === "origin");
-
-      if (originExists) {
-        flag = 0;
+      const localBranches = await git.branchLocal();
+      const branchExists = localBranches.all.includes(branchName);
+      if (!branchExists) {
+          await git.checkoutLocalBranch(branchName);
       } else {
-        flag = 1;
+          await git.checkout(branchName);
       }
-    });
-    if (flag === 1) {
-      await git.addRemote("origin", req.body.url);
-    }
-    await git.push("origin", req.body.branch);
-    if (fs.existsSync(foldername)) {
-      fs.rmdirSync(`${foldername}`);
-    }
-    return res.send({ success: 1 });
+
+      await git.push("origin", branchName);
+
+      if (fs.existsSync(foldername)) {
+          fs.rmdirSync(foldername, { recursive: true });
+      }
+      return res.send({ success: true });
   } catch (error: any) {
-    const err = error.toString();
-    return res.json({ success: 0, error: err });
+      return res.json({ success: false, error: error.message });
   }
 });
+
 module.exports = app;

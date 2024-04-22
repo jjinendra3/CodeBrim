@@ -19,7 +19,7 @@ const Form = () => {
   const [gitcontrols, setgitcontrols] = useState<any>({
     repolink: "",
     commitmsg: "commit",
-    branch: "main",
+    branch: "master",
   });
   const pathname = usePathname();
   const [fileindex, setfileindex] = useState(0); //used to tell which file is highlighted and active
@@ -53,6 +53,7 @@ const Form = () => {
     };
 
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function handlestdDidMount(stdin: any, monaco: any) {
@@ -118,9 +119,6 @@ const Form = () => {
                       >
                         {file.filename}
                       </button>
-                      <button className="bg-red-700 flex-2 px-1 rounded-md">
-                        Delete
-                      </button>
                     </div>
                   );
                 })}
@@ -166,10 +164,11 @@ const Form = () => {
               <button
                 className={`text-gray-700 text-sm font-bold bg-green-500 rounded-sm p-2`}
                 onClick={async () => {
-                    const response = await context.coderunner(fileindex);
-                    if(response.success===1){
+                  const response = await context.coderunner(fileindex);
+                  if (response.success === 1) {
                     setstd({ std: false, id: context.files[fileindex].id });
-                    }}}
+                  }
+                }}
               >
                 Run
               </button>
