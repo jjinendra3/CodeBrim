@@ -73,7 +73,13 @@ const Form = () => {
           context={context}
         />
       )}
-      {filemod && <FileModal setfilemod={setfilemod} context={context} setfileindex={setfileindex}/>}
+      {filemod && (
+        <FileModal
+          setfilemod={setfilemod}
+          context={context}
+          setfileindex={setfileindex}
+        />
+      )}
       <div className="flex-row ">
         <div className="flex">
           <div className="w-1/8 overflow-y-auto" style={{ overflowY: "auto" }}>
@@ -160,29 +166,10 @@ const Form = () => {
               <button
                 className={`text-gray-700 text-sm font-bold bg-green-500 rounded-sm p-2`}
                 onClick={async () => {
-                  try {
-                    const index: number = fileindex;
-                    const saver = await context.saver();
-                    if (saver.data.success === 0) {
-                      throw saver.data.error;
-                    }
+                    const response = await context.coderunner(fileindex);
+                    if(response.success===1){
                     setstd({ std: false, id: context.files[fileindex].id });
-                    if (saver.success === 0) {
-                      throw saver.success;
-                    }
-                    const response = await context.coderunner(index);
-                    context.setFiles((prevFiles: any[]) => {
-                      const updatedFiles = [...prevFiles];
-                      updatedFiles[index] = {
-                        ...updatedFiles[index],
-                        stdout: response.stdout,
-                      };
-                      return updatedFiles;
-                    });
-                  } catch (error) {
-                    console.error(error);
-                  }
-                }}
+                    }}}
               >
                 Run
               </button>

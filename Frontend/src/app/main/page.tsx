@@ -82,7 +82,7 @@ const IndexPage = () => {
             <div>
               <a
                 href="#"
-                className="styled-button text-green-600 w-32"
+                className="styled-button text-green-600 w-32 ml-12"
                 onClick={() => {
                   context.newProject("java");
                 }}
@@ -93,7 +93,7 @@ const IndexPage = () => {
             <div>
               <a
                 href="#"
-                className="styled-button text-yellow-600 w-32"
+                className="styled-button text-yellow-600 w-32 mr-12"
                 onClick={() => {
                   context.newProject("go");
                 }}
@@ -101,17 +101,7 @@ const IndexPage = () => {
                 Go
               </a>
             </div>
-            <div>
-              <a
-                href="#"
-                className="styled-button text-orange-600 w-32"
-                onClick={() => {
-                  context.newProject("rust");
-                }}
-              >
-                Rust
-              </a>
-            </div>
+            
           </div>
         </div>
         <div className="flex justify-center mt-16 ">

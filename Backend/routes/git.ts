@@ -49,13 +49,9 @@ async function processFolder(
         case "cpp":
           lang = "cpp";
           break;
-        case "rs":
-          lang = "rust";
-          break;
         case "go":
           lang = "go";
           break;
-        // Add more cases for other file extensions and corresponding languages
         default:
           lang = "";
       }

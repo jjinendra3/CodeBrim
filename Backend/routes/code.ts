@@ -4,6 +4,24 @@ const { exec } = require("child_process");
 import * as fs from "fs";
 const app = Router();
 const date = new Date();
+
+async function prismaupdate(id: string, stdin: string, stdout: string) {
+  try {
+    await prisma.files.update({
+      where: {
+        id: id,
+      },
+      data: {
+        stdin: stdin,
+        stdout: stdout,
+      },
+    });
+    return { success: 1 };
+  } catch (error) {
+    return { success: 0, error: error };
+  }
+}
+
 function buildDockerImage(lang: string) {
   return new Promise((resolve, reject) => {
     const dockerCommand = `docker build -t my-${lang}-app ./dock/${lang}`;
@@ -19,7 +37,7 @@ function buildDockerImage(lang: string) {
 
 function runImage(lang: string, stdin: string) {
   return new Promise((resolve, reject) => {
-    const dockerRunCommand = `docker run -i my-${lang}-app`;
+    const dockerRunCommand = `docker run -i --ulimit cpu=1 my-${lang}-app`;
     const child = exec(
       dockerRunCommand,
       (error: any, stdout: any, stderr: any) => {
@@ -48,8 +66,6 @@ app.post("/runcode", async (req: any, res: any) => {
     ext = lang;
   } else if (lang === "python") {
     ext = "py";
-  } else if (lang === "rust") {
-    ext = "rs";
   } else if (lang === "javascript") {
     ext = "js";
   } else {
@@ -84,76 +100,100 @@ app.post("/runcode", async (req: any, res: any) => {
               index - 24,
             )
           : originalString;
-      await prisma.files.update({
-        where: {
-          id: req.body.files.id,
-        },
-        data: {
-          stdin: req.body.files.stdin,
-          stdout: date + ">>>\n" + copiedString,
-        },
-      });
+      const dbupdate = await prismaupdate(
+        req.body.files.id,
+        req.body.files.stdin,
+        date + ">>>\n" + copiedString,
+      );
+      if (dbupdate.success === 0) {
+        return res.send({
+          success: 0,
+          stdout: "Database Error",
+        });
+      }
       return res.send({
         success: 0,
-        stdout:
-          date +
-          ">>>\n" +
-          "Failure in compiling the code, please try again later.",
-        sender: date + ">>>\n" + copiedString,
+        stdout: date + ">>>\n" + copiedString,
       });
     }
-    await prisma.files.update({
-      where: {
-        id: req.body.files.id,
-      },
-      data: {
-        stdin: req.body.files.stdin,
-        stdout:
-          date +
-          ">>>\n" +
-          "Failure in compiling the code, please try again later.",
-      },
-    });
+    const dbupdate = await prismaupdate(
+      req.body.files.id,
+      req.body.files.stdin,
+      date + ">>>\n" + "Failure in compiling the code, please try again later.",
+    );
+    if (dbupdate.success === 0) {
+      return res.send({
+        success: 0,
+        stdout: "Database Error",
+      });
+    }
     return res.send({
       success: 0,
       stdout:
         date +
         ">>>\n" +
         "Failure in compiling the code, please try again later.",
-      error: date + ">>>\n" + error,
+      error: error,
     });
   }
   try {
     const Runner: any = await runImage(lang, req.body.files.stdin);
-    await prisma.files.update({
-      where: {
-        id: req.body.files.id,
-      },
-      data: {
-        stdin: req.body.files.stdin,
-        stdout: date + ">>>\n" + Runner,
-      },
-    });
+    const dbupdater = await prismaupdate(
+      req.body.files.id,
+      req.body.files.stdin,
+      date + ">>>\n" + Runner,
+    );
+    if (dbupdater.success === 0) {
+      return res.send({
+        success: 0,
+        stdout: "Database Error",
+      });
+    }
+    if (typeof Runner !== "string") {
+      return res.send({
+        success: 0,
+        stdout: date + ">>>\n" + "Please try again later!",
+      });
+    }
     return res.send({ success: 1, stdout: date + ">>>\n" + Runner });
   } catch (error: any) {
-    const err = error.stderr.toString();
-    await prisma.files.update({
-      where: {
-        id: req.body.files.id,
-      },
-      data: {
-        stdin: req.body.files.stdin,
-        stdout: date + ">>>\n" + err,
-      },
-    });
+    if (error.error !== null) {
+      if (
+        error.error.code === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER" ||
+        error.error.code === 137
+      ) {
+        const dbupdaterun = await prismaupdate(
+          req.body.files.id,
+          req.body.files.stdin,
+          date + ">>>\n" + "Timeout Error",
+        );
+        if (dbupdaterun.success === 0) {
+          return res.send({
+            success: 0,
+            stdout: "Database Error",
+          });
+        }
+        return res.send({
+          success: 0,
+          stdout: date + ">>>\n" + "Timeout Error",
+        });
+      }
+    }
+    const err = error.toString();
+    const db = await prismaupdate(
+      req.body.files.id,
+      req.body.files.stdin,
+      date + ">>>\n" + err,
+    );
+    if (db.success === 0) {
+      return res.send({
+        success: 0,
+        stdout: "Database Error",
+      });
+    }
     return res.send({
       success: 0,
-      stdout: date + ">>>\n" + error.stderr,
-      error: date + ">>>\n" + error.error,
-      message:
-        date +
-        ">>>\n" +
-        "Failure in compiling the code, please try again later.",
+      stdout: date + ">>>\n" + err,
     });
   }
 });

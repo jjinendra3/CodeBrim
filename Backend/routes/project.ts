@@ -64,9 +64,7 @@ app.get("/newcompiler/:lang", async (req, res) => {
       case "javascript":
         content = `console.log("Hello World!")`;
         break;
-      case "rust":
-        content = `fn main() { \n\tprintln!("Hello World!"); \n}`;
-        break;
+      
       case "go":
         content = `package main \nimport "fmt" \nfunc main() { \n\tfmt.Println("Hello World!") \n}`;
         break;
@@ -82,9 +80,7 @@ app.get("/newcompiler/:lang", async (req, res) => {
         ? lang === "python"
           ? "py"
           : "js"
-        : lang === "rust"
-          ? "rs"
-          : lang);
+        : lang);
     const newUser = await prisma.user.create({
       data: {
         id: newId,

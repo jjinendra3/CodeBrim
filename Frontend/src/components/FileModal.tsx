@@ -3,11 +3,11 @@ import { useState } from "react";
 export default function Modal({
   setfilemod,
   context,
-  setfileindex
+  setfileindex,
 }: {
   setfilemod: any;
   context: any;
-  setfileindex:any;
+  setfileindex: any;
 }) {
   const [filename, setfilename] = useState<string>("");
   const [language, setlanguage] = useState<string>("");
@@ -18,7 +18,7 @@ export default function Modal({
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [ext, setext] = useState("");
-  const items = ["C++", "Python", "Javascript", "Java", "Go", "Rust"];
+  const items = ["C++", "Python", "Javascript", "Java", "Go"];
 
   const filteredItems = items.filter((item) =>
     item.toLowerCase().includes(searchTerm.toLowerCase()),
@@ -56,7 +56,6 @@ export default function Modal({
               </button>
               {isOpen && (
                 <div className="absolute right-0 mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 p-1 space-y-1">
-                  
                   {filteredItems.map((item) => (
                     <a
                       key={item}
@@ -76,9 +75,7 @@ export default function Modal({
                           setext(".java");
                         } else if (item === "Go") {
                           setext(".go");
-                        } else if (item === "Rust") {
-                          setext(".rs");
-                        }
+                        } 
                         if (name === "c++") {
                           name = "cpp";
                         }
