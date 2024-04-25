@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "react-toastify";
-const BACKEND=process.env.NEXT_public_BACKEND
+const BACKEND=process.env.NEXT_PUBLIC_BACKEND;
 interface CodeStateProps {
   children: React.ReactNode;
 }
@@ -52,7 +52,6 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       setFiles(response.data.output.files);
       router.push(`code/${response.data.output.id}`);
     } catch (error) {
-      console.error(error);
       toast.update(ids, {
         render: `${error}`,
         type: "error",
@@ -226,7 +225,6 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
         commitmsg: commitmsg,
         branch: branch,
       });
-      console.log(response);
       if (response.data.success === false) {
         throw response.data.error;
       }
