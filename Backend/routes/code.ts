@@ -87,6 +87,9 @@ app.post("/runcode", async (req: any, res: any) => {
   try {
     await buildDockerImage(lang);
   } catch (error: any) {
+    if(error.stderr){
+      error.stdout+=error.stderr;
+    }
     if (lang === "cpp" || lang === "java") {
       const originalString = error.stderr;
       const firststring = "[4/4]";
@@ -157,6 +160,9 @@ app.post("/runcode", async (req: any, res: any) => {
     }
     return res.send({ success: 1, stdout: date + ">>>\n" + Runner });
   } catch (error: any) {
+    if(error.stderr){
+      error.stdout+=error.stderr;
+    }
     if (error.error !== null) {
       if (
         error.error.code === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER" ||

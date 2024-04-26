@@ -3,6 +3,7 @@ import prisma from "../db";
 import { simpleGit } from "simple-git";
 import path from "path";
 import * as fs from "fs";
+import {v4 as uuidv4} from "uuid";
 const app = Router();
 
 function isValidGitUrl(url: string): boolean {
@@ -11,9 +12,13 @@ function isValidGitUrl(url: string): boolean {
 }
 
 interface FileData {
+  id:string;
   filename: string;
   content?: string;
-  userId?: string;
+  userId?: string|null;
+  lang:string;
+  stdin: string;
+  stdout:string;
 }
 
 async function processFolder(
@@ -21,7 +26,8 @@ async function processFolder(
   userId: string,
   files: FileData[] = [],
 ): Promise<FileData[]> {
-  const folderContents = fs.readdirSync(folderPath, { withFileTypes: true });
+  try {
+    const folderContents = fs.readdirSync(folderPath, { withFileTypes: true });
   for (const item of folderContents) {
     if (item.name === ".git") {
       continue;
@@ -35,13 +41,13 @@ async function processFolder(
       let lang = "";
       switch (fileExtension) {
         case "js":
-          lang = "javaScript";
+          lang = "javascript";
           break;
         case "java":
           lang = "java";
           break;
         case "py":
-          lang = "Python";
+          lang = "python";
           break;
         case "cpp":
           lang = "cpp";
@@ -55,7 +61,7 @@ async function processFolder(
         default:
           lang = "";
       }
-      await prisma.files.create({
+      const file_create=await prisma.files.create({
         data: {
           filename: item.name,
           content: content,
@@ -67,14 +73,14 @@ async function processFolder(
           },
         },
       });
-      files.push({
-        filename: item.name,
-        content,
-        userId,
-      });
+      files.push(file_create);
     }
   }
   return files;
+  } catch (error: any) {
+    return [];
+  }
+  
 }
 
 function deleteFolderRecursive(folderPath: string): void {
@@ -92,76 +98,96 @@ function deleteFolderRecursive(folderPath: string): void {
 }
 
 app.post("/gitclone", async (req, res) => {
+
   const url: string = req.body.url;
-  const snippet_id: string = req.body.id;
   if (!isValidGitUrl(url)) {
     return res.send({ success: false, error: "Invalid Git Repository link" });
   }
+  const projectname: string = url.slice(0, -4).slice(19).replace(/\//g, "-");
+  const foldername: string = projectname.slice(projectname.indexOf("-") + 1);
   try {
-    const projectname: string = url.slice(0, -4).slice(19).replace(/\//g, "-");
-    const foldername: string = projectname.slice(projectname.indexOf("-") + 1);
+    const id:string = uuidv4().replace(/-/g, "").slice(5, 10);
     const git: any = await simpleGit().clone(url);
-    const response: Array<any> = await processFolder(foldername, snippet_id);
+    const user=await prisma.user.create({
+      data:{
+        id: id
+      }
+    });
+
+    const main: Array<any> = await processFolder(foldername, id);
+    const response={
+      id: id,
+      files: main
+    }
+    if(main.length === 0) {
+      throw ({message:"No files found in the repository"});
+    }
     await deleteFolderRecursive(foldername);
     return res.send({ success: 1, response });
   } catch (error: any) {
+    await deleteFolderRecursive(foldername);
     return res.json({ success: false, error: error });
   }
 });
+
+
 app.post("/gitpush/:id", async (req, res) => {
+  let foldername: string = "";
+  let reponame: string = "";
   try {
-      if (!isValidGitUrl(req.body.url)) {
-          throw new Error("Invalid Git Repository link");
+    if (!isValidGitUrl(req.body.url)) {
+      throw new Error("Invalid Git Repository link");
+    }
+    reponame = req.body.url.slice(0, -4).slice(19);
+    let str:any = "";
+    for (let i = reponame.length-1; i >=0; i--) {
+      if (reponame[i] == "/") {
+        break;
       }
-      const user = await prisma.user.findMany({
-          where: {
-              id: req.params.id,
-          },
-          include: {
-              files: true,
-          },
-      });
-      if (!user) {
-          throw new Error("No Such Code Snippet Found!");
-      }
-      const files = user[0].files;
-      const foldername: string = user[0].id.toString();
-      if (!fs.existsSync(foldername)) {
-          fs.mkdirSync(foldername);
-      }
-      for (const file of files) {
-          fs.writeFileSync(`${foldername}/${file.filename}`, file.content);
-      }
-      const git = simpleGit(foldername);
-      await git.init();
-      await git.add(".");
-      await git.commit(req.body.commitmsg + " (Pushed using CodeBrim)");
-      
-      const branchName = req.body.branch;
-      const remoteUrl = req.body.url;
-      
-      await git.fetch();
-      const remoteExists = await git.listRemote(['--get-url', 'origin']).then((url) => url.trim() === remoteUrl);
-      if (!remoteExists) {
-          await git.addRemote("origin", remoteUrl);
-      }
+      str += reponame[i];
+    }
+    str=str.split('').reverse().join('');
+    const hello = await simpleGit().clone(req.body.url);
+    const user = await prisma.user.findMany({
+      where: {
+        id: req.params.id,
+      },
+      include: {
+        files: true,
+      },
+    });
+    if (!user) {
+      throw new Error("No Such Code Snippet Found!");
+    }
+    const files = user[0].files;
+    foldername = user[0].id.toString();
+    await fs.renameSync(str, foldername);
 
-      const localBranches = await git.branchLocal();
-      const branchExists = localBranches.all.includes(branchName);
-      if (!branchExists) {
-          await git.checkoutLocalBranch(branchName);
-      } else {
-          await git.checkout(branchName);
-      }
-
-      await git.push("origin", branchName);
-
-      if (fs.existsSync(foldername)) {
-          fs.rmdirSync(foldername, { recursive: true });
-      }
-      return res.send({ success: true });
+    for (const file of files) {
+      fs.writeFileSync(`${foldername}/${file.filename}`, file.content);
+    }
+    const git = simpleGit(foldername);
+    await git.add(".");
+    await git.commit(req.body.commitmsg + "  (Pushed using CodeBrim)");
+    const branchName = req.body.branch;
+    const remoteUrl = req.body.url;
+    await git.fetch();
+    const localBranches = await git.branchLocal();
+    const branchExists = localBranches.all.includes(branchName);
+    if (!branchExists) {
+      await git.checkoutLocalBranch(branchName);
+    } else {
+      await git.checkout(branchName);
+    }
+    await git.push("origin", branchName);
+    await deleteFolderRecursive(foldername);
+    return res.send({ success: true });
   } catch (error: any) {
-      return res.json({ success: false, error: error.message });
+    if (foldername != "") {
+      if(reponame!==""){
+      await deleteFolderRecursive(reponame);
+    }}
+    return res.json({ success: false, error: error.message });
   }
 });
 

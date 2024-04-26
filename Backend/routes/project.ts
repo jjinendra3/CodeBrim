@@ -177,4 +177,23 @@ app.post("/set-password/:id", async (req, res) => {
     return res.send({ success: false, error: error });
   }
 });
+
+app.post("/lock-user/:id", async (req, res) => { 
+  try {
+    const user = await prisma.user.update({
+      where: {
+        id: req.params.id,
+      },
+      data: {
+        password: req.body.password,
+      },
+    });
+    if (user === null) {
+      throw new Error("No Such Code Snipper Found!");
+    }
+    return res.send({ success: 1, output: user });
+  } catch (error) {
+    return res.send({ success: false, error: error });
+  }
+ })
 module.exports = app;

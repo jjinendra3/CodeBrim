@@ -27,7 +27,7 @@ export default function Modal({
       <div className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none ">
         <div className="relative  my-6 mx-auto max-w-3xl bg-blue-500 p-5  rounded-lg w-1/3 text-text-col ">
           <div className="text-2xl font-extrabold text-center mb-4">
-            Git Controls
+            Push to Repo
           </div>
           <div className="flex flex-col ">
             <div className="mb-4 font-bold text-center">

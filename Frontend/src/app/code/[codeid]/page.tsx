@@ -5,15 +5,17 @@ import Context from "@/ContextAPI";
 import { usePathname } from "next/navigation";
 import Modal from "@/components/Modal";
 import FileModal from "@/components/FileModal";
+import PasswordModal from "@/components/PasswordModal";
 const Form = () => {
   const context = useContext(Context);
   const editorRef = useRef<any>(null);
   const stdinRef = useRef<any>(null);
+  const [pwdmod, setpwdmod] = useState(false);
+  const [pwdflag, setpwdflag] = useState(false);
   const [std, setstd] = useState<{
     id: string;
     std: boolean;
   }>({ id: "", std: true });
-
   const [mod, setmod] = useState<boolean>(false);
   const [filemod, setfilemod] = useState<boolean>(false);
   const [gitcontrols, setgitcontrols] = useState<any>({
@@ -41,14 +43,17 @@ const Form = () => {
       });
     }
   }
-  async function ok(pathname: string) {
-    const response = await context.code_getter(pathname);
-  }
-
-  useEffect(() => {
+  useEffect(() => { 
     const fetchData = async () => {
       if (!context.newproject) {
-        await ok(pathname.slice(-5));
+        const str=pathname.slice(-5);
+        const response= await context.code_getter(str);
+    
+        if(response.success===1){{
+        if(response.user.password!==null){
+          context.seteditable(false);
+          setpwdmod(true);
+        }}}
       }
     };
 
@@ -66,6 +71,14 @@ const Form = () => {
 
   return (
     <Context.Provider value={context}>
+      {
+        pwdmod && (
+          <PasswordModal
+            setpwdmod={setpwdmod}
+            pwdflag={pwdflag}
+          />
+        )
+      }
       {mod && (
         <Modal
           setmod={setmod}
@@ -88,14 +101,14 @@ const Form = () => {
               File Language: {context.files[fileindex].lang}
             </div>
             <div className="flex justify-evenly text-sm mt-2">
-              <button
+            {context.editable && <button
                 className="bg-orange-400 text-black rounded-lg p-1 font-bold"
                 onClick={async () => {
                   setfilemod(true);
                 }}
               >
                 Add File +
-              </button>
+              </button>}
             </div>
             <div className="flex-row mt-4 space-y-4">
               {context.files.length !== 0 &&
@@ -127,6 +140,20 @@ const Form = () => {
           <div className="flex-1 bg-gray-900 text-white w-7/8 coding">
             <div className="h-6 w-full flex justify-end ">
               <div className="space-x-4 pr-8 flex">
+                {
+                  !context.editable && <button className="bg-blue-800 text-center px-1 text-white font-bold" 
+                  onClick={()=>{
+                    setpwdflag(false);
+                    setpwdmod(true);
+                }}>Unlock</button>
+                }
+                {context.newproject && <button 
+                  className="bg-blue-800 text-center px-1 text-white font-bold" 
+                  onClick={()=>{
+                    setpwdflag(true);
+                    setpwdmod(true);
+                }}>
+                  Lock</button>}
                 <button
                   className="bg-blue-800 text-center px-1 text-white font-bold"
                   onClick={context.snipclone}
@@ -158,6 +185,7 @@ const Form = () => {
                 language={context.files[fileindex].lang}
                 onMount={handleEditorDidMount}
                 onChange={handleCodeChange}
+                options={{readOnly: !context.editable}}
               />
             </div>
             <div className="space-x-2">
@@ -211,7 +239,7 @@ const Form = () => {
                     ? handlestdinChange
                     : undefined
                 }
-                options={{ readOnly: !std }}
+                options={{ readOnly: std?!context.editable:!std }}
               />
             </div>
           </div>

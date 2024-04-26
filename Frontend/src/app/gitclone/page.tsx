@@ -1,7 +1,8 @@
 "use client";
-import { useState } from "react";
-
+import { useState,useContext } from "react";
+import Context from "@/ContextAPI";
 const Home = () => {
+  const context = useContext(Context);
   const [gitUrl, setGitUrl] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -10,9 +11,11 @@ const Home = () => {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    context.gitclone(gitUrl);
   };
-
+  
   return (
+    <Context.Provider value={context}>
     <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
       <div className="flex-row ">
         <span className="font-thin">
@@ -35,6 +38,7 @@ const Home = () => {
         </form>
       </div>
     </div>
+    </Context.Provider>
   );
 };
 

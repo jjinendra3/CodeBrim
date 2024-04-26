@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "react-toastify";
-const BACKEND=process.env.NEXT_PUBLIC_BACKEND;
+const BACKEND = process.env.NEXT_PUBLIC_BACKEND;
 interface CodeStateProps {
   children: React.ReactNode;
 }
@@ -30,7 +30,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
   ]);
   const [user, setuser] = useState({});
   const [newproject, setnewproject] = useState(false);
-
+  const [editable, seteditable] = useState<boolean>(true);
   const newProject = async (lang: string) => {
     const ids = toast.loading("Creating new Project...", { autoClose: false });
     try {
@@ -68,7 +68,9 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
     });
     try {
       setid(ID);
-      const response = await axios.get(`${BACKEND}/project/code-snippet/${ID}/`);
+      const response = await axios.get(
+        `${BACKEND}/project/code-snippet/${ID}/`,
+      );
       if (response.data.success === false) {
         throw response.data.error;
       }
@@ -81,6 +83,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
         isLoading: false,
         autoClose: 1000,
       });
+      return {success:1,user:response.data.user};
     } catch (error) {
       toast.update(ids, {
         render: `${error}`,
@@ -88,7 +91,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
         isLoading: false,
         autoClose: 1000,
       });
-      return error;
+      return {success:0,error:error};
     }
   };
 
@@ -102,8 +105,9 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
     const ids = toast.loading("Running your Code, please wait!", {
       autoClose: false,
     });
+    let response:any;
     try {
-      const response = await axios.post(`${BACKEND}/code/runcode/`, {
+      response = await axios.post(`${BACKEND}/code/runcode/`, {
         files: save.data.files[fileid],
       });
       if (response.data.success === false) {
@@ -124,13 +128,14 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
         return updatedFiles;
       });
       return response.data;
-    } catch (error) {
+    } catch (error:any) {
       toast.update(ids, {
-        render: `${error}`,
+        render: `${error.stdout}`,
         type: "error",
         isLoading: false,
         autoClose: 1000,
       });
+      return response.data;
     }
   };
 
@@ -284,7 +289,6 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       if (response.data.success === false) {
         throw response.data.error;
       }
-      router.push("/main");
       toast.update(ids, {
         render: "Server is awake!",
         type: "success",
@@ -300,11 +304,71 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       });
     }
   };
+  const gitclonepage=()=>{
+  router.push("/gitclone");
+  }
+  const gitclone=async(url:string)=>{
+    const ids = toast.loading("Please wait... Cloning your code now!", {
+      autoClose: false,
+    });
+    try {
+      const response = await axios.post(
+        `${BACKEND}/git/gitclone`,{url:url}
+      );
+      if (response.data.success === false) {
+        throw response.data.error;
+      }
+      setnewproject(true);
+      setid(response.data.response.id);
+      setFiles(response.data.response.files);
+      await router.push("/code/" + response.data.response.id);
+      toast.update(ids, {
+        render: "Code Cloned!",
+        type: "success",
+        isLoading: false,
+        autoClose: 1000,
+      });
+      return response;
+    } catch (error:any) {
+      toast.update(ids, {
+        render: `${error.message}`,
+        type: "error",
+        isLoading: false,
+        autoClose: 2000,
+      });
+    }
+  }
+  const lockuser = async (pwd: string) => {
+    const ids = toast.loading("Locking your account...", { autoClose: false });
+    try {
+      const response = await axios.post(`${BACKEND}/project/lock-user/${id}`, {
+        password: pwd,
+      });
+      if (response.data.success === false) {
+        throw response.data.error;
+      }
+     setuser(response.data.output);
+      toast.update(ids, {
+        render: "Snippet Locked!",
+        type: "success",
+        isLoading: false,
+        autoClose: 1000,
+      });
+      return response;
+    } catch (error) {
+      toast.update(ids, {
+        render: `${error}`,
+        type: "error",
+        isLoading: false,
+        autoClose: 1000,
+      });
+    }
+  }
   return (
     <Context.Provider
       value={{
         id,
-        files,
+        files,user,
         newproject,
         newProject,
         setFiles,
@@ -315,6 +379,9 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
         gitpush,
         snipclone,
         wakeServer,
+        gitclonepage,
+        gitclone,
+        lockuser,editable,seteditable
       }}
     >
       {children}

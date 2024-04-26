@@ -119,8 +119,12 @@ export default function Modal({
               <button
                 className="bg-blue-900 text-white rounded-lg px-4 py-2 font-bold"
                 onClick={() => {
-                  if (language === "" || filename === "") {
+                  if (language === "" ) {
                     alert("Please select a language");
+                    return;
+                  }
+                  if(filename === "" ) {
+                    alert("Please enter a filename");
                     return;
                   }
                   for (let i in context.files) {

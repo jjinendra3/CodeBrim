@@ -1,7 +1,7 @@
 {
   "scripts": {
-    "start-frontend": "cd Frontend && npm run start",
-    "start-backend": "cd Backend && npm run start",
+    "start-frontend": "cd Frontend && npm run build && npm start",
+    "start-backend": "cd Backend && npm start",
     "start": "concurrently -n \"FRONTEND,BACKEND\" -c \"bgBlue,bgYellow\" -p \"[{name}]\" \"npm run start-frontend\" \"npm run start-backend\"",
     "install-frontend": "cd Frontend && npm i && npm run build",
     "install-backend": "cd Backend && npm i",
