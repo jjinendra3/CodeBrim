@@ -3,7 +3,7 @@ import prisma from "../db";
 import { simpleGit } from "simple-git";
 import path from "path";
 import * as fs from "fs";
-import {v4 as uuidv4} from "uuid";
+import { v4 as uuidv4 } from "uuid";
 const app = Router();
 
 function isValidGitUrl(url: string): boolean {
@@ -12,13 +12,13 @@ function isValidGitUrl(url: string): boolean {
 }
 
 interface FileData {
-  id:string;
+  id: string;
   filename: string;
   content?: string;
-  userId?: string|null;
-  lang:string;
+  userId?: string | null;
+  lang: string;
   stdin: string;
-  stdout:string;
+  stdout: string;
 }
 
 async function processFolder(
@@ -28,59 +28,58 @@ async function processFolder(
 ): Promise<FileData[]> {
   try {
     const folderContents = fs.readdirSync(folderPath, { withFileTypes: true });
-  for (const item of folderContents) {
-    if (item.name === ".git") {
-      continue;
-    }
-    const itemPath = path.join(folderPath, item.name);
-    if (item.isDirectory()) {
-      await processFolder(itemPath, userId);
-    } else if (item.isFile()) {
-      const content = fs.readFileSync(itemPath, "utf8").replace(/\x00/g, " ");
-      const fileExtension = path.extname(item.name).slice(1);
-      let lang = "";
-      switch (fileExtension) {
-        case "js":
-          lang = "javascript";
-          break;
-        case "java":
-          lang = "java";
-          break;
-        case "py":
-          lang = "python";
-          break;
-        case "cpp":
-          lang = "cpp";
-          break;
-        case "cpp":
-          lang = "cpp";
-          break;
-        case "go":
-          lang = "go";
-          break;
-        default:
-          lang = "";
+    for (const item of folderContents) {
+      if (item.name === ".git") {
+        continue;
       }
-      const file_create=await prisma.files.create({
-        data: {
-          filename: item.name,
-          content: content,
-          lang: lang,
-          user: {
-            connect: {
-              id: userId,
+      const itemPath = path.join(folderPath, item.name);
+      if (item.isDirectory()) {
+        await processFolder(itemPath, userId);
+      } else if (item.isFile()) {
+        const content = fs.readFileSync(itemPath, "utf8").replace(/\x00/g, " ");
+        const fileExtension = path.extname(item.name).slice(1);
+        let lang = "";
+        switch (fileExtension) {
+          case "js":
+            lang = "javascript";
+            break;
+          case "java":
+            lang = "java";
+            break;
+          case "py":
+            lang = "python";
+            break;
+          case "cpp":
+            lang = "cpp";
+            break;
+          case "cpp":
+            lang = "cpp";
+            break;
+          case "go":
+            lang = "go";
+            break;
+          default:
+            lang = "";
+        }
+        const file_create = await prisma.files.create({
+          data: {
+            filename: item.name,
+            content: content,
+            lang: lang,
+            user: {
+              connect: {
+                id: userId,
+              },
             },
           },
-        },
-      });
-      files.push(file_create);
+        });
+        files.push(file_create);
+      }
     }
-  }
-  return files;
+    return files;
   } catch (error: any) {
     return [];
   }
-  
 }
 
 function deleteFolderRecursive(folderPath: string): void {
@@ -98,7 +97,6 @@ function deleteFolderRecursive(folderPath: string): void {
 }
 
 app.post("/gitclone", async (req, res) => {
-
   const url: string = req.body.url;
   if (!isValidGitUrl(url)) {
     return res.send({ success: false, error: "Invalid Git Repository link" });
@@ -106,21 +104,21 @@ app.post("/gitclone", async (req, res) => {
   const projectname: string = url.slice(0, -4).slice(19).replace(/\//g, "-");
   const foldername: string = projectname.slice(projectname.indexOf("-") + 1);
   try {
-    const id:string = uuidv4().replace(/-/g, "").slice(5, 10);
+    const id: string = uuidv4().replace(/-/g, "").slice(5, 10);
     const git: any = await simpleGit().clone(url);
-    const user=await prisma.user.create({
-      data:{
-        id: id
-      }
+    const user = await prisma.user.create({
+      data: {
+        id: id,
+      },
     });
 
     const main: Array<any> = await processFolder(foldername, id);
-    const response={
+    const response = {
       id: id,
-      files: main
-    }
-    if(main.length === 0) {
-      throw ({message:"No files found in the repository"});
+      files: main,
+    };
+    if (main.length === 0) {
+      throw { message: "No files found in the repository" };
     }
     await deleteFolderRecursive(foldername);
     return res.send({ success: 1, response });
@@ -130,7 +128,6 @@ app.post("/gitclone", async (req, res) => {
   }
 });
 
-
 app.post("/gitpush/:id", async (req, res) => {
   let foldername: string = "";
   let reponame: string = "";
@@ -139,14 +136,14 @@ app.post("/gitpush/:id", async (req, res) => {
       throw new Error("Invalid Git Repository link");
     }
     reponame = req.body.url.slice(0, -4).slice(19);
-    let str:any = "";
-    for (let i = reponame.length-1; i >=0; i--) {
+    let str: any = "";
+    for (let i = reponame.length - 1; i >= 0; i--) {
       if (reponame[i] == "/") {
         break;
       }
       str += reponame[i];
     }
-    str=str.split('').reverse().join('');
+    str = str.split("").reverse().join("");
     const hello = await simpleGit().clone(req.body.url);
     const user = await prisma.user.findMany({
       where: {
@@ -184,9 +181,10 @@ app.post("/gitpush/:id", async (req, res) => {
     return res.send({ success: true });
   } catch (error: any) {
     if (foldername != "") {
-      if(reponame!==""){
-      await deleteFolderRecursive(reponame);
-    }}
+      if (reponame !== "") {
+        await deleteFolderRecursive(reponame);
+      }
+    }
     return res.json({ success: false, error: error.message });
   }
 });

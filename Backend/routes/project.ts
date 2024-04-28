@@ -178,7 +178,7 @@ app.post("/set-password/:id", async (req, res) => {
   }
 });
 
-app.post("/lock-user/:id", async (req, res) => { 
+app.post("/lock-user/:id", async (req, res) => {
   try {
     const user = await prisma.user.update({
       where: {
@@ -195,5 +195,5 @@ app.post("/lock-user/:id", async (req, res) => {
   } catch (error) {
     return res.send({ success: false, error: error });
   }
- })
+});
 module.exports = app;

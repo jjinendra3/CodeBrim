@@ -24,7 +24,7 @@ async function prismaupdate(id: string, stdin: string, stdout: string) {
 
 function buildDockerImage(lang: string) {
   return new Promise((resolve, reject) => {
-    const dockerCommand = `sudo docker build -t my-${lang}-app ./dock/${lang}`;
+    const dockerCommand = `docker build -t my-${lang}-app ./dock/${lang}`;
     exec(dockerCommand, (error: any, stdout: any, stderr: any) => {
       if (error) {
         reject({ stderr, error });
@@ -37,7 +37,7 @@ function buildDockerImage(lang: string) {
 
 function runImage(lang: string, stdin: string) {
   return new Promise((resolve, reject) => {
-    const dockerRunCommand = `sudo docker run -i --ulimit cpu=1 my-${lang}-app`;
+    const dockerRunCommand = `docker run -i --ulimit cpu=1 my-${lang}-app`;
     const child = exec(
       dockerRunCommand,
       (error: any, stdout: any, stderr: any) => {
@@ -58,7 +58,7 @@ function findClassName(javaCode: string): string | null {
   const match = classRegex.exec(javaCode);
   return match ? match[1] : null;
 }
-app.post("/runcode", async (req: any, res: any) => {
+app.post("/runcode", async (req: any, res: any) => {    
   //run project save then run code
   const lang: string = req.body.files.lang;
   let ext: string;
@@ -69,7 +69,7 @@ app.post("/runcode", async (req: any, res: any) => {
   } else if (lang === "javascript") {
     ext = "js";
   } else {
-    return res.send({ success: false, error: "Language not chosen" });
+    return res.send({ success: false, stderr: "Language not chosen" });
   }
   if (lang === "java") {
     const javafilename = findClassName(req.body.files.content);
@@ -87,8 +87,8 @@ app.post("/runcode", async (req: any, res: any) => {
   try {
     await buildDockerImage(lang);
   } catch (error: any) {
-    if(error.stderr){
-      error.stdout+=error.stderr;
+    if (error.stderr) {
+      error.stdout += error.stderr;
     }
     if (lang === "cpp" || lang === "java") {
       const originalString = error.stderr;
@@ -117,6 +117,7 @@ app.post("/runcode", async (req: any, res: any) => {
       return res.send({
         success: false,
         stdout: date + ">>>\n" + copiedString,
+        stderr:date + ">>>\n" + copiedString
       });
     }
     const dbupdate = await prismaupdate(
@@ -136,7 +137,7 @@ app.post("/runcode", async (req: any, res: any) => {
         date +
         ">>>\n" +
         "Failure in compiling the code, please try again later.",
-      error: error,
+      error: error.stderr,
     });
   }
   try {
@@ -156,13 +157,12 @@ app.post("/runcode", async (req: any, res: any) => {
       return res.send({
         success: false,
         stdout: date + ">>>\n" + "Please try again later!",
+        stderr:"There is an issue, please try again later!"
       });
     }
     return res.send({ success: 1, stdout: date + ">>>\n" + Runner });
   } catch (error: any) {
-    if(error.stderr){
-      error.stdout+=error.stderr;
-    }
+    
     if (error.error !== null) {
       if (
         error.error.code === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER" ||
@@ -182,6 +182,7 @@ app.post("/runcode", async (req: any, res: any) => {
         return res.send({
           success: false,
           stdout: date + ">>>\n" + "Timeout Error",
+          stderr:date + ">>>\n" + "Timeout Error"
         });
       }
     }
@@ -200,6 +201,7 @@ app.post("/runcode", async (req: any, res: any) => {
     return res.send({
       success: false,
       stdout: date + ">>>\n" + err,
+      stderr:date + ">>>\n" + err,
     });
   }
 });

@@ -1,11 +1,30 @@
 "use client";
 import React, { useState, useRef, useContext, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 import Editor from "@monaco-editor/react";
 import Context from "@/ContextAPI";
 import { usePathname } from "next/navigation";
 import Modal from "@/components/Modal";
 import FileModal from "@/components/FileModal";
 import PasswordModal from "@/components/PasswordModal";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  FaRunning,
+  FaSave,
+  FaClone,
+  FaLock,
+  FaLockOpen,
+  FaHome,
+} from "react-icons/fa";
+import { IoMdGitBranch } from "react-icons/io";
+import { MdOutlineOutput, MdOutlineInput } from "react-icons/md";
+import { AiFillFileAdd } from "react-icons/ai";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
+
 const Form = () => {
   const context = useContext(Context);
   const editorRef = useRef<any>(null);
@@ -43,17 +62,20 @@ const Form = () => {
       });
     }
   }
-  useEffect(() => { 
+  useEffect(() => {
     const fetchData = async () => {
       if (!context.newproject) {
-        const str=pathname.slice(-5);
-        const response= await context.code_getter(str);
-    
-        if(response.success===1){{
-        if(response.user.password!==null){
-          context.seteditable(false);
-          setpwdmod(true);
-        }}}
+        const str = pathname.slice(-5);
+        const response = await context.code_getter(str);
+
+        if (response.success === 1) {
+          {
+            if (response.user.password !== null) {
+              context.seteditable(false);
+              setpwdmod(true);
+            }
+          }
+        }
       }
     };
 
@@ -71,14 +93,7 @@ const Form = () => {
 
   return (
     <Context.Provider value={context}>
-      {
-        pwdmod && (
-          <PasswordModal
-            setpwdmod={setpwdmod}
-            pwdflag={pwdflag}
-          />
-        )
-      }
+      {pwdmod && <PasswordModal setpwdmod={setpwdmod} pwdflag={pwdflag} />}
       {mod && (
         <Modal
           setmod={setmod}
@@ -94,29 +109,40 @@ const Form = () => {
           setfileindex={setfileindex}
         />
       )}
-      <div className="flex-row ">
-        <div className="flex">
-          <div className="w-1/8 overflow-y-auto" style={{ overflowY: "auto" }}>
-            <div className="w-48 border-2 border-gray-300 text-white mt-8 p-1 text-sm">
-              File Language: {context.files[fileindex].lang}
-            </div>
-            <div className="flex justify-evenly text-sm mt-2">
-            {context.editable && <button
-                className="bg-orange-400 text-black rounded-lg p-1 font-bold"
-                onClick={async () => {
-                  setfilemod(true);
-                }}
+      <ResizablePanelGroup
+        direction="horizontal"
+        className="min-h-screen overflow-hidden"
+      >
+        <ResizablePanel defaultSize={10}>
+          <ScrollArea>
+            <div className="flex flex-col justify-center items-center text-sm mt-4">
+              <Button
+                onClick={context.goHome}
+                className="w-24 space-x-1 font-bold mb-6"
               >
-                Add File +
-              </button>}
+                <FaHome />
+                <div className="pt-1">Home</div>
+              </Button>
+
+              {context.editable && (
+                <Button
+                  className="bg-white text-black rounded-lg font-bold h-7 space-x-1 mt-2 md:w-32 sm:w-full"
+                  onClick={async () => {
+                    setfilemod(true);
+                  }}
+                >
+                  <div>Add File</div>
+                  <AiFillFileAdd />
+                </Button>
+              )}
             </div>
             <div className="flex-row mt-4 space-y-4">
               {context.files.length !== 0 &&
                 context.files.map((file: any) => {
                   return (
                     <div className="flex p-1 text-white" key={file.id}>
-                      <button
-                        className={`${file.id === context.files[fileindex].id ? "bg-blue-400 border-2 border-white" : "bg-green-400"} flex-1 px-1 rounded-md`}
+                      <Button
+                        className={`${file.id === context.files[fileindex].id ? "bg-blue-400 border-2 border-white" : "bg-green-400"} flex-1 px-1 rounded-md h-8`}
                         onClick={() => {
                           setstd({
                             id: context.files[fileindex].id,
@@ -131,106 +157,129 @@ const Form = () => {
                         }}
                       >
                         {file.filename}
-                      </button>
+                      </Button>
                     </div>
                   );
                 })}
             </div>
-          </div>
-          <div className="flex-1 bg-gray-900 text-white w-7/8 coding">
-            <div className="h-6 w-full flex justify-end ">
-              <div className="space-x-4 pr-8 flex">
-                {
-                  !context.editable && <button className="bg-blue-800 text-center px-1 text-white font-bold" 
-                  onClick={()=>{
-                    setpwdflag(false);
-                    setpwdmod(true);
-                }}>Unlock</button>
-                }
-                {context.newproject && <button 
-                  className="bg-blue-800 text-center px-1 text-white font-bold" 
-                  onClick={()=>{
-                    setpwdflag(true);
-                    setpwdmod(true);
-                }}>
-                  Lock</button>}
-                <button
-                  className="bg-blue-800 text-center px-1 text-white font-bold"
-                  onClick={context.snipclone}
-                >
-                  Clone Project
-                </button>
-                <button
-                  className="bg-blue-800 text-center px-1 text-white font-bold"
-                  onClick={() => {
-                    setmod(true);
-                  }}
-                >
-                  Git Controls
-                </button>
-                <button
-                  className="bg-blue-800 text-center px-1 text-white font-bold"
-                  onClick={context.saver}
-                >
-                  Save/Share
-                </button>
+          </ScrollArea>
+        </ResizablePanel>
+        <ResizableHandle />
+        <ResizablePanel defaultSize={50} className="border-l-2 z-10">
+          <ResizablePanelGroup direction="vertical">
+            <ResizablePanel defaultSize={75} className="border-b-2">
+              <div className="h-6 w-full flex justify-between ">
+                <div className=" font-bold font-mono text-sm text-white ml-4">
+                  Language:{" "}
+                  {context.files[fileindex].lang !== undefined
+                    ? context.files[fileindex].lang.toUpperCase()
+                    : ""}
+                </div>
+                <div className="space-x-4 pr-8 flex">
+                  {!context.editable && (
+                    <Button
+                      className="bg-blue-800 text-center  text-white font-bold space-x-1"
+                      onClick={() => {
+                        setpwdflag(false);
+                        setpwdmod(true);
+                      }}
+                    >
+                      <div>Unlock</div>
+                      <FaLockOpen />
+                    </Button>
+                  )}
+                  {context.newproject && (
+                    <Button
+                      className="bg-blue-800 text-center px-1 text-white font-bold h-6 space-x-1"
+                      onClick={() => {
+                        setpwdflag(true);
+                        setpwdmod(true);
+                      }}
+                    >
+                      <div>Lock</div>
+                      <FaLock />
+                    </Button>
+                  )}
+                  <Button
+                    className="bg-blue-800 text-center px-1 text-white font-bold h-6 space-x-1"
+                    onClick={context.snipclone}
+                  >
+                    <div>Clone Project</div>
+                    <FaClone />
+                  </Button>
+                  <Button
+                    className="bg-blue-800 text-center px-1 text-white font-bold h-6 space-x-1"
+                    onClick={() => {
+                      setmod(true);
+                    }}
+                  >
+                    <div>Git Controls</div>
+                    <IoMdGitBranch />
+                  </Button>
+                  <Button
+                    className="bg-blue-800 text-center px-1 text-white font-bold h-6 space-x-1"
+                    onClick={context.saver}
+                  >
+                    <div>Save</div>
+                    <FaSave />
+                  </Button>
+                  <Button
+                    className="bg-blue-800 text-center px-1 text-white font-bold h-6 w-16 space-x-1"
+                    onClick={async () => {
+                      const response = await context.coderunner(fileindex);
+                        setstd({ std: false, id: context.files[fileindex].id });
+                      
+                    }}
+                  >
+                    <div>Run</div> <FaRunning />
+                  </Button>
+                </div>
               </div>
-            </div>
-            <div className="">
               <Editor
-                height="70vh"
-                width="100%"
                 theme="vs-dark"
                 value={context.files[fileindex].content}
                 language={context.files[fileindex].lang}
                 onMount={handleEditorDidMount}
                 onChange={handleCodeChange}
-                options={{readOnly: !context.editable}}
+                options={{ readOnly: !context.editable }}
               />
-            </div>
-            <div className="space-x-2">
-              <button
-                className={`text-gray-700 text-sm font-bold bg-green-500 rounded-sm p-2`}
-                onClick={async () => {
-                  const response = await context.coderunner(fileindex);
-                  if (response.success === 1) {
-                    setstd({ std: false, id: context.files[fileindex].id });
-                  }
-                }}
-              >
-                Run
-              </button>
-              <button
-                className={`text-gray-700 text-sm font-bold ${std.std === true ? "bg-blue-400 underline" : "bg-red-400"} rounded-sm p-2`}
-                onClick={() => {
-                  setstd({
-                    id: context.files[fileindex].id,
-                    std: true,
-                  });
-                }}
-              >
-                Stdin
-              </button>
-              <button
-                className={`text-gray-700 text-sm font-bold ${std.std === false && std.id === context.files[fileindex].id ? "bg-blue-400 underline" : "bg-red-400"} rounded-sm p-2`}
-                onClick={() => {
-                  setstd({
-                    id: context.files[fileindex].id,
-                    std: false,
-                  });
-                }}
-              >
-                Stdout
-              </button>
-            </div>
-            <div className="">
+            </ResizablePanel>
+            <ResizableHandle />
+            <ResizablePanel defaultSize={25}>
+              <div className="space-x-2 flex flex-row">
+                <Button
+                  className={` h-7 font-bold ${std.std === true ? "bg-blue-400 underline hover:bg-blue-500" : "bg-red-400 hover:bg-red-500"} rounded-sm p-2 space-x-1`}
+                  onClick={() => {
+                    setstd({
+                      id: context.files[fileindex].id,
+                      std: true,
+                    });
+                  }}
+                >
+                  <div>INPUT</div>
+                  <MdOutlineInput />
+                </Button>
+                <Button
+                  className={`h-7  font-bold ${std.std === false && std.id === context.files[fileindex].id ? "bg-blue-400 underline hover:bg-blue-500" : "bg-red-400 hover:bg-red-500"} rounded-sm p-2  space-x-1`}
+                  onClick={() => {
+                    setstd({
+                      id: context.files[fileindex].id,
+                      std: false,
+                    });
+                  }}
+                >
+                  <div>OUTPUT</div>
+                  <MdOutlineOutput />
+                </Button>
+                <div className="font-thin text-white text-sm mt-1">
+                  {"(All the Panels are resizable)"}
+                </div>
+              </div>
               <Editor
-                height="40vh"
                 theme="vs-dark"
-                width="100%"
                 onMount={handlestdDidMount}
                 value={
-                  std.std === true && std.id === context.files[fileindex].id
+                  std.std === true
                     ? context.files[fileindex].stdin
                     : context.files[fileindex].stdout
                 }
@@ -239,12 +288,12 @@ const Form = () => {
                     ? handlestdinChange
                     : undefined
                 }
-                options={{ readOnly: std?!context.editable:!std }}
+                options={{ readOnly: std.std ? !context.editable : !std.std }}
               />
-            </div>
-          </div>
-        </div>
-      </div>
+            </ResizablePanel>
+          </ResizablePanelGroup>
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </Context.Provider>
   );
 };

@@ -4,23 +4,3 @@
 body {
   background-color: #16213e;
 }
-.styled-button {
-  background-color: transparent;
-  border: 2px solid #ff0000;
-  font-weight: bold;
-  padding: 1rem 2rem;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 1rem;
-  border-radius: 0.25rem;
-  transition:
-    background-color 0.3s,
-    color 0.3s;
-}
-
-.styled-button:hover {
-  background-color: #0f3460;
-  border: 2px solid #0f3460;
-  color: #ffffff;
-}

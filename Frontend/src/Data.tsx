@@ -83,7 +83,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
         isLoading: false,
         autoClose: 1000,
       });
-      return {success:1,user:response.data.user};
+      return { success: 1, user: response.data.user };
     } catch (error) {
       toast.update(ids, {
         render: `${error}`,
@@ -91,7 +91,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
         isLoading: false,
         autoClose: 1000,
       });
-      return {success:0,error:error};
+      return { success: 0, error: error };
     }
   };
 
@@ -105,7 +105,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
     const ids = toast.loading("Running your Code, please wait!", {
       autoClose: false,
     });
-    let response:any;
+    let response: any;
     try {
       response = await axios.post(`${BACKEND}/code/runcode/`, {
         files: save.data.files[fileid],
@@ -128,9 +128,17 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
         return updatedFiles;
       });
       return response.data;
-    } catch (error:any) {
+    } catch (error: any) {
+      setFiles((prevFiles: any[]) => {
+        const updatedFiles = [...prevFiles];
+        updatedFiles[fileid] = {
+          ...updatedFiles[fileid],
+          stdout: response.data.stderr,
+        };
+        return updatedFiles;
+      });
       toast.update(ids, {
-        render: `${error.stdout}`,
+        render: `${error}`,
         type: "error",
         isLoading: false,
         autoClose: 1000,
@@ -304,17 +312,17 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       });
     }
   };
-  const gitclonepage=()=>{
-  router.push("/gitclone");
-  }
-  const gitclone=async(url:string)=>{
+  const gitclonepage = () => {
+    router.push("/gitclone");
+  };
+  const gitclone = async (url: string) => {
     const ids = toast.loading("Please wait... Cloning your code now!", {
       autoClose: false,
     });
     try {
-      const response = await axios.post(
-        `${BACKEND}/git/gitclone`,{url:url}
-      );
+      const response = await axios.post(`${BACKEND}/git/gitclone`, {
+        url: url,
+      });
       if (response.data.success === false) {
         throw response.data.error;
       }
@@ -329,7 +337,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
         autoClose: 1000,
       });
       return response;
-    } catch (error:any) {
+    } catch (error: any) {
       toast.update(ids, {
         render: `${error.message}`,
         type: "error",
@@ -337,7 +345,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
         autoClose: 2000,
       });
     }
-  }
+  };
   const lockuser = async (pwd: string) => {
     const ids = toast.loading("Locking your account...", { autoClose: false });
     try {
@@ -347,7 +355,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       if (response.data.success === false) {
         throw response.data.error;
       }
-     setuser(response.data.output);
+      setuser(response.data.output);
       toast.update(ids, {
         render: "Snippet Locked!",
         type: "success",
@@ -363,12 +371,16 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
         autoClose: 1000,
       });
     }
-  }
+  };
+  const goHome = () => {
+    router.push("/");
+  };
   return (
     <Context.Provider
       value={{
         id,
-        files,user,
+        files,
+        user,
         newproject,
         newProject,
         setFiles,
@@ -381,7 +393,10 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
         wakeServer,
         gitclonepage,
         gitclone,
-        lockuser,editable,seteditable
+        lockuser,
+        editable,
+        seteditable,
+        goHome,
       }}
     >
       {children}

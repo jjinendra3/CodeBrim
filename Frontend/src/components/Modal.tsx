@@ -1,3 +1,4 @@
+import { Button } from "./ui/button";
 export default function Modal({
   setmod,
   gitcontrols,
@@ -63,7 +64,7 @@ export default function Modal({
               className="w-full px-2 py-2 mb-2 border border-bg2-col rounded focus:outline-none bg-bg1-col"
             />
             <div className="flex flex-row space-x-4 mx-auto my-4">
-              <button
+              <Button
                 className="bg-red-900 text-white rounded-lg px-4 py-2 font-bold"
                 onClick={() => {
                   resetInputs();
@@ -71,8 +72,8 @@ export default function Modal({
                 }}
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 className="bg-blue-900 text-white rounded-lg px-4 py-2 font-bold"
                 onClick={() => {
                   resetInputs();
@@ -85,7 +86,7 @@ export default function Modal({
                 }}
               >
                 Submit
-              </button>
+              </Button>
             </div>
           </div>
         </div>

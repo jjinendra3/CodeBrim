@@ -1,5 +1,15 @@
 "use client";
 import { useState } from "react";
+import { Button } from "./ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 export default function Modal({
   setfilemod,
   context,
@@ -11,83 +21,51 @@ export default function Modal({
 }) {
   const [filename, setfilename] = useState<string>("");
   const [language, setlanguage] = useState<string>("");
+  const handleLangChange = (event: string) => {
+    if (event === "javascript") {
+      setext(".js");
+    } else if (event === "cpp") {
+      setext(".cpp");
+    } else if (event === "python") {
+      setext(".py");
+    } else if (event === "java") {
+      setext(".java");
+    } else if (event === "go") {
+      setext(".go");
+    }
+    setlanguage(event);
+    setIsOpen(false);
+  };
   const handleInputChange = (event: any) => {
     const { name, value } = event.target;
     setfilename(value + `${ext}`);
   };
   const [isOpen, setIsOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
   const [ext, setext] = useState("");
-  const items = ["C++", "Python", "Javascript", "Java", "Go"];
-
-  const filteredItems = items.filter((item) =>
-    item.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
   return (
     <>
       <div className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none ">
         <div className=" bg-blue-500 p-5  rounded-lg w-1/3 text-text-col ">
           <div className="text-2xl font-extrabold text-center mb-4">
-            Git Controls
+            Add File
           </div>
-          <div className="flex flex-col ">
-            <div className="mb-4 font-bold text-center">
-              Please make the repository public before hitting Submit.
-            </div>
+          <div className="flex flex-col justify-center items-center">
             <div className="relative group">
-              <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="inline-flex justify-center w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-blue-500"
-              >
-                <span className="mr-2">Open Dropdown</span>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-5 h-5 ml-2 -mr-1"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  aria-hidden="true"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M6.293 9.293a1 1 0 011.414 0L10 11.586l2.293-2.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </button>
-              {isOpen && (
-                <div className="absolute right-0 mt-2 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 p-1 space-y-1">
-                  {filteredItems.map((item) => (
-                    <a
-                      key={item}
-                      href="#"
-                      className="block px-4 py-2 text-gray-700 hover:bg-gray-100 active:bg-blue-100 cursor-pointer rounded-md"
-                      onClick={() => {
-                        let name: string =
-                          item.charAt(0).toLowerCase() + item.slice(1);
-
-                        if (item === "Javascript") {
-                          setext(".js");
-                        } else if (item === "C++") {
-                          setext(".cpp");
-                        } else if (item === "Python") {
-                          setext(".py");
-                        } else if (item === "Java") {
-                          setext(".java");
-                        } else if (item === "Go") {
-                          setext(".go");
-                        }
-                        if (name === "c++") {
-                          name = "cpp";
-                        }
-                        setlanguage(name);
-                        setIsOpen(false);
-                      }}
-                    >
-                      {item}
-                    </a>
-                  ))}
-                </div>
-              )}
+              <Select onValueChange={handleLangChange}>
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Select a Language" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Language</SelectLabel>
+                    <SelectItem value="cpp">C++</SelectItem>
+                    <SelectItem value="python">Python</SelectItem>
+                    <SelectItem value="javascript">Javascript</SelectItem>
+                    <SelectItem value="java">Java</SelectItem>
+                    <SelectItem value="go">Go</SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
             </div>
             <label
               htmlFor="role"
@@ -96,7 +74,7 @@ export default function Modal({
               FileName
             </label>
             {language !== "" && (
-              <div className="bg-white ">
+              <div className="bg-white space-x-2 ">
                 <input
                   type="text"
                   name="filename"
@@ -104,26 +82,27 @@ export default function Modal({
                   className="flex-grow px-2 py-2 rounded focus:outline-none bg-bg1-col"
                   style={{ minWidth: "50px", width: "auto" }}
                 />
+
                 {ext}
               </div>
             )}
             <div className="flex flex-row space-x-4 mx-auto my-4">
-              <button
-                className="bg-red-900 text-white rounded-lg px-4 py-2 font-bold"
+              <Button
+                className="bg-red-900 text-white rounded-lg  font-bold"
                 onClick={() => {
                   setfilemod(false);
                 }}
               >
                 Cancel
-              </button>
-              <button
-                className="bg-blue-900 text-white rounded-lg px-4 py-2 font-bold"
+              </Button>
+              <Button
+                className="bg-blue-900 text-white rounded-lg  font-bold"
                 onClick={() => {
-                  if (language === "" ) {
+                  if (language === "") {
                     alert("Please select a language");
                     return;
                   }
-                  if(filename === "" ) {
+                  if (filename === "") {
                     alert("Please enter a filename");
                     return;
                   }
@@ -139,7 +118,7 @@ export default function Modal({
                 }}
               >
                 Submit
-              </button>
+              </Button>
             </div>
           </div>
         </div>

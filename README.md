@@ -25,6 +25,6 @@
 ## Authors
 
 Jinendra Jain
- - [Linkedin](https://linkedin.com/in/jjinendra3)
- - [Twitter](https://x.com/jjinendra3)
 
+- [Linkedin](https://linkedin.com/in/jjinendra3)
+- [Twitter](https://x.com/jjinendra3)
