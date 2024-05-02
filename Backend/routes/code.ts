@@ -24,7 +24,7 @@ async function prismaupdate(id: string, stdin: string, stdout: string) {
 
 function buildDockerImage(lang: string) {
   return new Promise((resolve, reject) => {
-    const dockerCommand = `sudo docker build -t my-${lang}-app ./dock/${lang}`;
+    const dockerCommand = `sudo docker build --rm -t my-${lang}-app ./dock/${lang}`;
     exec(dockerCommand, (error: any, stdout: any, stderr: any) => {
       if (error) {
         reject({ stderr, error });
@@ -58,7 +58,7 @@ function findClassName(javaCode: string): string | null {
   const match = classRegex.exec(javaCode);
   return match ? match[1] : null;
 }
-app.post("/runcode", async (req: any, res: any) => {    
+app.post("/runcode", async (req: any, res: any) => {
   //run project save then run code
   const lang: string = req.body.files.lang;
   let ext: string;
@@ -117,7 +117,7 @@ app.post("/runcode", async (req: any, res: any) => {
       return res.send({
         success: false,
         stdout: date + ">>>\n" + copiedString,
-        stderr:date + ">>>\n" + copiedString
+        stderr: date + ">>>\n" + copiedString,
       });
     }
     const dbupdate = await prismaupdate(
@@ -157,12 +157,11 @@ app.post("/runcode", async (req: any, res: any) => {
       return res.send({
         success: false,
         stdout: date + ">>>\n" + "Please try again later!",
-        stderr:"There is an issue, please try again later!"
+        stderr: "There is an issue, please try again later!",
       });
     }
     return res.send({ success: 1, stdout: date + ">>>\n" + Runner });
   } catch (error: any) {
-    
     if (error.error !== null) {
       if (
         error.error.code === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER" ||
@@ -182,7 +181,7 @@ app.post("/runcode", async (req: any, res: any) => {
         return res.send({
           success: false,
           stdout: date + ">>>\n" + "Timeout Error",
-          stderr:date + ">>>\n" + "Timeout Error"
+          stderr: date + ">>>\n" + "Timeout Error",
         });
       }
     }
@@ -201,7 +200,7 @@ app.post("/runcode", async (req: any, res: any) => {
     return res.send({
       success: false,
       stdout: date + ">>>\n" + err,
-      stderr:date + ">>>\n" + err,
+      stderr: date + ">>>\n" + err,
     });
   }
 });

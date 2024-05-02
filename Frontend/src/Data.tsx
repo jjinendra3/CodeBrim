@@ -148,7 +148,6 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
   };
 
   const newFile = (newFilename: string, language: string) => {
-    const ids = toast.loading("Adding new file!", { autoClose: false });
     try {
       let content: string = "";
       switch (language) {
@@ -180,19 +179,8 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
         lang: language,
       };
       setFiles((prevFiles) => [...prevFiles, newFile]);
-      toast.update(ids, {
-        render: "File added successfully!",
-        type: "success",
-        isLoading: false,
-        autoClose: 1000,
-      });
     } catch (error) {
-      toast.update(ids, {
-        render: `New file not added, please save your work and refresh`,
-        type: "error",
-        isLoading: false,
-        autoClose: 1000,
-      });
+      toast.error("Error creating new file");
     }
   };
 
@@ -270,6 +258,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
         throw response.data.error;
       }
       setnewproject(true);
+      seteditable(true);
       setid(response.data.output.id);
       setuser(response.data.output);
       setFiles(response.data.output.files);

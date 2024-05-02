@@ -81,7 +81,7 @@ const IndexPage = () => {
             </Button>
           </div>
           <div className="flex justify-center mt-16">
-            <div className="flex-row">
+            {/* <div className="flex-row">
               <Button
                 className="bg-gray-700 w-48 flex space-x-2 p-2 rounded-md text-lg font-semibold justify-center"
                 onClick={context.gitclonepage}
@@ -89,7 +89,7 @@ const IndexPage = () => {
                 <FaGithub />
                 <div className="align-middle">Clone</div>
               </Button>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

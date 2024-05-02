@@ -17,8 +17,6 @@ interface FileData {
   content?: string;
   userId?: string | null;
   lang: string;
-  stdin: string;
-  stdout: string;
 }
 
 async function processFolder(
@@ -34,7 +32,7 @@ async function processFolder(
       }
       const itemPath = path.join(folderPath, item.name);
       if (item.isDirectory()) {
-        await processFolder(itemPath, userId);
+        await processFolder(itemPath, userId, files);
       } else if (item.isFile()) {
         const content = fs.readFileSync(itemPath, "utf8").replace(/\x00/g, " ");
         const fileExtension = path.extname(item.name).slice(1);
@@ -52,28 +50,20 @@ async function processFolder(
           case "cpp":
             lang = "cpp";
             break;
-          case "cpp":
-            lang = "cpp";
-            break;
           case "go":
             lang = "go";
             break;
           default:
             lang = "";
         }
-        const file_create = await prisma.files.create({
-          data: {
-            filename: item.name,
-            content: content,
-            lang: lang,
-            user: {
-              connect: {
-                id: userId,
-              },
-            },
-          },
+        const id = uuidv4().replace(/-/g, "").slice(5, 10);
+        files.push({
+          id: id,
+          filename: itemPath,
+          content: content,
+          lang: lang,
+          userId: userId,
         });
-        files.push(file_create);
       }
     }
     return files;
@@ -105,8 +95,8 @@ app.post("/gitclone", async (req, res) => {
   const foldername: string = projectname.slice(projectname.indexOf("-") + 1);
   try {
     const id: string = uuidv4().replace(/-/g, "").slice(5, 10);
-    const git: any = await simpleGit().clone(url);
-    const user = await prisma.user.create({
+    await simpleGit().clone(url);
+    await prisma.user.create({
       data: {
         id: id,
       },
@@ -167,7 +157,6 @@ app.post("/gitpush/:id", async (req, res) => {
     await git.add(".");
     await git.commit(req.body.commitmsg + "  (Pushed using CodeBrim)");
     const branchName = req.body.branch;
-    const remoteUrl = req.body.url;
     await git.fetch();
     const localBranches = await git.branchLocal();
     const branchExists = localBranches.all.includes(branchName);

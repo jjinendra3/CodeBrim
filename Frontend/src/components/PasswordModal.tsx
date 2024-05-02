@@ -1,6 +1,9 @@
 "use client";
 import { useContext, useState } from "react";
 import Context from "@/ContextAPI";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { toast } from "react-toastify";
 export default function Modal({
   setpwdmod,
   pwdflag,
@@ -13,10 +16,23 @@ export default function Modal({
   const handleInputChange = (event: any) => {
     setpassword(event.target.value);
   };
+  async function handleSubmit(event: any) {
+    event.preventDefault();
+    if (pwdflag === false) {
+      if (password === context.user.password) {
+        context.seteditable(true);
+      } else {
+        toast.error("Wrong Password!");
+      }
+    } else {
+      await context.lockuser(password);
+    }
+    setpwdmod(false);
+  }
   return (
     <Context.Provider value={context}>
       <div className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none ">
-        <div className=" bg-blue-500 p-5  rounded-lg w-1/3 text-text-col ">
+        <div className=" bg-[#101518] border-2 border-green-300 p-5  rounded-lg w-1/2 text-text-col text-white">
           <div className="text-2xl font-extrabold text-center mb-4">
             Enter Password to Edit!
           </div>
@@ -27,40 +43,28 @@ export default function Modal({
             >
               Password
             </label>
-            <input
-              type="text"
-              name="password"
-              onChange={handleInputChange}
-              className="flex-grow px-2 py-2 rounded focus:outline-none bg-bg1-col"
-              style={{ minWidth: "50px", width: "auto" }}
-            />
-            <div className="flex flex-row space-x-4 mx-auto my-4">
-              <button
-                className="bg-red-900 text-white rounded-lg px-4 py-2 font-bold"
-                onClick={() => {
-                  setpwdmod(false);
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                className="bg-blue-900 text-white rounded-lg px-4 py-2 font-bold"
-                onClick={async () => {
-                  if (pwdflag === false) {
-                    if (password === context.user.password) {
-                      context.seteditable(true);
-                    } else {
-                      alert("Wrong Password!");
-                    }
-                  } else {
-                    await context.lockuser(password);
-                  }
-                  setpwdmod(false);
-                }}
-              >
-                Submit
-              </button>
-            </div>
+            <form onSubmit={handleSubmit}>
+              <Input
+                type="text"
+                name="password"
+                onChange={handleInputChange}
+                className="w-full font-mono"
+              />
+              <div className="flex flex-row space-x-4 mx-auto my-4 justify-center">
+                <Button
+                  className="bg-red-900 text-white rounded-lg px-4 py-2 font-bold"
+                  type="button"
+                  onClick={() => {
+                    setpwdmod(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button className="bg-blue-900 text-white rounded-lg px-4 py-2 font-bold">
+                  Submit
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
