@@ -51,6 +51,7 @@ const Form = () => {
     repolink: "",
     commitmsg: "commit",
     branch: "master",
+    pan: "",
   });
   const pathname = usePathname();
   const [fileindex, setfileindex] = useState(0); //used to tell which file is highlighted and active
@@ -199,7 +200,6 @@ const Form = () => {
                     <DropdownMenu>
                       <DropdownMenuTrigger className="bg-blue-800 text-center px-1 text-white font-bold h-6 space-x-1">
                         <div>Open</div>
-                        <RxHamburgerMenu />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
                         <DropdownMenuLabel
@@ -237,13 +237,13 @@ const Form = () => {
                         <DropdownMenuItem onClick={context.snipclone}>
                           Copy Files
                         </DropdownMenuItem>
-                        {/* <DropdownMenuItem
+                        <DropdownMenuItem
                           onClick={(): void => {
                             setmod(true);
                           }}
                         >
                           Git Controls
-                        </DropdownMenuItem> */}
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={context.saver}>
                           Save
                         </DropdownMenuItem>
@@ -282,7 +282,7 @@ const Form = () => {
                         <div>Copy Files</div>
                         <FaClone />
                       </Button>
-                      {/* <Button
+                      <Button
                         className="bg-blue-800 text-center px-1 text-white font-bold h-6 space-x-1"
                         onClick={() => {
                           setmod(true);
@@ -290,7 +290,7 @@ const Form = () => {
                       >
                         <div>Git Controls</div>
                         <IoMdGitBranch />
-                      </Button> */}
+                      </Button>
                       <Button
                         className="bg-blue-800 text-center px-1 text-white font-bold h-6 space-x-1"
                         onClick={context.saver}

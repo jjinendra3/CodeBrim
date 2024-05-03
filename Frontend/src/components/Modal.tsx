@@ -23,6 +23,7 @@ export default function Modal({
       repolink: "",
       commitmsg: "commit",
       branch: "master",
+      pan: "",
     });
   };
   return (
@@ -30,7 +31,7 @@ export default function Modal({
       <div className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none ">
         <div className="relative my-6 mx-auto sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl bg-[#101518] p-5 rounded-lg text-text-col border-2 border-green-300 text-white">
           <div className="text-2xl font-extrabold text-center mb-4">
-            Push to Repo
+            Push to Repository
           </div>
           <div className="flex flex-col ">
             <div className="mb-4 font-bold text-center">
@@ -46,6 +47,19 @@ export default function Modal({
               type="text"
               name="repolink"
               id="repolink"
+              onChange={handleInputChange}
+              className="w-full px-2 py-2 mb-2 border rounded focus:outline-none"
+            />
+            <label
+              htmlFor="repolink"
+              className="text-xs mb-1 font-bold align-left"
+            >
+              {" Personal Access Token (Classic) (Provide access to repo)"}
+            </label>
+            <Input
+              type="password"
+              name="pan"
+              id="pan"
               onChange={handleInputChange}
               className="w-full px-2 py-2 mb-2 border rounded focus:outline-none"
             />
@@ -69,7 +83,8 @@ export default function Modal({
             </label>
             <Input
               type="text"
-              placeholder="master"
+              disabled
+              value={"master"}
               name="branch"
               onChange={handleInputChange}
               className="w-full px-2 py-2 mb-2 border rounded focus:outline-none"
@@ -92,6 +107,7 @@ export default function Modal({
                     gitcontrols.repolink,
                     gitcontrols.commitmsg,
                     gitcontrols.branch,
+                    gitcontrols.pan,
                   );
                   setmod(false);
                 }}

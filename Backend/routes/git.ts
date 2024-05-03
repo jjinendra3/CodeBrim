@@ -5,7 +5,6 @@ import path from "path";
 import * as fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 const app = Router();
-
 function isValidGitUrl(url: string): boolean {
   const gitUrlRegex = /^(git|https?):\/\/[^\s/$.?#].[^\s]*$/;
   return gitUrlRegex.test(url);
@@ -17,6 +16,8 @@ interface FileData {
   content?: string;
   userId?: string | null;
   lang: string;
+  stdin: string;
+  stdout: string;
 }
 
 async function processFolder(
@@ -32,7 +33,7 @@ async function processFolder(
       }
       const itemPath = path.join(folderPath, item.name);
       if (item.isDirectory()) {
-        await processFolder(itemPath, userId, files);
+        await processFolder(itemPath, userId);
       } else if (item.isFile()) {
         const content = fs.readFileSync(itemPath, "utf8").replace(/\x00/g, " ");
         const fileExtension = path.extname(item.name).slice(1);
@@ -50,20 +51,28 @@ async function processFolder(
           case "cpp":
             lang = "cpp";
             break;
+          case "cpp":
+            lang = "cpp";
+            break;
           case "go":
             lang = "go";
             break;
           default:
             lang = "";
         }
-        const id = uuidv4().replace(/-/g, "").slice(5, 10);
-        files.push({
-          id: id,
-          filename: itemPath,
-          content: content,
-          lang: lang,
-          userId: userId,
+        const file_create = await prisma.files.create({
+          data: {
+            filename: item.name,
+            content: content,
+            lang: lang,
+            user: {
+              connect: {
+                id: userId,
+              },
+            },
+          },
         });
+        files.push(file_create);
       }
     }
     return files;
@@ -95,8 +104,8 @@ app.post("/gitclone", async (req, res) => {
   const foldername: string = projectname.slice(projectname.indexOf("-") + 1);
   try {
     const id: string = uuidv4().replace(/-/g, "").slice(5, 10);
-    await simpleGit().clone(url);
-    await prisma.user.create({
+    const git: any = await simpleGit().clone(url);
+    const user = await prisma.user.create({
       data: {
         id: id,
       },
@@ -126,15 +135,6 @@ app.post("/gitpush/:id", async (req, res) => {
       throw new Error("Invalid Git Repository link");
     }
     reponame = req.body.url.slice(0, -4).slice(19);
-    let str: any = "";
-    for (let i = reponame.length - 1; i >= 0; i--) {
-      if (reponame[i] == "/") {
-        break;
-      }
-      str += reponame[i];
-    }
-    str = str.split("").reverse().join("");
-    const hello = await simpleGit().clone(req.body.url);
     const user = await prisma.user.findMany({
       where: {
         id: req.params.id,
@@ -148,15 +148,18 @@ app.post("/gitpush/:id", async (req, res) => {
     }
     const files = user[0].files;
     foldername = user[0].id.toString();
-    await fs.renameSync(str, foldername);
-
+    await fs.mkdirSync(foldername, { recursive: true });
+    const git = simpleGit(foldername);
+    await git
+      .init()
+      .addRemote("origin", `https://${req.body.pan}@github.com/${reponame}`);
+    const branchName = req.body.branch;
+    await git.pull("origin", branchName);
     for (const file of files) {
       fs.writeFileSync(`${foldername}/${file.filename}`, file.content);
     }
-    const git = simpleGit(foldername);
     await git.add(".");
     await git.commit(req.body.commitmsg + "  (Pushed using CodeBrim)");
-    const branchName = req.body.branch;
     await git.fetch();
     const localBranches = await git.branchLocal();
     const branchExists = localBranches.all.includes(branchName);
@@ -169,10 +172,9 @@ app.post("/gitpush/:id", async (req, res) => {
     await deleteFolderRecursive(foldername);
     return res.send({ success: true });
   } catch (error: any) {
+    console.log(error);
     if (foldername != "") {
-      if (reponame !== "") {
-        await deleteFolderRecursive(reponame);
-      }
+        await deleteFolderRecursive(foldername);
     }
     return res.json({ success: false, error: error.message });
   }

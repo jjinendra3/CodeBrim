@@ -215,16 +215,30 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       return error;
     }
   };
-  const gitpush = async (link: string, commitmsg: string, branch: string) => {
+  const gitpush = async (
+    link: string,
+    commitmsg: string,
+    branch: string,
+    pan: string,
+  ) => {
     const ids = toast.loading("Please wait... Pushing your code to git now!", {
       autoClose: false,
     });
+    if (pan === "") {
+      return toast.update(ids, {
+        render: "Please provide your Github Personal Access Token",
+        type: "error",
+        isLoading: false,
+        autoClose: 1000,
+      });
+    }
     try {
-      saver();
+      await saver();
       const response = await axios.post(`${BACKEND}/git/gitpush/${id}/`, {
         url: link,
         commitmsg: commitmsg,
         branch: branch,
+        pan: pan,
       });
       if (response.data.success === false) {
         throw response.data.error;
@@ -238,7 +252,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       return response;
     } catch (error) {
       toast.update(ids, {
-        render: "Code Not pushed! Please try again later in sometime",
+        render: `${error}`,
         type: "error",
         isLoading: false,
         autoClose: 1000,
