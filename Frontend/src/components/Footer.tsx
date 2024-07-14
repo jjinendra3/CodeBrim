@@ -1,11 +1,12 @@
 import { FaGlobe } from "react-icons/fa";
+import Image from "next/image";
 const Footer = () => {
   return (
     <footer className="font-sans">
       <div className="flex items-center justify-center text-center">
         <div className="flex gap-4 hover:cursor-pointer">
           <a href="https://twitter.com/jjinendra3" target="_blank">
-            <img
+            <Image
               src="https://www.svgrepo.com/show/303115/twitter-3-logo.svg"
               width="30"
               height="30"
@@ -13,7 +14,7 @@ const Footer = () => {
             />
           </a>
           <a href="https://github.com/jjinendra3" target="_blank">
-            <img
+            <Image
               src="https://www.svgrepo.com/show/94698/github.svg"
               className=""
               width="30"
@@ -25,7 +26,7 @@ const Footer = () => {
             <FaGlobe className="h-[30px] w-[30px] text-white" />
           </a>
           <a href="https://linkedin.com/in/jjinendra3" target="_blank">
-            <img
+            <Image
               src="https://www.svgrepo.com/show/28145/linkedin.svg"
               width="30"
               height="30"
@@ -36,7 +37,7 @@ const Footer = () => {
             href="https://mail.google.com/mail/?view=cm&fs=1&to=jjinendra3@gmail.com"
             target="_blank"
           >
-            <img
+            <Image
               src="https://www.svgrepo.com/show/530453/mail-reception.svg"
               width="30"
               height="30"

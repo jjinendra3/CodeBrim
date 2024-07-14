@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import CodeState from "@/Data";
 import ToastProvider from "../../toast.provider";
+// eslint-disable-next-line import/no-unresolved 
 import { Analytics } from "@vercel/analytics/react"
 const inter = Inter({ subsets: ["latin"] });
 import Head from "next/head";
