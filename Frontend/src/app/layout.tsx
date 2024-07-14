@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import CodeState from "@/Data";
 import ToastProvider from "../../toast.provider";
+import { Analytics } from "@vercel/analytics/react"
 const inter = Inter({ subsets: ["latin"] });
 import Head from "next/head";
 export const metadata: Metadata = {
@@ -37,6 +38,7 @@ export default function RootLayout({
           href="/images/favicon-16x16.png"
         />
       </Head>
+      <Analytics/>  
       <CodeState>
         <body className={inter.className}>
           <ToastProvider>{children}</ToastProvider>
