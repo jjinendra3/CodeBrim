@@ -7,9 +7,7 @@ import { usePathname } from "next/navigation";
 import Modal from "@/components/Modal";
 import FileModal from "@/components/FileModal";
 import PasswordModal from "@/components/PasswordModal";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { RxHamburgerMenu } from "react-icons/rx";
-
+import { useBreakpoint } from "@/use-breakpoint";
 import {
   FaRunning,
   FaSave,
@@ -17,6 +15,7 @@ import {
   FaLock,
   FaLockOpen,
   FaHome,
+  FaAlignJustify,
 } from "react-icons/fa";
 import {
   DropdownMenu,
@@ -36,15 +35,12 @@ import {
 } from "@/components/ui/resizable";
 
 const Form = () => {
+  const isTabBigger = useBreakpoint("md");
   const context = useContext(Context);
   const editorRef = useRef<any>(null);
   const stdinRef = useRef<any>(null);
   const [pwdmod, setpwdmod] = useState(false);
   const [pwdflag, setpwdflag] = useState(false);
-  const [std, setstd] = useState<{
-    id: string;
-    std: boolean;
-  }>({ id: "", std: true });
   const [mod, setmod] = useState<boolean>(false);
   const [filemod, setfilemod] = useState<boolean>(false);
   const [gitcontrols, setgitcontrols] = useState<any>({
@@ -122,94 +118,84 @@ const Form = () => {
       )}
 
       <ResizablePanelGroup
-        direction={window.innerWidth < 640 ? "vertical" : "horizontal"}
+        direction={!isTabBigger ? "vertical" : "horizontal"}
         className="min-h-screen overflow-hidden"
       >
-        <ResizablePanel defaultSize={window.innerWidth > 640 ? 10 : 20}>
+        <ResizablePanel defaultSize={isTabBigger ? 10 : 20}>
           <h1 className="text-3xl font-semibold text-center font-serif text-white mt-4">
             CodeBrim
           </h1>
           <h6 className="text-sm font-semibold text-center font-mono text-white mb-2">
             Compiler on the Go!
           </h6>
-          <ScrollArea>
-            <div
-              className={`flex flex${window.innerWidth > 640 ? "-col " : ""}col justify-center items-center text-sm w-full`}
+          <div
+            className={`flex ${isTabBigger ? "flex-col" : "flex-row"} justify-center items-center text-sm w-full`}
+          >
+            <Button
+              onClick={context.goHome}
+              className="w-24 space-x-1 font-bold mb-2"
             >
-              <Button
-                onClick={context.goHome}
-                className="w-24 space-x-1 font-bold mb-2"
-              >
-                <FaHome />
-                <div className="pt-1">Home</div>
-              </Button>
+              <FaHome />
+              <div className="pt-1">Home</div>
+            </Button>
 
-              {context.editable && (
-                <Button
-                  className={`${window.innerWidth > 640 ? "bg-white text-black rounded-lg font-bold h-7 space-x-1 mt-2 md:w-32 sm:w-full" : "w-24 space-x-1 font-bold mb-2 ml-4"}`}
-                  onClick={async () => {
-                    setfilemod(true);
-                  }}
-                >
-                  <div>Add File</div>
-                  {window.innerWidth > 640 && <AiFillFileAdd />}
-                </Button>
-              )}
-            </div>
-            <div className="flex-row mt-4 space-y-4">
-              {context.files.length !== 0 &&
-                context.files.map((file: any) => {
-                  return (
-                    <div className="flex p-1 text-white w-full" key={file.id}>
-                      <Button
-                        className={`${file.id === context.files[fileindex].id && " border-2 border-white"} flex-1 truncate  px-1 rounded-md h-8 w-full`}
-                        onClick={() => {
-                          setstd({
-                            id: context.files[fileindex].id,
-                            std: false,
-                          });
-                          for (let i = 0; i < context.files.length; i++) {
-                            if (file.id === context.files[i].id) {
-                              setfileindex(i);
-                              break;
-                            }
+            {context.editable && (
+              <Button
+                className={`${isTabBigger ? "bg-white text-black rounded-lg font-bold h-7 space-x-1 mt-2 md:w-32 sm:w-full" : "w-24 space-x-1 font-bold mb-2 ml-4"}`}
+                onClick={async () => {
+                  setfilemod(true);
+                }}
+              >
+                <div>Add File</div>
+                {isTabBigger && <AiFillFileAdd />}
+              </Button>
+            )}
+          </div>
+          <div className="flex-row mt-4 space-y-4 h-96 overflow-y-auto">
+            {context.files.length !== 0 &&
+              context.files.map((file: any) => {
+                return (
+                  <div className="flex p-1 text-white w-full" key={file.id}>
+                    <Button
+                      className={`${file.id === context.files[fileindex].id ? "border-2 border-white" : ""} flex-1 truncate px-1 rounded-md h-8 w-full`}
+                      onClick={() => {
+                        for (let i = 0; i < context.files.length; i++) {
+                          if (file.id === context.files[i].id) {
+                            setfileindex(i);
+                            break;
                           }
-                        }}
-                      >
-                        {file.filename}
-                      </Button>
-                    </div>
-                  );
-                })}
-            </div>
-          </ScrollArea>
+                        }
+                      }}
+                    >
+                      {file.filename}
+                    </Button>
+                  </div>
+                );
+              })}
+          </div>
         </ResizablePanel>
+
         <ResizableHandle withHandle />
         <ResizablePanel defaultSize={50} className="border-l-2 z-10">
           <ResizablePanelGroup direction="vertical">
             <ResizablePanel defaultSize={75} className="border-b-2">
               <div className="h-8 w-full flex justify-between items-center ">
-                <div className="font-bold font-mono text-sm text-white ml-4 ">
+                <div className="font-bold font-mono text-sm text-white pl-4 ">
                   Language:{" "}
                   {context.files[fileindex]?.lang
                     ? context.files[fileindex].lang.toUpperCase()
                     : ""}
                 </div>
                 <div className="pr-8">
-                  {window.innerWidth < 640 ? (
+                  {!isTabBigger ? (
                     <DropdownMenu>
-                      <DropdownMenuTrigger className="bg-blue-800 text-center px-1 text-white font-bold h-6 space-x-1">
-                        <div>Open</div>
+                      <DropdownMenuTrigger className="text-center px-1 text-white font-bold h-6 space-x-1">
+                        <FaAlignJustify />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
                         <DropdownMenuLabel
                           onClick={async () => {
-                            const response =
-                              await context.coderunner(fileindex);
-                            setstd({
-                              std: false,
-                              id: context.files[fileindex].id,
-                            });
+                            await context.coderunner(fileindex);
                           }}
                         >
                           Run
@@ -301,11 +287,7 @@ const Form = () => {
                       <Button
                         className="bg-blue-800 text-center px-1 text-white font-bold h-6 w-16 space-x-1"
                         onClick={async () => {
-                          const response = await context.coderunner(fileindex);
-                          setstd({
-                            std: false,
-                            id: context.files[fileindex].id,
-                          });
+                          await context.coderunner(fileindex);
                         }}
                       >
                         <div>Run</div> <FaRunning />
@@ -326,47 +308,39 @@ const Form = () => {
             </ResizablePanel>
             <ResizableHandle withHandle />
             <ResizablePanel defaultSize={25}>
-              <div className="space-x-2 flex flex-row">
-                <Button
-                  className={` h-7 font-bold ${std.std === true ? "bg-blue-400 underline hover:bg-blue-500" : "bg-red-400 hover:bg-red-500"} rounded-sm p-2 space-x-1`}
-                  onClick={() => {
-                    setstd({
-                      id: context.files[fileindex].id,
-                      std: true,
-                    });
-                  }}
-                >
-                  <div>INPUT</div>
-                  <MdOutlineInput />
-                </Button>
-                <Button
-                  className={`h-7  font-bold ${std.std === false && std.id === context.files[fileindex].id ? "bg-blue-400 underline hover:bg-blue-500" : "bg-red-400 hover:bg-red-500"} rounded-sm p-2  space-x-1`}
-                  onClick={() => {
-                    setstd({
-                      id: context.files[fileindex].id,
-                      std: false,
-                    });
-                  }}
-                >
-                  <div>OUTPUT</div>
-                  <MdOutlineOutput />
-                </Button>
-              </div>
-              <Editor
-                theme="vs-dark"
-                onMount={handlestdDidMount}
-                value={
-                  std.std === true
-                    ? context.files[fileindex].stdin
-                    : context.files[fileindex].stdout
-                }
-                onChange={
-                  std.std === true && std.id === context.files[fileindex].id
-                    ? handlestdinChange
-                    : undefined
-                }
-                options={{ readOnly: std.std ? !context.editable : !std.std }}
-              />
+              <ResizablePanelGroup direction="horizontal">
+                <ResizablePanel>
+                  <div className="space-x-2 flex flex-row justify-center px-8">
+                    <div className="py-1 rounded-sm p-2 space-x-1 flex flex-row items-center">
+                      <div className="text-blue-500 font-bold">INPUT</div>
+                      <MdOutlineInput className="text-blue-500" />
+                    </div>
+                  </div>
+                  <Editor
+                    theme="vs-dark"
+                    onMount={handlestdDidMount}
+                    value={context.files[fileindex].stdin}
+                    onChange={handlestdinChange}
+                  />
+                </ResizablePanel>
+                <ResizableHandle withHandle />
+                <ResizablePanel>
+                  <div className="space-x-2 flex flex-row justify-center px-8">
+                    <div className="py-1 rounded-sm p-2 space-x-1 flex flex-row items-center">
+                      <div className="text-green-500 font-bold">OUTPUT</div>
+                      <MdOutlineOutput className="text-green-500" />
+                    </div>
+                  </div>
+                  <Editor
+                    theme="vs-dark"
+                    onMount={handlestdDidMount}
+                    value={context.files[fileindex].stdout}
+                    options={{
+                      readOnly: true,
+                    }}
+                  />
+                </ResizablePanel>
+              </ResizablePanelGroup>
             </ResizablePanel>
           </ResizablePanelGroup>
         </ResizablePanel>

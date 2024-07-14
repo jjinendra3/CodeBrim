@@ -3,8 +3,17 @@ import prisma from "../db";
 const { exec } = require("child_process");
 import * as fs from "fs";
 const app = Router();
-const date = new Date();
 
+const dayjs = require("dayjs");
+
+const utc = require("dayjs/plugin/utc");
+
+const timezone = require("dayjs/plugin/timezone");
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+const date =
+  dayjs.tz(new Date(), "Asia/Kolkata").format("ddd, DD-MM-YYYY HH:mm:ss") + " ";
 async function prismaupdate(id: string, stdin: string, stdout: string) {
   try {
     await prisma.files.update({
