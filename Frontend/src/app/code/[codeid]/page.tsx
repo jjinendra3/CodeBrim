@@ -246,7 +246,7 @@ export default function Form() {
                     )}
                     {context.newproject && (
                       <Button
-                        variant="outline"
+                        variant="default"
                         size="sm"
                         onClick={() => {
                           setpwdflag(true);
