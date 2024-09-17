@@ -79,10 +79,10 @@ export default function Modal({
                 onChange={handleInputChange}
                 className="text-white w-full font-bold font-mono"
               />
-              <div className="text-sm font-thin text-center w-full">
+              <h1 className="text-sm font-thin text-center w-full">
                 CodeBrim currently supports C++, Python, Javascript, Java and
                 Go.
-              </div>
+              </h1>
               <div className="flex flex-row space-x-4 mx-auto my-4 justify-center">
                 <Button
                   className="bg-red-900 text-white rounded-lg  font-bold"

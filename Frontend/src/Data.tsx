@@ -31,6 +31,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
   const [user, setuser] = useState({});
   const [newproject, setnewproject] = useState(false);
   const [editable, seteditable] = useState<boolean>(true);
+  const [saving, setSaving] = useState(false);
   const newProject = async (lang: string) => {
     const ids = toast.loading("Creating new Project...", { autoClose: false });
     try {
@@ -185,10 +186,8 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
   };
 
   const saver = async () => {
-    const ids = toast.loading("Please wait... Saving your work now!", {
-      autoClose: false,
-    });
     try {
+      setSaving(true);
       const response = await axios.post(`${BACKEND}/project/project-save/`, {
         files,
         projectid: id,
@@ -197,21 +196,10 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
         throw response.data.error;
       }
       setFiles(response.data.files);
-
-      toast.update(ids, {
-        render: "Code Saved!",
-        type: "success",
-        isLoading: false,
-        autoClose: 1000,
-      });
+      setSaving(false);
       return response;
     } catch (error) {
-      toast.update(ids, {
-        render: "Code Not saved! Please try again later in sometime",
-        type: "error",
-        isLoading: false,
-        autoClose: 1000,
-      });
+      toast.error("Error saving your work", { autoClose: 2000 });
       return error;
     }
   };
@@ -251,12 +239,19 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       });
       return response;
     } catch (error) {
-      toast.update(ids, {
-        render: `${error}`,
-        type: "error",
-        isLoading: false,
-        autoClose: 1000,
-      });
+      typeof error === "string"
+      ? toast.update(ids, {
+          render: `${error.slice(0, 50)}`,
+          type: "error",
+          isLoading: false,
+          autoClose: 1000,
+        })
+      : toast.update(ids, {
+          render: `Please try again later!`,
+          type: "error",
+          isLoading: false,
+          autoClose: 1000,
+        });
       return error;
     }
   };
@@ -285,12 +280,19 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       });
       return response;
     } catch (error) {
-      toast.update(ids, {
-        render: `Code Not Cloned! Please try again later in sometime ${error}`,
-        type: "error",
-        isLoading: false,
-        autoClose: 1000,
-      });
+      typeof error === "string"
+        ? toast.update(ids, {
+            render: `Code Not Cloned! Please try again later in sometime ${error.slice(0,50)}`,
+            type: "error",
+            isLoading: false,
+            autoClose: 1000,
+          })
+        : toast.update(ids, {
+            render: `Code Not Cloned! Please try again later in sometime!`,
+            type: "error",
+            isLoading: false,
+            autoClose: 1000,
+          });
     }
   };
   const wakeServer = async () => {
@@ -307,12 +309,19 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
         autoClose: 1000,
       });
     } catch (error) {
-      toast.update(ids, {
-        render: `${error}`,
-        type: "error",
-        isLoading: false,
-        autoClose: 1000,
-      });
+      typeof error === "string"
+        ? toast.update(ids, {
+            render: `${error.slice(0, 50)}`,
+            type: "error",
+            isLoading: false,
+            autoClose: 1000,
+          })
+        : toast.update(ids, {
+            render: `Please try again later!`,
+            type: "error",
+            isLoading: false,
+            autoClose: 1000,
+          });
     }
   };
   const gitclonepage = () => {
@@ -341,12 +350,19 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       });
       return response;
     } catch (error: any) {
-      toast.update(ids, {
-        render: `${error.message}`,
-        type: "error",
-        isLoading: false,
-        autoClose: 2000,
-      });
+      typeof error.message === "string"
+        ? toast.update(ids, {
+            render: `${error.message.slice(0, 50)}`,
+            type: "error",
+            isLoading: false,
+            autoClose: 1000,
+          })
+        : toast.update(ids, {
+            render: `Please try again later!`,
+            type: "error",
+            isLoading: false,
+            autoClose: 1000,
+          });
     }
   };
   const lockuser = async (pwd: string) => {
@@ -367,12 +383,19 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       });
       return response;
     } catch (error) {
-      toast.update(ids, {
-        render: `${error}`,
-        type: "error",
-        isLoading: false,
-        autoClose: 1000,
-      });
+      typeof error === "string"
+        ? toast.update(ids, {
+            render: `${error.slice(0, 50)}`,
+            type: "error",
+            isLoading: false,
+            autoClose: 1000,
+          })
+        : toast.update(ids, {
+            render: `Please try again later!`,
+            type: "error",
+            isLoading: false,
+            autoClose: 1000,
+          });
     }
   };
   const goHome = () => {
@@ -400,6 +423,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
         editable,
         seteditable,
         goHome,
+        saving,
       }}
     >
       {children}
