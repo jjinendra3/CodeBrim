@@ -234,7 +234,7 @@ export default function Form() {
                   <div className="flex space-x-2">
                     {!context.editable && (
                       <Button
-                        variant="outline"
+                        variant="default"
                         size="sm"
                         onClick={() => {
                           setpwdflag(false);
