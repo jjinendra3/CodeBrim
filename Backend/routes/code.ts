@@ -3,13 +3,9 @@ import prisma from "../db";
 const { exec } = require("child_process");
 import * as fs from "fs";
 const app = Router();
-
-const dayjs = require("dayjs");
-
-const utc = require("dayjs/plugin/utc");
-
-const timezone = require("dayjs/plugin/timezone");
-
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 const date =

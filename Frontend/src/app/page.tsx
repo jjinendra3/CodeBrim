@@ -24,7 +24,7 @@ const IndexPage = () => {
           Compiler on the Go!
         </h6>
         <div className="w-full md:w-1/2 mx-auto">
-          <div className="flex flex-row justify-center space-x-2">
+          {/* <div className="flex flex-row justify-center space-x-2">
             <Input
               type="text"
               placeholder="CodeBrim Link"
@@ -34,7 +34,7 @@ const IndexPage = () => {
             <Button className="w-16 h-10 flex p-2 rounded-md text-lg font-semibold justify-center">
               Go!
             </Button>
-          </div>
+          </div> */}
           <h1 className="mt-12 mb-12 text-2xl font-bold font-sans underline text-center">
             Create a New Project
           </h1>
