@@ -55,6 +55,9 @@ app.get("/newcompiler/:lang", async (req, res) => {
     const lang: string = req.params.lang;
     let content: string = "";
     switch (lang) {
+      case "c":
+        content = `#include <stdio.h> \nint main() \n{ \n\tprintf("Hello World!"); \n\treturn 0; \n}`;
+        break;
       case "cpp":
         content = `#include <iostream> \nusing namespace std; \nint main() \n{ \n\tcout << "Hello World!"; \n\treturn 0; \n}`;
         break;

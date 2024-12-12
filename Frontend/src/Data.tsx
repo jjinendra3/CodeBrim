@@ -32,6 +32,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
   const [newproject, setnewproject] = useState(false);
   const [editable, seteditable] = useState<boolean>(true);
   const [saving, setSaving] = useState(false);
+  
   const newProject = async (lang: string) => {
     const ids = toast.loading("Creating new Project...", { autoClose: false });
     try {

@@ -8,8 +8,7 @@ import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 dayjs.extend(utc);
 dayjs.extend(timezone);
-const date =
-  dayjs.tz(new Date(), "Asia/Kolkata").format("ddd, DD-MM-YYYY HH:mm:ss") + " ";
+
 async function prismaupdate(id: string, stdin: string, stdout: string) {
   try {
     await prisma.files.update({
@@ -43,6 +42,7 @@ function buildDockerImage(lang: string) {
 function runImage(lang: string, stdin: string) {
   return new Promise((resolve, reject) => {
     const dockerRunCommand = `sudo docker run -i --ulimit cpu=1 my-${lang}-app`;
+    //timeout for 5 seconds
     const child = exec(
       dockerRunCommand,
       (error: any, stdout: any, stderr: any) => {
@@ -65,6 +65,9 @@ function findClassName(javaCode: string): string | null {
 }
 app.post("/runcode", async (req: any, res: any) => {
   //run project save then run code
+  const date =
+    dayjs.tz(new Date(), "Asia/Kolkata").format("ddd, DD-MM-YYYY HH:mm:ss") +
+    " ";
   const lang: string = req.body.files.lang;
   let ext: string;
   if (lang === "cpp" || lang === "java" || lang === "go") {

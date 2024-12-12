@@ -39,6 +39,14 @@ const IndexPage = () => {
             Create a New Project
           </h1>
           <div className="flex flex-wrap justify-center gap-8">
+          <Button
+              className="w-32 h-10 flex p-2 rounded-md text-lg font-semibold justify-center"
+              onClick={() => {
+                context.newProject("c");
+              }}
+            >
+              C
+            </Button>
             <Button
               className="w-32 h-10 flex p-2 rounded-md text-lg font-semibold justify-center"
               onClick={() => {
