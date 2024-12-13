@@ -1,6 +1,6 @@
 import { Queue } from "bullmq";
 import { Worker } from "bullmq";
-import { io } from "../../io";
+import { io } from "../../index";
 import { executeCode } from "./codeExecuter";
 import { dBUpdate } from "./databaseUpdater";
 import { codeExecuterProps } from "../../interface/codeExecuterInterface";
