@@ -32,7 +32,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
   const [newproject, setnewproject] = useState(false);
   const [editable, seteditable] = useState<boolean>(true);
   const [saving, setSaving] = useState(false);
-  
+
   const newProject = async (lang: string) => {
     const ids = toast.loading("Creating new Project...", { autoClose: false });
     try {
@@ -116,7 +116,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
         throw response.data.error;
       }
       toast.update(ids, {
-        render: "Code Ran successfully!",
+        render: "Code Queued successfully!",
         type: "success",
         isLoading: false,
         autoClose: 1000,
@@ -125,7 +125,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
         const updatedFiles = [...prevFiles];
         updatedFiles[fileid] = {
           ...updatedFiles[fileid],
-          stdout: response.data.stdout,
+          stdout: "Queued!",
         };
         return updatedFiles;
       });
@@ -180,7 +180,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
         stdout: "",
         lang: language,
       };
-      setFiles((prevFiles) => [...prevFiles, newFile]);
+      setFiles(prevFiles => [...prevFiles, newFile]);
     } catch (error) {
       toast.error("Error creating new file");
     }
@@ -241,18 +241,18 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       return response;
     } catch (error) {
       typeof error === "string"
-      ? toast.update(ids, {
-          render: `${error.slice(0, 50)}`,
-          type: "error",
-          isLoading: false,
-          autoClose: 1000,
-        })
-      : toast.update(ids, {
-          render: `Please try again later!`,
-          type: "error",
-          isLoading: false,
-          autoClose: 1000,
-        });
+        ? toast.update(ids, {
+            render: `${error.slice(0, 50)}`,
+            type: "error",
+            isLoading: false,
+            autoClose: 1000,
+          })
+        : toast.update(ids, {
+            render: `Please try again later!`,
+            type: "error",
+            isLoading: false,
+            autoClose: 1000,
+          });
       return error;
     }
   };
@@ -283,7 +283,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
     } catch (error) {
       typeof error === "string"
         ? toast.update(ids, {
-            render: `Code Not Cloned! Please try again later in sometime ${error.slice(0,50)}`,
+            render: `Code Not Cloned! Please try again later in sometime ${error.slice(0, 50)}`,
             type: "error",
             isLoading: false,
             autoClose: 1000,

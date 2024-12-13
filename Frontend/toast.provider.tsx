@@ -26,15 +26,12 @@ export default function ToastProvider({ children }: ToastProviderProps) {
         style={
           !isMobile
             ? {
-                width: "100%",
-                padding: "0",
-                margin: "0",
-              }
-            : {
                 width: "115px",
                 padding: "0",
                 margin: "0",
+                fontSize: "0.8rem",
               }
+            : {}
         }
       />
     </>

@@ -38,52 +38,40 @@ const IndexPage = () => {
           <h1 className="mt-12 mb-12 text-2xl font-bold font-sans underline text-center">
             Create a New Project
           </h1>
-          <div className="flex flex-wrap justify-center gap-8">
-          <Button
-              className="w-32 h-10 flex p-2 rounded-md text-lg font-semibold justify-center"
-              onClick={() => {
-                context.newProject("c");
-              }}
+          <div className="grid grid-cols-3 gap-4 sm:gap-8 max-w-2xl mx-auto">
+            <Button disabled
+              className="w-full h-10 flex p-2 rounded-md text-lg font-semibold justify-center"
+              onClick={() => context.newProject("c")}
             >
               C
             </Button>
             <Button
-              className="w-32 h-10 flex p-2 rounded-md text-lg font-semibold justify-center"
-              onClick={() => {
-                context.newProject("cpp");
-              }}
+              className="w-full h-10 flex p-2 rounded-md text-lg font-semibold justify-center"
+              onClick={() => context.newProject("cpp")}
             >
               C++
             </Button>
             <Button
-              className="w-32 h-10 flex p-2 rounded-md text-lg font-semibold justify-center"
-              onClick={() => {
-                context.newProject("python");
-              }}
+              className="w-full h-10 flex p-2 rounded-md text-lg font-semibold justify-center"
+              onClick={() => context.newProject("python")}
             >
               Python
             </Button>
             <Button
-              className="w-32 h-10 flex p-2 rounded-md text-lg font-semibold justify-center"
-              onClick={() => {
-                context.newProject("javascript");
-              }}
+              className="w-full h-10 flex p-2 rounded-md text-lg font-semibold justify-center"
+              onClick={() => context.newProject("javascript")}
             >
               Javascript
             </Button>
             <Button
-              className="w-32 h-10 flex p-2 rounded-md text-lg font-semibold justify-center"
-              onClick={() => {
-                context.newProject("java");
-              }}
+              className="w-full h-10 flex p-2 rounded-md text-lg font-semibold justify-center"
+              onClick={() => context.newProject("java")}
             >
               Java
             </Button>
             <Button
-              className="w-32 h-10 flex p-2 rounded-md text-lg font-semibold justify-center"
-              onClick={() => {
-                context.newProject("go");
-              }}
+              className="w-full h-10 flex p-2 rounded-md text-lg font-semibold justify-center"
+              onClick={() => context.newProject("go")}
             >
               Go
             </Button>
