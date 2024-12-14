@@ -39,7 +39,8 @@ const IndexPage = () => {
             Create a New Project
           </h1>
           <div className="grid grid-cols-3 gap-4 sm:gap-8 max-w-2xl mx-auto">
-            <Button disabled
+            <Button
+              disabled
               className="w-full h-10 flex p-2 rounded-md text-lg font-semibold justify-center"
               onClick={() => context.newProject("c")}
             >

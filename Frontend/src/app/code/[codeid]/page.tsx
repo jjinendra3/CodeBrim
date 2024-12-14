@@ -32,8 +32,24 @@ import {
   FolderInput,
   FolderOutput,
 } from "lucide-react";
-
+import { useSocket } from "../../../../lib/socket";
 export default function Form() {
+  const [fileId, setFileId] = useState<string | null>(null);
+  const [fileindex, setfileindex] = useState(0);
+  const socket = useSocket();
+  useEffect(() => {
+    function handleEvent(payload: any) {
+      if (context.files[fileindex].id !== payload.fileId) return;
+      context.setFiles((prevFiles: any) => {
+        const updatedFiles = [...prevFiles];
+        updatedFiles[fileindex].stdout = payload.stdout;
+        return updatedFiles;
+      });
+    }
+    if (socket) {
+      socket.on("codeResult", handleEvent);
+    }
+  }, [socket, fileindex]);
   const isTabBigger = useBreakpoint("md");
   const context = useContext(Context);
   const editorRef = useRef<any>(null);
@@ -49,7 +65,6 @@ export default function Form() {
     pan: "",
   });
   const pathname = usePathname();
-  const [fileindex, setfileindex] = useState(0);
 
   function handleCodeChange(value: string | undefined, event: any) {
     if (value) {
@@ -78,6 +93,7 @@ export default function Form() {
         const response = await context.code_getter(str);
 
         if (response.success === 1) {
+          setFileId(response.user.files[0].id);
           if (response.user.password !== null) {
             context.seteditable(false);
             setpwdmod(true);
@@ -158,13 +174,20 @@ export default function Form() {
                 key={file.id}
                 variant={
                   file.id === context.files[fileindex].id
-                    ? "secondary"
-                    : "ghost"
+                    ? "ghost"
+                    : "secondary"
                 }
                 className="w-full justify-start"
-                onClick={() => setfileindex(index)}
+                onClick={() => {
+                  setfileindex(index);
+                  setFileId(context.files[index].id);
+                }}
               >
-                {file.filename}
+                <h1
+                  className={`${file.id === context.files[fileindex].id ? "text-white" : "text-black"}`}
+                >
+                  {file.filename}
+                </h1>
               </Button>
             ))}
           </div>
