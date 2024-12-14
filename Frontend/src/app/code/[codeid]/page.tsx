@@ -33,23 +33,30 @@ import {
   FolderOutput,
 } from "lucide-react";
 import { useSocket } from "../../../../lib/socket";
+
 export default function Form() {
   const [fileId, setFileId] = useState<string | null>(null);
-  const [fileindex, setfileindex] = useState(0);
+  const [fileIndex, setFileIndex] = useState(0);
   const socket = useSocket();
+
   useEffect(() => {
     function handleEvent(payload: any) {
-      if (context.files[fileindex].id !== payload.fileId) return;
-      context.setFiles((prevFiles: any) => {
-        const updatedFiles = [...prevFiles];
-        updatedFiles[fileindex].stdout = payload.stdout;
-        return updatedFiles;
+      console.log(payload);
+      context.files.find((file: any, index: number) => {
+        if (file.id === payload.fileId) {
+          context.setFiles((prevFiles: any) => {
+            const updatedFiles = [...prevFiles];
+            updatedFiles[file.index].stdout = payload.stdout;
+            return updatedFiles;
+          });
+        }
       });
     }
     if (socket) {
       socket.on("codeResult", handleEvent);
     }
-  }, [socket, fileindex]);
+  }, [socket]);
+
   const isTabBigger = useBreakpoint("md");
   const context = useContext(Context);
   const editorRef = useRef<any>(null);
@@ -70,7 +77,7 @@ export default function Form() {
     if (value) {
       context.setFiles((prevFiles: any) => {
         const updatedFiles = [...prevFiles];
-        updatedFiles[fileindex].content = value;
+        updatedFiles[fileIndex].content = value;
         return updatedFiles;
       });
     }
@@ -80,7 +87,7 @@ export default function Form() {
     if (value) {
       context.setFiles((prevFiles: any) => {
         const updatedFiles = [...prevFiles];
-        updatedFiles[fileindex].stdin = value;
+        updatedFiles[fileIndex].stdin = value;
         return updatedFiles;
       });
     }
@@ -128,7 +135,7 @@ export default function Form() {
         <FileModal
           setfilemod={setfilemod}
           context={context}
-          setfileindex={setfileindex}
+          setfileindex={setFileIndex}
         />
       )}
 
@@ -141,7 +148,10 @@ export default function Form() {
           className="bg-gray-800"
         >
           <div className="p-4 space-y-4">
-            <h1 className="text-3xl font-bold text-center text-white">
+            <h1
+              className="text-3xl font-bold text-center text-white cursor-pointer"
+              onClick={context.goHome}
+            >
               CodeBrim
             </h1>
             <p className="text-sm text-center text-gray-400">
@@ -173,18 +183,18 @@ export default function Form() {
               <Button
                 key={file.id}
                 variant={
-                  file.id === context.files[fileindex].id
+                  file.id === context.files[fileIndex].id
                     ? "ghost"
                     : "secondary"
                 }
                 className="w-full justify-start"
                 onClick={() => {
-                  setfileindex(index);
+                  setFileIndex(index);
                   setFileId(context.files[index].id);
                 }}
               >
                 <h1
-                  className={`${file.id === context.files[fileindex].id ? "text-white" : "text-black"}`}
+                  className={`${file.id === context.files[fileIndex].id ? "text-white" : "text-black"}`}
                 >
                   {file.filename}
                 </h1>
@@ -197,16 +207,16 @@ export default function Form() {
         <ResizablePanel defaultSize={85} className="bg-gray-900">
           <ResizablePanelGroup direction="vertical">
             <ResizablePanel defaultSize={75}>
-              <div className="h-12 flex justify-between items-center px-4 bg-gray-800 text-white">
-                <h2 className="font-semibold">
-                  Language: {context.files[fileindex]?.lang?.toUpperCase()}
+              <div className="h-8 flex justify-between items-center px-4 bg-gray-800 text-white">
+                <h2 className="font-semibold text-xs">
+                  Language: {context.files[fileIndex]?.lang?.toUpperCase()}
                 </h2>
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm">
+                  <span className="text-xs">
                     {context.saving ? "Saving..." : "Code Saved!"}
                   </span>
                   <Save
-                    className={`h-4 w-4 ${context.saving ? "animate-pulse" : ""}`}
+                    className={`h-3 w-3 ${context.saving ? "animate-pulse" : ""}`}
                   />
                 </div>
                 {!isTabBigger ? (
@@ -218,7 +228,7 @@ export default function Form() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem
-                        onClick={() => context.coderunner(fileindex)}
+                        onClick={() => context.coderunner(fileIndex)}
                       >
                         Run
                       </DropdownMenuItem>
@@ -258,7 +268,7 @@ export default function Form() {
                     {!context.editable && (
                       <Button
                         variant="default"
-                        size="sm"
+                        size="xs"
                         onClick={() => {
                           setpwdflag(false);
                           setpwdmod(true);
@@ -270,7 +280,7 @@ export default function Form() {
                     {context.newproject && (
                       <Button
                         variant="default"
-                        size="sm"
+                        size="xs"
                         onClick={() => {
                           setpwdflag(true);
                           setpwdmod(true);
@@ -281,35 +291,35 @@ export default function Form() {
                     )}
                     <Button
                       variant="default"
-                      size="sm"
+                      size="xs"
                       onClick={context.snipclone}
                     >
                       <Copy className="mr-2 h-4 w-4" /> Copy Files
                     </Button>
                     <Button
                       variant="default"
-                      size="sm"
+                      size="xs"
                       onClick={() => setmod(true)}
                     >
                       <GitBranch className="mr-2 h-4 w-4" /> Git Controls
                     </Button>
-                    <Button variant="default" size="sm" onClick={context.saver}>
+                    <Button variant="default" size="xs" onClick={context.saver}>
                       <Save className="mr-2 h-4 w-4" /> Save
                     </Button>
                     <Button
                       variant="default"
-                      size="sm"
-                      onClick={() => context.coderunner(fileindex)}
+                      size="xs"
+                      onClick={() => context.coderunner(fileIndex)}
                     >
-                      <Play className="mr-2 h-4 w-4" /> Run
+                      <Play className="mr-1 h-4 w-4" /> Run
                     </Button>
                   </div>
                 )}
               </div>
               <Editor
                 theme="vs-dark"
-                value={context.files[fileindex].content}
-                language={context.files[fileindex].lang}
+                value={context.files[fileIndex].content}
+                language={context.files[fileIndex].lang}
                 onMount={handleEditorDidMount}
                 onChange={handleCodeChange}
                 options={{ readOnly: !context.editable }}
@@ -326,7 +336,7 @@ export default function Form() {
                   <Editor
                     theme="vs-dark"
                     onMount={handlestdDidMount}
-                    value={context.files[fileindex].stdin}
+                    value={context.files[fileIndex].stdin}
                     onChange={handlestdinChange}
                     className="border-t border-gray-700"
                   />
@@ -339,7 +349,7 @@ export default function Form() {
                   <Editor
                     theme="vs-dark"
                     onMount={handlestdDidMount}
-                    value={context.files[fileindex].stdout}
+                    value={context.files[fileIndex].stdout}
                     options={{ readOnly: true }}
                     className="border-t border-gray-700"
                   />
