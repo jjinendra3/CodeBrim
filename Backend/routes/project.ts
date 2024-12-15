@@ -1,48 +1,20 @@
 import { Router } from "express";
 import prisma from "../db";
 import { v4 as uuidv4 } from "uuid";
+import { languageContent } from "./helper/languageContent";
 
 const app = Router();
 
-app.post("/project-save", async (req, res) => {
+app.post("/file-save", async (req, res) => {
   try {
-    for (let i = 0; i < req.body.files.length; i++) {
-      const obj = req.body.files[i];
-      if (obj.id.length == 36) {
-        //creating uuid in frontend aand cuid in backend(prisma)
-        await prisma.files.create({
-          data: {
-            filename: obj.filename,
-            content: obj.content,
-            lang: obj.lang,
-            user: {
-              connect: {
-                id: req.body.projectid,
-              },
-            },
-          },
-        });
-        continue;
-      }
-      await prisma.files.update({
-        where: {
-          id: obj.id,
-        },
-        data: {
-          filename: obj.filename,
-          content: obj.content,
-          stdin: obj.stdin,
-          stdout: obj.stdout,
-          lang: obj.lang,
-        },
-      });
-    }
-    const files = await prisma.files.findMany({
+    const file = req.body.file;
+    await prisma.files.update({
       where: {
-        userId: req.body.projectid,
+        id: file.id,
       },
+      data: file,
     });
-    return res.send({ success: 1, files: files });
+    return res.send({ success: 1 });
   } catch (error) {
     return res.send({ success: false, error: error });
   }
@@ -53,30 +25,7 @@ app.get("/newcompiler/:lang", async (req, res) => {
     const Id: string = uuidv4().replace(/-/g, "");
     const newId: string = Id.slice(5, 10);
     const lang: string = req.params.lang;
-    let content: string = "";
-    switch (lang) {
-      case "c":
-        content = `#include <stdio.h> \nint main() \n{ \n\tprintf("Hello World!"); \n\treturn 0; \n}`;
-        break;
-      case "cpp":
-        content = `#include <iostream> \nusing namespace std; \nint main() \n{ \n\tcout << "Hello World!"; \n\treturn 0; \n}`;
-        break;
-      case "python":
-        content = `print("Hello World!")`;
-        break;
-      case "javascript":
-        content = `console.log("Hello World!")`;
-        break;
-
-      case "go":
-        content = `package main \nimport "fmt" \nfunc main() { \n\tfmt.Println("Hello World!") \n}`;
-        break;
-      case "java":
-        content = `class Main { \n\tpublic static void main(String[] args) { \n\t\tSystem.out.println("Hello World!"); \n\t} \n}`;
-        break;
-      default:
-        break;
-    }
+    const content: string = languageContent(lang);
     const filename: string =
       "main." +
       (lang === "python" || lang === "javascript"
@@ -106,9 +55,32 @@ app.get("/newcompiler/:lang", async (req, res) => {
   }
 });
 
-app.get("/code-snippet/:id", async (req, res) => {
+app.post("/add-file", async (req, res) => {
   try {
-    const user = await prisma.user.findMany({
+    const Id: string = uuidv4().replace(/-/g, "");
+    const projectId: string = req.body.projectId;
+    const content: string = languageContent(req.body.lang);
+    const filename: string = req.body.filename;
+    const newFile = await prisma.files.create({
+      data: {
+        id: Id,
+        filename: filename,
+        content: content,
+        lang: req.body.lang,
+        userId: projectId,
+      },
+    });
+    console.log(newFile)
+    return res.send({ success: 1, output: newFile });
+  } catch (error: any) {
+    const err = error.toString();
+    return res.send({ success: false, error: err });
+  }
+});
+
+app.get("/getproject/:id", async (req, res) => {
+  try {
+    const user = await prisma.user.findFirst({
       where: {
         id: req.params.id,
       },
@@ -116,10 +88,22 @@ app.get("/code-snippet/:id", async (req, res) => {
         files: true,
       },
     });
-    if (user.length === 0) {
-      throw new Error("No Such Code Snipper Found!");
+    if (!user) {
+      throw new Error("No Such Code Snippet Found!");
     }
-    return res.send({ success: 1, user: user[0] });
+    return res.send({ success: 1, user: user });
+  } catch (error: any) {
+    return res.json({ success: false, error: error });
+  }
+});
+app.get("/getfile/:id", async (req, res) => {
+  try {
+    const file = await prisma.files.findFirst({
+      where: {
+        id: req.params.id,
+      },
+    });
+    return res.send({ success: 1, file: file });
   } catch (error: any) {
     return res.json({ success: false, error: error });
   }

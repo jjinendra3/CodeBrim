@@ -3,22 +3,23 @@ import React, { useState } from "react";
 import Context from "./ContextAPI";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import { v4 as uuidv4 } from "uuid";
 import { toast } from "react-toastify";
+
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND;
 interface CodeStateProps {
   children: React.ReactNode;
 }
-interface File {
+export interface File {
   id: string;
   filename: string;
   content: string;
   stdin: string;
   stdout: string;
+  lang: string;
 }
 const CodeState: React.FC<CodeStateProps> = ({ children }) => {
   const router = useRouter();
-  const [id, setid] = useState<string | null>(null);
+  const [id, setId] = useState<string | null>(null);
   const [files, setFiles] = useState<File[]>([
     {
       content: "",
@@ -26,11 +27,12 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       id: "",
       stdin: "",
       stdout: "",
+      lang: "",
     },
   ]);
-  const [user, setuser] = useState({});
-  const [newproject, setnewproject] = useState(false);
-  const [editable, seteditable] = useState<boolean>(true);
+  const [user, setUser] = useState({});
+  const [newProjectBool, setNewProjectBool] = useState(false);
+  const [editable, setEditable] = useState<boolean>(true);
   const [saving, setSaving] = useState(false);
 
   const newProject = async (lang: string) => {
@@ -48,11 +50,13 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
         isLoading: false,
         autoClose: 1000,
       });
-      setnewproject(true);
-      setid(response.data.output.id);
-      setuser(response.data.output);
+      setNewProjectBool(true);
+      setId(response.data.output.id);
+      setUser(response.data.output);
       setFiles(response.data.output.files);
-      router.push(`code/${response.data.output.id}`);
+      router.push(
+        `code/${response.data.output.id}/${response.data.output.files[0].id}`,
+      );
     } catch (error) {
       toast.update(ids, {
         render: `${error}`,
@@ -63,22 +67,33 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
     }
     return;
   };
-
+  const addFile = async (lang: string, fileName: string) => {
+    try {
+      const response = await axios.post(`${BACKEND}/project/add-file`, {
+        projectId: id,
+        lang: lang,
+        filename: fileName,
+      });
+      setFiles(prevFiles => [...prevFiles, response.data.output]);
+      return response.data;
+    } catch (error) {
+      console.log(error);
+      toast.error("Error creating new file");
+    }
+  };
   const code_getter = async (ID: string) => {
     const ids = toast.loading("Fetching your Code, please wait!", {
       autoClose: false,
     });
     try {
-      setid(ID);
-      const response = await axios.get(
-        `${BACKEND}/project/code-snippet/${ID}/`,
-      );
+      setId(ID);
+      const response = await axios.get(`${BACKEND}/project/getproject/${ID}/`);
       if (response.data.success === false) {
         throw response.data.error;
       }
       setFiles(response.data.user.files);
-      setuser(response.data.user);
-      setid(response.data.user.id);
+      setUser(response.data.user);
+      setId(response.data.user.id);
       toast.update(ids, {
         render: `Data Fetched!`,
         type: "success",
@@ -97,113 +112,50 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
     }
   };
 
-  const coderunner = async (fileid: number) => {
-    let save: any;
+  const getFileData = async (ID: string) => {
     try {
-      save = await saver();
+      const response = await axios.get(`${BACKEND}/project/getfile/${ID}`);
+      return response.data;
     } catch (error) {
-      throw error;
-    }
-    const ids = toast.loading("Running your Code, please wait!", {
-      autoClose: false,
-    });
-    let response: any;
-    try {
-      response = await axios.post(`${BACKEND}/code/runcode/`, {
-        files: save.data.files[fileid],
-      });
-      if (response.data.success === false) {
-        throw response.data.error;
-      }
-      toast.update(ids, {
-        render: "Code Queued successfully!",
-        type: "success",
-        isLoading: false,
-        autoClose: 1000,
-      });
-      setFiles((prevFiles: any[]) => {
-        const updatedFiles = [...prevFiles];
-        updatedFiles[fileid] = {
-          ...updatedFiles[fileid],
-          stdout: "Queued!",
-        };
-        return updatedFiles;
-      });
-      return response.data;
-    } catch (error: any) {
-      setFiles((prevFiles: any[]) => {
-        const updatedFiles = [...prevFiles];
-        updatedFiles[fileid] = {
-          ...updatedFiles[fileid],
-          stdout: response.data.stderr,
-        };
-        return updatedFiles;
-      });
-      toast.update(ids, {
-        render: `${error}`,
-        type: "error",
-        isLoading: false,
-        autoClose: 1000,
-      });
-      return response.data;
+      console.log(error);
+      router.push('/maintenance')
+      toast.error("Error fetching your code, please try again later!");
     }
   };
 
-  const newFile = (newFilename: string, language: string) => {
+  const coderunner = async (File: File) => {
     try {
-      let content: string = "";
-      switch (language) {
-        case "cpp":
-          content = `#include <iostream> \nusing namespace std; \nint main() \n{ \n\tcout << "Hello World!"; \n\treturn 0; \n}`;
-          break;
-        case "python":
-          content = `print("Hello World!")`;
-          break;
-        case "javascript":
-          content = `console.log("Hello World!")`;
-          break;
-
-        case "go":
-          content = `package main \nimport "fmt" \nfunc main() { \n\tfmt.Println("Hello World!") \n}`;
-          break;
-        case "java":
-          content = `class Main { \n\tpublic static void main(String[] args) { \n\t\tSystem.out.println("Hello World!"); \n\t} \n}`;
-          break;
-        default:
-          break;
-      }
-      const newFile = {
-        id: uuidv4(),
-        filename: newFilename,
-        content: content,
-        stdin: "",
-        stdout: "",
-        lang: language,
-      };
-      setFiles(prevFiles => [...prevFiles, newFile]);
+      // await saver();
+      toast("Running your Code, please wait!");
+      const response = await axios.post(`${BACKEND}/code/runcode/`, {
+        files: File,
+      });
+      return response.data;
     } catch (error) {
-      toast.error("Error creating new file");
+      console.log(error);
+      toast.error("Error running your code, please try again later!");
     }
   };
 
-  const saver = async () => {
+
+  const saver = async (presentFile:File) => {
     try {
       setSaving(true);
-      const response = await axios.post(`${BACKEND}/project/project-save/`, {
-        files,
-        projectid: id,
+      const response = await axios.post(`${BACKEND}/project/file-save`, {
+        presentFile,
       });
       if (response.data.success === false) {
         throw response.data.error;
       }
-      setFiles(response.data.files);
       setSaving(false);
       return response;
     } catch (error) {
+      console.log(error);
       toast.error("Error saving your work", { autoClose: 2000 });
       return error;
     }
   };
+
   const gitpush = async (
     link: string,
     commitmsg: string,
@@ -222,7 +174,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       });
     }
     try {
-      await saver();
+      // await saver();
       const response = await axios.post(`${BACKEND}/git/gitpush/${id}/`, {
         url: link,
         commitmsg: commitmsg,
@@ -267,10 +219,10 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       if (response.data.success === false) {
         throw response.data.error;
       }
-      setnewproject(true);
-      seteditable(true);
-      setid(response.data.output.id);
-      setuser(response.data.output);
+      setNewProjectBool(true);
+      setEditable(true);
+      setId(response.data.output.id);
+      setUser(response.data.output);
       setFiles(response.data.output.files);
       await router.push("/code/" + response.data.output.id);
       toast.update(ids, {
@@ -339,8 +291,8 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       if (response.data.success === false) {
         throw response.data.error;
       }
-      setnewproject(true);
-      setid(response.data.response.id);
+      setNewProjectBool(true);
+      setId(response.data.response.id);
       setFiles(response.data.response.files);
       await router.push("/code/" + response.data.response.id);
       toast.update(ids, {
@@ -375,7 +327,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       if (response.data.success === false) {
         throw response.data.error;
       }
-      setuser(response.data.output);
+      setUser(response.data.output);
       toast.update(ids, {
         render: "Snippet Locked!",
         type: "success",
@@ -408,12 +360,11 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
         id,
         files,
         user,
-        newproject,
+        newProjectBool,
         newProject,
         setFiles,
         code_getter,
         coderunner,
-        newFile,
         saver,
         gitpush,
         snipclone,
@@ -422,9 +373,11 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
         gitclone,
         lockuser,
         editable,
-        seteditable,
+        setEditable,
         goHome,
         saving,
+        addFile,
+        getFileData
       }}
     >
       {children}

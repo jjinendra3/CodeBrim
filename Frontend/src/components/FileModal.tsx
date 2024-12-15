@@ -3,14 +3,22 @@ import { useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { toast } from "react-toastify";
+import { FilePlus } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogTitle,
+} from "@radix-ui/react-dialog";
+
 export default function Modal({
-  setfilemod,
   context,
-  setfileindex,
+  modal,
+  setModal,
 }: {
-  setfilemod: any;
   context: any;
-  setfileindex: any;
+  modal: boolean;
+  setModal: (value: boolean) => void;
 }) {
   const [filename, setfilename] = useState<string>("");
   const [language, setlanguage] = useState<string>("");
@@ -40,8 +48,9 @@ export default function Modal({
         break;
     }
   };
-  const handleSubmit = (event: any) => {
-    event.preventDefault();
+
+  const handleSubmit = async (event: any) => {
+    event.preventDefault();  // Prevent form submission
     if (filename === "") {
       toast.error("Please enter a filename");
       return;
@@ -50,51 +59,52 @@ export default function Modal({
       toast.error("Please enter a valid language");
       return;
     }
-
-    for (let i in context.files) {
-      if (context.files[i].filename === filename) {
-        alert("File already exists");
-        return;
-      }
+    const response = await context.addFile(language, filename);
+    if (response.success) {
+      setModal(false);  // Close the dialog after successful file creation
+    } else {
+      toast.error("Error in creating file, please try again later!");
     }
-    context.newFile(filename, language);
-    setfileindex(context.files.length);
-    setfilemod(false);
   };
+
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === "Enter") {
+      event.preventDefault();  // Prevent form submission on Enter key press
+    }
+  };
+
   return (
-    <>
-      <div className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none">
+    <Dialog open={modal} onOpenChange={setModal}>
+      <DialogTrigger asChild>
+        <Button variant="outline" className="w-full">
+          <FilePlus className="mr-2 h-4 w-4" /> Add File
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none">
         <div className=" bg-[#101518] p-5  rounded-lg w-1/2 text-text-col border-2 border-green-300 text-white">
-          <div className="text-2xl font-extrabold text-center">Add File</div>
+          <DialogTitle className="text-2xl font-extrabold text-center">
+            Add File
+          </DialogTitle>
           <div className="flex flex-col justify-center items-center">
-            <div className="relative group"></div>
-            <label
-              htmlFor="role"
-              className="text-sm mb-1 font-bold align-left mt-4"
-            >
-              FileName
-            </label>
-            <form onSubmit={handleSubmit} className="w-full">
+            <form onSubmit={handleSubmit} className="w-full" onKeyDown={handleKeyDown}>
               <Input
+                placeholder="Filename"
                 onChange={handleInputChange}
                 className="text-white w-full font-bold font-mono"
               />
               <h1 className="text-sm font-thin text-center w-full">
-                CodeBrim currently supports C++, Python, Javascript, Java and
+                CodeBrim currently supports C, C++, Python, Javascript, Java and
                 Go.
               </h1>
               <div className="flex flex-row space-x-4 mx-auto my-4 justify-center">
                 <Button
-                  className="bg-red-900 text-white rounded-lg  font-bold"
-                  type="button"
-                  onClick={() => {
-                    setfilemod(false);
-                  }}
+                  className="bg-red-900 text-white rounded-lg font-bold"
+                  onClick={() => setModal(false)}  // Manually close dialog on Cancel button click
                 >
                   Cancel
                 </Button>
                 <Button
-                  className="bg-blue-900 text-white rounded-lg  font-bold"
+                  className="bg-blue-900 text-white rounded-lg font-bold"
                   type="submit"
                 >
                   Submit
@@ -103,8 +113,7 @@ export default function Modal({
             </form>
           </div>
         </div>
-      </div>
-      <div className="opacity-25 fixed inset-0 z-40 bg-black"></div>
-    </>
+      </DialogContent>
+    </Dialog>
   );
 }
