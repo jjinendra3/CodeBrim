@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import CodeState from "@/Data";
-import ToastProvider from "../../toast.provider";
+import { Toaster } from "sonner";
+
 import { Analytics } from "@vercel/analytics/react";
 const inter = Inter({ subsets: ["latin"] });
 import Head from "next/head";
@@ -115,7 +116,8 @@ export default function RootLayout({
       <Analytics />
       <CodeState>
         <body className={inter.className}>
-          <ToastProvider>{children}</ToastProvider>
+          <Toaster richColors duration={1000} position="bottom-right" theme="dark"/>
+          {children}
         </body>
       </CodeState>
     </html>

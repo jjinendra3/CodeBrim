@@ -3,9 +3,8 @@ import { useContext, useState } from "react";
 import Context from "@/ContextAPI";
 import { useEffect } from "react";
 import { useSocket } from "../../../../lib/socket";
-import PasswordModal from "@/components/PasswordModal";
-import { useBreakpoint } from "@/use-breakpoint";
-import { Home, FilePlus } from "lucide-react";
+import Image from "next/image";
+import { Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePathname, useRouter } from "next/navigation";
 import FileModal from "@/components/FileModal";
@@ -55,7 +54,6 @@ export default function CodePageLayoyut({
     fetchData();
     //eslint-disable-next-line
   }, []);
-  console.log(context.files);
   return (
     <Context.Provider value={context}>
       <div className="flex md:flex-row flex-col">
@@ -73,7 +71,7 @@ export default function CodePageLayoyut({
             <div className={`flex flex-col justify-center items-center gap-2`}>
               <Button
                 onClick={context.goHome}
-                variant="outline"
+                variant="ghost"
                 className="w-full"
               >
                 <Home className="mr-2 h-4 w-4" /> Home
@@ -98,11 +96,17 @@ export default function CodePageLayoyut({
                     file.id === fileId
                       ? "shadow-none border-2 border-white"
                       : "shadow-xl",
-                    "flex flex-row justify-between",
+                    "flex flex-row justify-between px-2",
                   )}
                   onClick={() => router.push(`/code/${projectId}/${file.id}`)}
                 >
-                  <FilePlus className="mr-2 h-4 w-4" />
+                  <Image
+                    src={"/languageIcon/"+file.filename.split(".")[1] + ".svg"}
+                    width={100}
+                    height={100}
+                    className="w-5 h-5"
+                    alt="Language Icon"
+                  />
                   <span className="truncate">{file.filename}</span>
                 </Button>
               ))}

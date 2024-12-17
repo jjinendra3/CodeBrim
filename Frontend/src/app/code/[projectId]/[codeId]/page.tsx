@@ -39,11 +39,6 @@ export default function Form() {
   const projectId = pathname.split("/")[2];
   const fileId = pathname.split("/")[3];
   const [presentFile, setPresentFile] = useState<File | null>(null);
-  const presentFileRef = useRef(presentFile);
-  useEffect(() => {
-    presentFileRef.current = presentFile;
-  }, [presentFile]);
-  console.log(presentFile);
 
   const isTabBigger = useBreakpoint("md");
   const context = useContext(Context);
@@ -52,7 +47,6 @@ export default function Form() {
   const [pwdmod, setpwdmod] = useState(false);
   const [pwdflag, setpwdflag] = useState(false);
   const [mod, setmod] = useState<boolean>(false);
-  const [filemod, setfilemod] = useState<boolean>(false);
   const [gitcontrols, setgitcontrols] = useState<any>({
     repolink: "",
     commitmsg: "commit",
@@ -68,7 +62,6 @@ export default function Form() {
       } else {
         router.push("/not-found");
       }
-      console.log(presentFile);
     };
     fetchData();
     //eslint-disable-next-line
@@ -78,9 +71,8 @@ export default function Form() {
     const handleKeyDown = async (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key === "s") {
         event.preventDefault();
-        console.log(presentFileRef.current); // Always the latest value
-        if (presentFileRef.current) {
-          await context.saver(presentFileRef.current);
+        if (presentFile) {
+          await context.saver(presentFile);
         }
       }
     };
@@ -91,6 +83,7 @@ export default function Form() {
     };
     //eslint-disable-next-line
   }, []);
+
   useEffect(() => {
     const handleStdOutChange = () => {
       if (context.payload && context.payload.fileId === fileId) {
@@ -106,7 +99,7 @@ export default function Form() {
     handleStdOutChange();
     //eslint-disable-next-line
   }, [context.payload]);
-  console.log(context.payload);
+  
   function handleCodeChange(value: string | undefined, event: any) {
     if (value) {
       setPresentFile((prev: File | null) => {
@@ -151,7 +144,7 @@ export default function Form() {
         <ResizablePanel defaultSize={75}>
           <div className="h-8 flex justify-between items-center px-4 bg-gray-800 text-white">
             <div className="flex flex-row gap-2 items-center">
-              <FeedbackModal />
+              <FeedbackModal context={context} />
               <h2 className="font-semibold text-xs">
                 Language: {presentFile?.lang.toUpperCase()}
               </h2>

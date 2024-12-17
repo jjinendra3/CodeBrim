@@ -31,3 +31,10 @@ model Files {
   datetime DateTime @default(now())
   userId   String?
 }
+
+model Feedback {
+  id       String   @id @default(cuid())
+  datetime DateTime @default(now())
+  happy    Boolean
+  content  String
+}

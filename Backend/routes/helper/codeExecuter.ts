@@ -47,7 +47,6 @@ const extractBuildErrorMessage = (error: { stderr: Buffer }): string => {
 
   const firstIndex = originalString.indexOf(firstMarker);
   const secondIndex = originalString.indexOf(secondMarker);
-
   if (firstIndex === -1 || secondIndex === -1) {
     return originalString;
   }
@@ -123,7 +122,12 @@ const executeCode = async (data: any): Promise<codeExecuterProps> => {
       success: typeof Runner != "string" ? false : true,
       fileId: fileId,
       stdin: stdin.toString(),
-      stdout: date + ">>>\n" + Runner.toString(),
+      stdout:
+        date +
+        ">>>\n" +
+        (Runner !== ""
+          ? Runner.toString()
+          : "There is an issue in the code, please check!"),
       stderr:
         typeof Runner != "string"
           ? "There is an issue, please try again later!"

@@ -186,4 +186,19 @@ app.post("/lock-user/:id", async (req, res) => {
     return res.send({ success: false, error: error });
   }
 });
+
+app.post("/add-feedback", async (req, res) => {
+  const feedback = req.body.feedback;
+  try {
+    await prisma.feedback.create({
+      data: {
+        content: feedback.content,
+        happy: feedback.happy,
+      },
+    });
+    return res.send({ success: 1 });
+  } catch (error) {
+    return res.send({ success: false, error: error });
+  }
+});
 module.exports = app;
