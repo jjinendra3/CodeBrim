@@ -77,8 +77,8 @@ export default function ChooseLanguage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
-              <button
-                onClick={() => setSelectedLanguage(lang.code)}
+              <Button
+                onClick={async e => await context.newProject(lang.code)}
                 className={`w-full h-full p-6 rounded-xl transition-all duration-200 flex flex-col justify-center items-center ${
                   selectedLanguage === lang.code
                     ? "bg-blue-600 shadow-lg shadow-blue-500/50"
@@ -102,29 +102,10 @@ export default function ChooseLanguage() {
                 >
                   {lang.description}
                 </p>
-              </button>
+              </Button>
             </motion.div>
           ))}
         </div>
-        <motion.div
-          className="mt-12 text-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.7 }}
-        >
-          <Button
-            className={`inline-flex items-center justify-center rounded-md px-6 py-3 text-lg font-medium transition-colors duration-200 ${
-              selectedLanguage
-                ? "bg-blue-600 text-white hover:bg-blue-700"
-                : "bg-gray-700 text-gray-400 cursor-not-allowed"
-            }`}
-            onClick={async e => await context.newProject(selectedLanguage)}
-          >
-            <Code className="mr-2 h-5 w-5" />
-            Start Coding
-            <ArrowRight className="ml-2 h-5 w-5" />
-          </Button>
-        </motion.div>
       </div>
     </div>
   );

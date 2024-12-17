@@ -60,10 +60,10 @@ export default function FeedbackModal({
       <DialogTrigger asChild>
         <div className="flex justify-center items-center">
           <Button
-            className="w-10 h-10 flex items-center justify-center rounded-md transition-all duration-200 hover:bg-purple-900 active:scale-95"
+            className="flex items-center bg-transparent justify-center rounded-md transition-all duration-200 hover:bg-purple-900 active:scale-95"
             aria-label="Bug Report"
           >
-            <Bug color="white" />
+            <Bug color="white" size={'20px'}/>
             <span className="tooltip absolute top-[-40px] min-w-[100px] px-3 py-2 text-xs font-semibold text-white bg-gray-800 rounded shadow-lg opacity-0 transition-opacity duration-500 pointer-events-none group-hover:opacity-100">
               Bug Report
             </span>
@@ -80,7 +80,7 @@ export default function FeedbackModal({
           value={feedback.content}
           onChange={handleContentChange}
           placeholder="Your feedback..."
-          className="bg-slate-700 text-slate-300 h-28 placeholder:text-slate-300 placeholder:opacity-50 border border-slate-600 col-span-6 resize-none outline-none rounded-lg p-2 focus:border-slate-300"
+          className="bg-slate-700 text-slate-300 h-28 placeholder:text-slate-300 placeholder:opacity-50 border border-slate-600 col-span-6 resize-none outline-none rounded-lg p-2 focus:border-slate-300 w-full"
         />
 
         <Button

@@ -37,7 +37,7 @@ export default function Form() {
   const projectId = pathname.split("/")[2];
   const fileId = pathname.split("/")[3];
   const [presentFile, setPresentFile] = useState<File | null>(null);
-  const isTabBigger = useBreakpoint("md");
+  // const isTabBigger = useBreakpoint("md");
   const context = useContext(Context);
   const editorRef = useRef<any>(null);
   const stdinRef = useRef<any>(null);
@@ -127,7 +127,7 @@ export default function Form() {
   }
 
   return (
-    <div className="w-5/6">
+    <div className="w-5/6 overflow-hidden">
       {pwdmod && <PasswordModal setpwdmod={setpwdmod} pwdflag={pwdflag} />}
       {mod && (
         <Modal
@@ -140,7 +140,8 @@ export default function Form() {
       <ResizablePanelGroup direction="vertical">
         <ResizablePanel defaultSize={75}>
           <div className="h-8 flex justify-between items-center px-4 bg-gray-800 text-white">
-            <div className="flex flex-row gap-2 items-center">
+            <div className="flex flex-row gap-2 items-center ">
+             
               <FeedbackModal context={context} />
               <h2 className="font-semibold text-xs">
                 Language: {presentFile?.lang.toUpperCase()}
@@ -154,7 +155,7 @@ export default function Form() {
                 className={`h-3 w-3 ${context.saving ? "animate-pulse" : ""}`}
               />
             </div>
-            {!isTabBigger ? (
+            {/* {!isTabBigger ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon">
@@ -198,7 +199,7 @@ export default function Form() {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            ) : (
+            ) : ( */}
               <div className="flex space-x-2">
                 {/* {!context.editable && (
                   <Button
@@ -249,7 +250,7 @@ export default function Form() {
                   <Play className="mr-1 h-4 w-4" /> Run
                 </Button>
               </div>
-            )}
+            {/* )} */}
           </div>
           <Editor
             theme="vs-dark"
