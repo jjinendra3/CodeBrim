@@ -29,8 +29,6 @@ import {
   GitBranch,
   Save,
   Menu,
-  FolderInput,
-  FolderOutput,
 } from "lucide-react";
 import Loader from "@/components/Loader";
 export default function Form() {
@@ -39,7 +37,6 @@ export default function Form() {
   const projectId = pathname.split("/")[2];
   const fileId = pathname.split("/")[3];
   const [presentFile, setPresentFile] = useState<File | null>(null);
-
   const isTabBigger = useBreakpoint("md");
   const context = useContext(Context);
   const editorRef = useRef<any>(null);
@@ -203,7 +200,7 @@ export default function Form() {
               </DropdownMenu>
             ) : (
               <div className="flex space-x-2">
-                {!context.editable && (
+                {/* {!context.editable && (
                   <Button
                     variant="default"
                     size="xs"
@@ -226,7 +223,7 @@ export default function Form() {
                   >
                     <Lock className="mr-2 h-4 w-4" /> Lock
                   </Button>
-                )}
+                )} */}
                 <Button variant="default" size="xs" onClick={context.snipclone}>
                   <Copy className="mr-2 h-4 w-4" /> Copy Files
                 </Button>

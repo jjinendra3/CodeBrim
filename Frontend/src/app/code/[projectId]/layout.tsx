@@ -20,6 +20,7 @@ export default function CodePageLayoyut({
   const context = useContext(Context);
   useEffect(() => {
     if (socket) {
+      //gotta add the condition where socket doesnt get connected
       socket.on("codeResult", (payload: any) => {
         context.setPayload(payload);
         context.setQueued({
