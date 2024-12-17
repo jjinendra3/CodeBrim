@@ -6,7 +6,7 @@ export function useSocket() {
   const [socket, setSocket] = useState<any>(null)
 
   useEffect(() => {
-    const socketIo = io('http://127.0.0.1:5000')
+    const socketIo = io(process.env.NEXT_PUBLIC_BACKEND)
 
     setSocket(socketIo)
 
