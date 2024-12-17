@@ -9,16 +9,24 @@ import { Home, FilePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePathname, useRouter } from "next/navigation";
 import FileModal from "@/components/FileModal";
+import type { File } from "@/Data";
+import { cn } from "@/lib/utils";
+
 export default function CodePageLayoyut({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const socket = useSocket();
+  const context = useContext(Context);
   useEffect(() => {
     if (socket) {
       socket.on("codeResult", (payload: any) => {
-        console.log(payload);
+        context.setPayload(payload);
+        context.setQueued({
+          loading: false,
+          fileId: payload.fileId,
+        });
       });
     }
     //eslint-disable-next-line
@@ -31,7 +39,6 @@ export default function CodePageLayoyut({
   const fileModalFunc = (value: boolean) => {
     setFileModal(value);
   };
-  const context = useContext(Context);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -48,6 +55,7 @@ export default function CodePageLayoyut({
     fetchData();
     //eslint-disable-next-line
   }, []);
+  console.log(context.files);
   return (
     <Context.Provider value={context}>
       <div className="flex md:flex-row flex-col">
@@ -79,23 +87,26 @@ export default function CodePageLayoyut({
               )}
             </div>
           </div>
-          <div className="mt-4 space-y-2 h-[calc(100vh-200px)] overflow-y-auto px-4">
-            {context.files.map((file: any, index: number) => (
-              <Button
-                key={file.id}
-                variant={file.id === fileId ? "default" : "secondary"}
-                className="w-full justify-start hover:bg-none"
-                onClick={() => {
-                  router.push(`/code/${projectId}/${file.id}`);
-                }}
-              >
-                <h1
-                  className={`${file.id === fileId ? "text-white" : "text-black"}`}
+
+          <div className="mt-4 space-y-2 h-[calc(100vh-200px)]  pb-12">
+            <div className="h-full w-full px-4 flex flex-col gap-2 overflow-y-auto scrollbar-hide">
+              {context.files.map((file: File) => (
+                <Button
+                  key={file.id}
+                  variant="default"
+                  className={cn(
+                    file.id === fileId
+                      ? "shadow-none border-2 border-white"
+                      : "shadow-xl",
+                    "flex flex-row justify-between",
+                  )}
+                  onClick={() => router.push(`/code/${projectId}/${file.id}`)}
                 >
-                  {file.filename}
-                </h1>
-              </Button>
-            ))}
+                  <FilePlus className="mr-2 h-4 w-4" />
+                  <span className="truncate">{file.filename}</span>
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
         {children}

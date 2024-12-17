@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import Context from "./ContextAPI";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import axios from "axios";
 import { toast } from "react-toastify";
 
@@ -16,9 +16,13 @@ export interface File {
   stdin: string;
   stdout: string;
   lang: string;
+  userId: string;
+  datetime: string | null;
 }
 const CodeState: React.FC<CodeStateProps> = ({ children }) => {
   const router = useRouter();
+  const projectId = usePathname().split("/")[2];
+  const fileId = usePathname().split("/")[3];
   const [id, setId] = useState<string | null>(null);
   const [files, setFiles] = useState<File[]>([
     {
@@ -28,12 +32,19 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       stdin: "",
       stdout: "",
       lang: "",
+      userId: "",
+      datetime: "",
     },
   ]);
   const [user, setUser] = useState({});
   const [newProjectBool, setNewProjectBool] = useState(false);
   const [editable, setEditable] = useState<boolean>(true);
   const [saving, setSaving] = useState(false);
+  const [payload, setPayload] = useState<File | null>(null);
+  const [queued, setQueued] = useState({
+    loading: false,
+    fileId: "",
+  });
 
   const newProject = async (lang: string) => {
     const ids = toast.loading("Creating new Project...", { autoClose: false });
@@ -118,18 +129,21 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       return response.data;
     } catch (error) {
       console.log(error);
-      router.push('/maintenance')
+      router.push("/maintenance");
       toast.error("Error fetching your code, please try again later!");
     }
   };
 
   const coderunner = async (File: File) => {
     try {
-      // await saver();
       toast("Running your Code, please wait!");
+      await saver(File);
       const response = await axios.post(`${BACKEND}/code/runcode/`, {
         files: File,
       });
+      if (response.data.success) {
+        setQueued({ loading: true, fileId: File.id });
+      }
       return response.data;
     } catch (error) {
       console.log(error);
@@ -137,8 +151,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
     }
   };
 
-
-  const saver = async (presentFile:File) => {
+  const saver = async (presentFile: File) => {
     try {
       setSaving(true);
       const response = await axios.post(`${BACKEND}/project/file-save`, {
@@ -174,7 +187,6 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       });
     }
     try {
-      // await saver();
       const response = await axios.post(`${BACKEND}/git/gitpush/${id}/`, {
         url: link,
         commitmsg: commitmsg,
@@ -377,7 +389,11 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
         goHome,
         saving,
         addFile,
-        getFileData
+        getFileData,
+        payload,
+        setPayload,
+        queued,
+        setQueued,
       }}
     >
       {children}

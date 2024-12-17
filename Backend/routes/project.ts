@@ -7,7 +7,7 @@ const app = Router();
 
 app.post("/file-save", async (req, res) => {
   try {
-    const file = req.body.file;
+    const file = req.body.presentFile;
     await prisma.files.update({
       where: {
         id: file.id,
@@ -70,7 +70,6 @@ app.post("/add-file", async (req, res) => {
         userId: projectId,
       },
     });
-    console.log(newFile)
     return res.send({ success: 1, output: newFile });
   } catch (error: any) {
     const err = error.toString();
@@ -85,7 +84,11 @@ app.get("/getproject/:id", async (req, res) => {
         id: req.params.id,
       },
       include: {
-        files: true,
+        files: {
+          orderBy: {
+            datetime: "asc",
+          },
+        },
       },
     });
     if (!user) {

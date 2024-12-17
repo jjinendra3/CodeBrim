@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useRef, useContext, useEffect, use } from "react";
+import React, { useState, useRef, useContext, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import Editor from "@monaco-editor/react";
 import Context from "@/ContextAPI";
@@ -32,13 +32,17 @@ import {
   FolderInput,
   FolderOutput,
 } from "lucide-react";
-
+import Loader from "@/components/Loader";
 export default function Form() {
   const router = useRouter();
   const pathname = usePathname();
   const projectId = pathname.split("/")[2];
   const fileId = pathname.split("/")[3];
   const [presentFile, setPresentFile] = useState<File | null>(null);
+  const presentFileRef = useRef(presentFile);
+  useEffect(() => {
+    presentFileRef.current = presentFile;
+  }, [presentFile]);
   console.log(presentFile);
 
   const isTabBigger = useBreakpoint("md");
@@ -59,9 +63,6 @@ export default function Form() {
   useEffect(() => {
     const fetchData = async () => {
       const response = await context.getFileData(fileId);
-      console.log(response);
-      delete response.file.userId;
-      console.log(response);
       if (response.success === 1) {
         setPresentFile(response.file);
       } else {
@@ -77,17 +78,35 @@ export default function Form() {
     const handleKeyDown = async (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key === "s") {
         event.preventDefault();
-        console.log(presentFile);
-        if (presentFile) await context.saver(presentFile);
+        console.log(presentFileRef.current); // Always the latest value
+        if (presentFileRef.current) {
+          await context.saver(presentFileRef.current);
+        }
       }
     };
+
     window.addEventListener("keydown", handleKeyDown);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
     //eslint-disable-next-line
   }, []);
-
+  useEffect(() => {
+    const handleStdOutChange = () => {
+      if (context.payload && context.payload.fileId === fileId) {
+        setPresentFile((prev: File | null) => {
+          if (prev) {
+            return { ...prev, stdout: context.payload.stdout };
+          }
+          return prev;
+        });
+        context.setPayload(null);
+      }
+    };
+    handleStdOutChange();
+    //eslint-disable-next-line
+  }, [context.payload]);
+  console.log(context.payload);
   function handleCodeChange(value: string | undefined, event: any) {
     if (value) {
       setPresentFile((prev: File | null) => {
@@ -225,7 +244,11 @@ export default function Form() {
                 >
                   <GitBranch className="mr-2 h-4 w-4" /> Git Controls
                 </Button>
-                <Button variant="default" size="xs" onClick={context.saver}>
+                <Button
+                  variant="default"
+                  size="xs"
+                  onClick={() => context.saver(presentFile)}
+                >
                   <Save className="mr-2 h-4 w-4" /> Save
                 </Button>
                 <Button
@@ -252,8 +275,8 @@ export default function Form() {
         <ResizablePanel defaultSize={25}>
           <ResizablePanelGroup direction="horizontal">
             <ResizablePanel>
-              <div className="h-8 flex items-center justify-center bg-gray-800 text-blue-400">
-                <FolderInput className="mr-2 h-4 w-4" /> INPUT
+              <div className="h-6 flex px-2 bg-gray-800">
+                <div className="float-left text-gray-300 font-mono">Input</div>
               </div>
               <Editor
                 theme="vs-dark"
@@ -265,16 +288,24 @@ export default function Form() {
             </ResizablePanel>
             <ResizableHandle withHandle />
             <ResizablePanel>
-              <div className="h-8 flex items-center justify-center bg-gray-800 text-green-400">
-                <FolderOutput className="mr-2 h-4 w-4" /> OUTPUT
-              </div>
-              <Editor
-                theme="vs-dark"
-                onMount={handlestdDidMount}
-                value={presentFile?.stdout}
-                options={{ readOnly: true }}
-                className="border-t border-gray-700"
-              />
+              {!(context.queued.fileId === fileId && context.queued.loading) ? (
+                <>
+                  <div className="h-6 flex px-2 bg-gray-800">
+                    <div className="float-left text-gray-300 font-mono">
+                      Output
+                    </div>
+                  </div>
+                  <Editor
+                    theme="vs-dark"
+                    onMount={handlestdDidMount}
+                    value={presentFile?.stdout}
+                    options={{ readOnly: true }}
+                    className="border-t border-gray-700"
+                  />
+                </>
+              ) : (
+                <Loader />
+              )}
             </ResizablePanel>
           </ResizablePanelGroup>
         </ResizablePanel>

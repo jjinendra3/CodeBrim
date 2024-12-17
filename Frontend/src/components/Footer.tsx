@@ -1,5 +1,6 @@
 import { FaGlobe } from "react-icons/fa";
 import Image from "next/image";
+import { Github } from "lucide-react";
 const Footer = () => {
   return (
     <footer className="font-sans">
@@ -14,13 +15,7 @@ const Footer = () => {
             />
           </a>
           <a href="https://github.com/jjinendra3" target="_blank">
-            <Image
-              src="https://www.svgrepo.com/show/94698/github.svg"
-              className=""
-              width="30"
-              height="30"
-              alt="gt"
-            />
+            <Github color="white" size={'30px'}/>
           </a>
           <a href="https://jinendrajain.xyz" target="_blank">
             <FaGlobe className="h-[30px] w-[30px] text-white" />
@@ -48,7 +43,7 @@ const Footer = () => {
       </div>
       <p className="font-sans p-8  text-center md:text-lg md:p-4 text-white font-semibold">
         {" "}
-        © 2024 Jinendra Jain. All Rights Reserved.
+        Made By Jinendra Jain
       </p>
     </footer>
   );
