@@ -83,7 +83,7 @@ async function processFolder(
 
 function deleteFolderRecursive(folderPath: string): void {
   if (fs.existsSync(folderPath)) {
-    fs.readdirSync(folderPath).forEach((file) => {
+    fs.readdirSync(folderPath).forEach(file => {
       const curPath = path.join(folderPath, file);
       if (fs.lstatSync(curPath).isDirectory()) {
         deleteFolderRecursive(curPath);
@@ -172,9 +172,8 @@ app.post("/gitpush/:id", async (req, res) => {
     await deleteFolderRecursive(foldername);
     return res.send({ success: true });
   } catch (error: any) {
-    console.log(error);
     if (foldername != "") {
-        await deleteFolderRecursive(foldername);
+      await deleteFolderRecursive(foldername);
     }
     return res.json({ success: false, error: error.message });
   }

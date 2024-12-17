@@ -1,24 +1,30 @@
 "use client";
 import React, { useState } from "react";
 import Context from "./ContextAPI";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import axios from "axios";
-import { v4 as uuidv4 } from "uuid";
-import { toast } from "react-toastify";
+// import { toast } from "react-toastify";
+import { toast } from "sonner";
+
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND;
 interface CodeStateProps {
   children: React.ReactNode;
 }
-interface File {
+export interface File {
   id: string;
   filename: string;
   content: string;
   stdin: string;
   stdout: string;
+  lang: string;
+  userId: string;
+  datetime: string | null;
 }
 const CodeState: React.FC<CodeStateProps> = ({ children }) => {
   const router = useRouter();
-  const [id, setid] = useState<string | null>(null);
+  const projectId = usePathname().split("/")[2];
+  const fileId = usePathname().split("/")[3];
+  const [id, setId] = useState<string | null>(null);
   const [files, setFiles] = useState<File[]>([
     {
       content: "",
@@ -26,14 +32,22 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       id: "",
       stdin: "",
       stdout: "",
+      lang: "",
+      userId: "",
+      datetime: "",
     },
   ]);
-  const [user, setuser] = useState({});
-  const [newproject, setnewproject] = useState(false);
-  const [editable, seteditable] = useState<boolean>(true);
+  const [user, setUser] = useState({});
+  const [newProjectBool, setNewProjectBool] = useState(false);
+  const [editable, setEditable] = useState<boolean>(true);
   const [saving, setSaving] = useState(false);
+  const [payload, setPayload] = useState<File | null>(null);
+  const [queued, setQueued] = useState({
+    loading: false,
+    fileId: "",
+  });
+
   const newProject = async (lang: string) => {
-    const ids = toast.loading("Creating new Project...", { autoClose: false });
     try {
       const response = await axios.get(
         `${BACKEND}/project/newcompiler/${lang}/`,
@@ -41,187 +55,107 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       if (response.data.success === false) {
         throw response.data.error;
       }
-      toast.update(ids, {
-        render: "New Project created!",
-        type: "success",
-        isLoading: false,
-        autoClose: 1000,
-      });
-      setnewproject(true);
-      setid(response.data.output.id);
-      setuser(response.data.output);
+      toast.success("Project Created!");
+      setNewProjectBool(true);
+      setId(response.data.output.id);
+      setUser(response.data.output);
       setFiles(response.data.output.files);
-      router.push(`code/${response.data.output.id}`);
+      router.push(
+        `code/${response.data.output.id}/${response.data.output.files[0].id}`,
+      );
     } catch (error) {
-      toast.update(ids, {
-        render: `${error}`,
-        type: "error",
-        isLoading: false,
-        autoClose: 2000,
-      });
+      toast.error("Error creating new project");
     }
     return;
   };
-
-  const code_getter = async (ID: string) => {
-    const ids = toast.loading("Fetching your Code, please wait!", {
-      autoClose: false,
-    });
+  const addFile = async (lang: string, fileName: string) => {
     try {
-      setid(ID);
-      const response = await axios.get(
-        `${BACKEND}/project/code-snippet/${ID}/`,
-      );
+      const response = await axios.post(`${BACKEND}/project/add-file`, {
+        projectId: id,
+        lang: lang,
+        filename: fileName,
+      });
+      setFiles(prevFiles => [...prevFiles, response.data.output]);
+      return response.data;
+    } catch (error) {
+      console.log(error);
+      toast.error("Error creating new file");
+    }
+  };
+  const code_getter = async (ID: string) => {
+    try {
+      setId(ID);
+      const response = await axios.get(`${BACKEND}/project/getproject/${ID}/`);
       if (response.data.success === false) {
         throw response.data.error;
       }
       setFiles(response.data.user.files);
-      setuser(response.data.user);
-      setid(response.data.user.id);
-      toast.update(ids, {
-        render: `Data Fetched!`,
-        type: "success",
-        isLoading: false,
-        autoClose: 1000,
-      });
+      setUser(response.data.user);
+      setId(response.data.user.id);
+      toast.success("Snippet Loaded!");
       return { success: 1, user: response.data.user };
     } catch (error) {
-      toast.update(ids, {
-        render: `${error}`,
-        type: "error",
-        isLoading: false,
-        autoClose: 1000,
-      });
+      toast.error("Error fetching your code, please try again later!");
       return { success: 0, error: error };
     }
   };
 
-  const coderunner = async (fileid: number) => {
-    let save: any;
+  const getFileData = async (ID: string) => {
     try {
-      save = await saver();
+      const response = await axios.get(`${BACKEND}/project/getfile/${ID}`);
+      return response.data;
     } catch (error) {
-      throw error;
-    }
-    const ids = toast.loading("Running your Code, please wait!", {
-      autoClose: false,
-    });
-    let response: any;
-    try {
-      response = await axios.post(`${BACKEND}/code/runcode/`, {
-        files: save.data.files[fileid],
-      });
-      if (response.data.success === false) {
-        throw response.data.error;
-      }
-      toast.update(ids, {
-        render: "Code Ran successfully!",
-        type: "success",
-        isLoading: false,
-        autoClose: 1000,
-      });
-      setFiles((prevFiles: any[]) => {
-        const updatedFiles = [...prevFiles];
-        updatedFiles[fileid] = {
-          ...updatedFiles[fileid],
-          stdout: response.data.stdout,
-        };
-        return updatedFiles;
-      });
-      return response.data;
-    } catch (error: any) {
-      setFiles((prevFiles: any[]) => {
-        const updatedFiles = [...prevFiles];
-        updatedFiles[fileid] = {
-          ...updatedFiles[fileid],
-          stdout: response.data.stderr,
-        };
-        return updatedFiles;
-      });
-      toast.update(ids, {
-        render: `${error}`,
-        type: "error",
-        isLoading: false,
-        autoClose: 1000,
-      });
-      return response.data;
+      console.log(error);
+      router.push("/maintenance");
+      toast.error("Error fetching your code, please try again later!");
     }
   };
 
-  const newFile = (newFilename: string, language: string) => {
+  const coderunner = async (File: File) => {
     try {
-      let content: string = "";
-      switch (language) {
-        case "cpp":
-          content = `#include <iostream> \nusing namespace std; \nint main() \n{ \n\tcout << "Hello World!"; \n\treturn 0; \n}`;
-          break;
-        case "python":
-          content = `print("Hello World!")`;
-          break;
-        case "javascript":
-          content = `console.log("Hello World!")`;
-          break;
-
-        case "go":
-          content = `package main \nimport "fmt" \nfunc main() { \n\tfmt.Println("Hello World!") \n}`;
-          break;
-        case "java":
-          content = `class Main { \n\tpublic static void main(String[] args) { \n\t\tSystem.out.println("Hello World!"); \n\t} \n}`;
-          break;
-        default:
-          break;
+      toast("Running your Code, please wait!");
+      await saver(File);
+      const response = await axios.post(`${BACKEND}/code/runcode/`, {
+        files: File,
+      });
+      if (response.data.success) {
+        setQueued({ loading: true, fileId: File.id });
       }
-      const newFile = {
-        id: uuidv4(),
-        filename: newFilename,
-        content: content,
-        stdin: "",
-        stdout: "",
-        lang: language,
-      };
-      setFiles((prevFiles) => [...prevFiles, newFile]);
+      return response.data;
     } catch (error) {
-      toast.error("Error creating new file");
+      console.log(error);
+      toast.error("Error running your code, please try again later!");
     }
   };
 
-  const saver = async () => {
+  const saver = async (presentFile: File) => {
     try {
       setSaving(true);
-      const response = await axios.post(`${BACKEND}/project/project-save/`, {
-        files,
-        projectid: id,
+      const response = await axios.post(`${BACKEND}/project/file-save`, {
+        presentFile,
       });
       if (response.data.success === false) {
         throw response.data.error;
       }
-      setFiles(response.data.files);
       setSaving(false);
       return response;
     } catch (error) {
-      toast.error("Error saving your work", { autoClose: 2000 });
+      console.log(error);
+      toast.error("Error saving your work");
       return error;
     }
   };
+
   const gitpush = async (
     link: string,
     commitmsg: string,
     branch: string,
     pan: string,
   ) => {
-    const ids = toast.loading("Please wait... Pushing your code to git now!", {
-      autoClose: false,
-    });
     if (pan === "") {
-      return toast.update(ids, {
-        render: "Please provide your Github Personal Access Token",
-        type: "error",
-        isLoading: false,
-        autoClose: 1000,
-      });
+      return toast.warning("Please provide your Github Personal Access Token");
     }
     try {
-      await saver();
       const response = await axios.post(`${BACKEND}/git/gitpush/${id}/`, {
         url: link,
         commitmsg: commitmsg,
@@ -231,34 +165,16 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       if (response.data.success === false) {
         throw response.data.error;
       }
-      toast.update(ids, {
-        render: "Code Pushed!",
-        type: "success",
-        isLoading: false,
-        autoClose: 1000,
-      });
+      toast.success("Code Pushed!");
       return response;
     } catch (error) {
       typeof error === "string"
-      ? toast.update(ids, {
-          render: `${error.slice(0, 50)}`,
-          type: "error",
-          isLoading: false,
-          autoClose: 1000,
-        })
-      : toast.update(ids, {
-          render: `Please try again later!`,
-          type: "error",
-          isLoading: false,
-          autoClose: 1000,
-        });
+        ? toast.error(`${error.slice(0, 50)}`)
+        : toast.error(`Please try again later!`);
       return error;
     }
   };
   const snipclone = async () => {
-    const ids = toast.loading("Please wait... Cloning your code now!", {
-      autoClose: false,
-    });
     try {
       const response = await axios.get(
         `${BACKEND}/project/clone-snippet/${id}/`,
@@ -266,71 +182,26 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       if (response.data.success === false) {
         throw response.data.error;
       }
-      setnewproject(true);
-      seteditable(true);
-      setid(response.data.output.id);
-      setuser(response.data.output);
+      setNewProjectBool(true);
+      setEditable(true);
+      setId(response.data.output.id);
+      setUser(response.data.output);
       setFiles(response.data.output.files);
       await router.push("/code/" + response.data.output.id);
-      toast.update(ids, {
-        render: "Code Cloned!",
-        type: "success",
-        isLoading: false,
-        autoClose: 1000,
-      });
+      toast.success("Code Cloned!");
       return response;
     } catch (error) {
       typeof error === "string"
-        ? toast.update(ids, {
-            render: `Code Not Cloned! Please try again later in sometime ${error.slice(0,50)}`,
-            type: "error",
-            isLoading: false,
-            autoClose: 1000,
-          })
-        : toast.update(ids, {
-            render: `Code Not Cloned! Please try again later in sometime!`,
-            type: "error",
-            isLoading: false,
-            autoClose: 1000,
-          });
+        ? toast.error(`Code Not Cloned! Please try again later in sometime ${error.slice(0, 50)}`)
+        : toast.error(`Code Not Cloned! Please try again later in sometime!`);
     }
   };
-  const wakeServer = async () => {
-    const ids = toast.loading("Waking up the server...", { autoClose: false });
-    try {
-      const response = await axios.get(`${BACKEND}/server/wake-up/`);
-      if (response.data.success === false) {
-        throw response.data.error;
-      }
-      toast.update(ids, {
-        render: "Server is awake!",
-        type: "success",
-        isLoading: false,
-        autoClose: 1000,
-      });
-    } catch (error) {
-      typeof error === "string"
-        ? toast.update(ids, {
-            render: `${error.slice(0, 50)}`,
-            type: "error",
-            isLoading: false,
-            autoClose: 1000,
-          })
-        : toast.update(ids, {
-            render: `Please try again later!`,
-            type: "error",
-            isLoading: false,
-            autoClose: 1000,
-          });
-    }
-  };
+  
   const gitclonepage = () => {
     router.push("/gitclone");
   };
   const gitclone = async (url: string) => {
-    const ids = toast.loading("Please wait... Cloning your code now!", {
-      autoClose: false,
-    });
+    const ids = toast("Please wait... Cloning your code now!");
     try {
       const response = await axios.post(`${BACKEND}/git/gitclone`, {
         url: url,
@@ -338,35 +209,20 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       if (response.data.success === false) {
         throw response.data.error;
       }
-      setnewproject(true);
-      setid(response.data.response.id);
+      setNewProjectBool(true);
+      setId(response.data.response.id);
       setFiles(response.data.response.files);
       await router.push("/code/" + response.data.response.id);
-      toast.update(ids, {
-        render: "Code Cloned!",
-        type: "success",
-        isLoading: false,
-        autoClose: 1000,
-      });
+      toast.success("Code Cloned!");
       return response;
     } catch (error: any) {
       typeof error.message === "string"
-        ? toast.update(ids, {
-            render: `${error.message.slice(0, 50)}`,
-            type: "error",
-            isLoading: false,
-            autoClose: 1000,
-          })
-        : toast.update(ids, {
-            render: `Please try again later!`,
-            type: "error",
-            isLoading: false,
-            autoClose: 1000,
-          });
+        ? toast.error(`${error.message.slice(0, 50)}`)
+        : toast.error(`Please try again later!`);
     }
   };
   const lockuser = async (pwd: string) => {
-    const ids = toast.loading("Locking your account...", { autoClose: false });
+    const ids = toast("Locking your account...");
     try {
       const response = await axios.post(`${BACKEND}/project/lock-user/${id}`, {
         password: pwd,
@@ -374,28 +230,23 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       if (response.data.success === false) {
         throw response.data.error;
       }
-      setuser(response.data.output);
-      toast.update(ids, {
-        render: "Snippet Locked!",
-        type: "success",
-        isLoading: false,
-        autoClose: 1000,
-      });
+      setUser(response.data.output);
+      toast.success("Snippet Locked!");
       return response;
     } catch (error) {
       typeof error === "string"
-        ? toast.update(ids, {
-            render: `${error.slice(0, 50)}`,
-            type: "error",
-            isLoading: false,
-            autoClose: 1000,
-          })
-        : toast.update(ids, {
-            render: `Please try again later!`,
-            type: "error",
-            isLoading: false,
-            autoClose: 1000,
-          });
+        ? toast.error(`${error.slice(0, 50)}`)
+        : toast.error(`Please try again later!`);
+    }
+  };
+  const addFeedback = async (feedback: string) => {
+    try {
+      const response = await axios.post(`${BACKEND}/project/add-feedback`, {
+        feedback: feedback,
+      });
+      return response.data;
+    } catch (error) {
+      toast.error("Error adding feedback");
     }
   };
   const goHome = () => {
@@ -404,26 +255,30 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
   return (
     <Context.Provider
       value={{
-        id,
         files,
         user,
-        newproject,
+        newProjectBool,
         newProject,
         setFiles,
         code_getter,
         coderunner,
-        newFile,
         saver,
         gitpush,
         snipclone,
-        wakeServer,
         gitclonepage,
         gitclone,
         lockuser,
         editable,
-        seteditable,
+        setEditable,
         goHome,
         saving,
+        addFile,
+        getFileData,
+        payload,
+        setPayload,
+        queued,
+        setQueued,
+        addFeedback
       }}
     >
       {children}

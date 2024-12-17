@@ -27,10 +27,25 @@ const config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        blinkCursor: {
+          "50%": { "border-right-color": "transparent" },
+        },
+        typeAndDelete: {
+          "0%, 10%": { width: "0" },
+          "45%, 55%": { width: "6.2em" }, // adjust width based on content
+          "90%, 100%": { width: "0" },
+        },
+        bounce: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-20%)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        blinkCursor: "blinkCursor 0.5s step-end infinite alternate",
+        typeAndDelete: "typeAndDelete 4s steps(11) infinite",
+        bounce: "bounce 2s infinite",
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",

@@ -21,12 +21,20 @@ model User {
 }
 
 model Files {
-  id       String  @id @default(cuid())
+  id       String   @id @default(cuid())
   filename String
   lang     String
-  content  String  @default("")
-  stdin    String  @default("")
-  stdout   String  @default("")
-  user     User?   @relation(fields: [userId], references: [id])
+  content  String   @default("")
+  stdin    String   @default("")
+  stdout   String   @default("")
+  user     User?    @relation(fields: [userId], references: [id])
+  datetime DateTime @default(now())
   userId   String?
+}
+
+model Feedback {
+  id       String   @id @default(cuid())
+  datetime DateTime @default(now())
+  happy    Boolean
+  content  String
 }

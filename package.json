@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "start-frontend": "cd Frontend && npm run build && npm start",
+    "start-frontend": "cd Frontend && npm run dev",
     "start-backend": "cd Backend && npm start",
     "start": "concurrently -n \"FRONTEND,BACKEND\" -c \"bgBlue,bgYellow\" -p \"[{name}]\" \"npm run start-frontend\" \"npm run start-backend\"",
     "install-frontend": "cd Frontend && npm i && npm run build",
@@ -10,7 +10,9 @@
   },
   "dependencies": {
     "concurrency": "^0.1.4",
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "ioredis": "^5.4.1",
+    "redis": "^4.7.0"
   },
   "devDependencies": {
     "prettier": "3.2.5"

@@ -20,7 +20,7 @@ export default function Modal({
     event.preventDefault();
     if (pwdflag === false) {
       if (password === context.user.password) {
-        context.seteditable(true);
+        context.setEditable(true);
       } else {
         toast.error("Wrong Password!");
       }
