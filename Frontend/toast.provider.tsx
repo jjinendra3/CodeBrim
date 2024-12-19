@@ -1,14 +1,12 @@
 "use client";
 
 import { ToastContainer } from "react-toastify";
-import { useBreakpoint } from "@/use-breakpoint";
 import "react-toastify/dist/ReactToastify.css";
 interface ToastProviderProps {
   children: React.ReactNode;
 }
 
 export default function ToastProvider({ children }: ToastProviderProps) {
-  const isMobile = useBreakpoint("md");
   return (
     <>
       {children}
@@ -23,16 +21,6 @@ export default function ToastProvider({ children }: ToastProviderProps) {
         draggable
         pauseOnHover={false}
         theme="dark"
-        style={
-          !isMobile
-            ? {
-                width: "115px",
-                padding: "0",
-                margin: "0",
-                fontSize: "0.8rem",
-              }
-            : {}
-        }
       />
     </>
   );
