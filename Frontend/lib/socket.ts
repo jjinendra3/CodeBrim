@@ -1,20 +1,20 @@
-'use client';
+"use client";
 import { useEffect, useState } from "react";
-import io from 'socket.io-client'
+import io from "socket.io-client";
 
 export function useSocket() {
-  const [socket, setSocket] = useState<any>(null)
+  const [socket, setSocket] = useState<any>(null);
 
   useEffect(() => {
-    const socketIo = io(process.env.NEXT_PUBLIC_BACKEND)
+    const socketIo = io(process.env.NEXT_PUBLIC_BACKEND);
 
-    setSocket(socketIo)
+    setSocket(socketIo);
 
     function cleanup() {
-      socketIo.disconnect()
+      socketIo.disconnect();
     }
     return cleanup;
-  }, [])
+  }, []);
 
-  return socket
+  return socket;
 }

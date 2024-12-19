@@ -192,11 +192,13 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
       return response;
     } catch (error) {
       typeof error === "string"
-        ? toast.error(`Code Not Cloned! Please try again later in sometime ${error.slice(0, 50)}`)
+        ? toast.error(
+            `Code Not Cloned! Please try again later in sometime ${error.slice(0, 50)}`,
+          )
         : toast.error(`Code Not Cloned! Please try again later in sometime!`);
     }
   };
-  
+
   const gitclonepage = () => {
     router.push("/gitclone");
   };
@@ -278,7 +280,7 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
         setPayload,
         queued,
         setQueued,
-        addFeedback
+        addFeedback,
       }}
     >
       {children}

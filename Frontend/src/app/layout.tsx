@@ -116,7 +116,12 @@ export default function RootLayout({
       <Analytics />
       <CodeState>
         <body className={inter.className}>
-          <Toaster richColors duration={1000} position="bottom-right" theme="dark"/>
+          <Toaster
+            richColors
+            duration={1000}
+            position="bottom-right"
+            theme="dark"
+          />
           {children}
         </body>
       </CodeState>

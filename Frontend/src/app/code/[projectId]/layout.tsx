@@ -3,19 +3,18 @@ import { useContext, useState } from "react";
 import Context from "@/ContextAPI";
 import { useEffect } from "react";
 import { useSocket } from "../../../../lib/socket";
-import Image from "next/image";
-import { Home } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Menu } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import FileModal from "@/components/FileModal";
-import type { File } from "@/Data";
 import { cn } from "@/lib/utils";
-
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import LayoutContent from "./LayoutContent";
+import { useIsMobile } from "@/hooks/use-mobile";
 export default function CodePageLayoyut({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const isBiggerThanTab = !useIsMobile();
   const socket = useSocket();
   const context = useContext(Context);
   useEffect(() => {
@@ -57,62 +56,36 @@ export default function CodePageLayoyut({
   }, []);
   return (
     <Context.Provider value={context}>
-      <div className="flex md:flex-row flex-col">
-        <div className="w-1/6 bg-gray-800 border-r border-gray-50">
-          <div className="p-4 space-y-4">
-            <h1
-              className="text-3xl font-bold text-center text-white cursor-pointer"
-              onClick={context.goHome}
-            >
-              CodeBrim
-            </h1>
-            <p className="text-sm text-center text-gray-400">
-              Compiler on the Go!
-            </p>
-            <div className={`flex flex-col justify-center items-center gap-2`}>
-              <Button
-                onClick={context.goHome}
-                variant="ghost"
-                className="w-full"
+      <div className="flex h-screen">
+        <div
+          className={cn(
+            isBiggerThanTab ? "w-1/6" : "w-1/8",
+            "bg-gray-800 border-r border-gray-50 h-screen",
+          )}
+        >
+          {!isBiggerThanTab ? (
+            <Sheet>
+              <SheetTrigger className="w-full text-center flex items-center justify-center">
+                <Menu />
+              </SheetTrigger>
+              <SheetContent
+                side={"left"}
+                className="bg-gray-800 border-r border-gray-50 h-full"
               >
-                <Home className="mr-2 h-4 w-4" /> Home
-              </Button>
-              {context.editable && (
-                <FileModal
+                <LayoutContent
                   context={context}
-                  modal={fileModal}
-                  setModal={fileModalFunc}
+                  fileModal={fileModal}
+                  fileModalFunc={fileModalFunc}
                 />
-              )}
-            </div>
-          </div>
-
-          <div className="mt-4 space-y-2 h-[calc(100vh-200px)]  pb-12">
-            <div className="h-full w-full px-4 flex flex-col gap-2 overflow-y-auto scrollbar-hide">
-              {context.files.map((file: File) => (
-                <Button
-                  key={file.id}
-                  variant="default"
-                  className={cn(
-                    file.id === fileId
-                      ? "shadow-none border-2 border-white"
-                      : "shadow-xl",
-                    "flex flex-row justify-between px-2",
-                  )}
-                  onClick={() => router.push(`/code/${projectId}/${file.id}`)}
-                >
-                  <Image
-                    src={"/languageIcon/"+file.filename.split(".")[1] + ".svg"}
-                    width={100}
-                    height={100}
-                    className="w-5 h-5"
-                    alt="Language Icon"
-                  />
-                  <span className="truncate">{file.filename}</span>
-                </Button>
-              ))}
-            </div>
-          </div>
+              </SheetContent>
+            </Sheet>
+          ) : (
+            <LayoutContent
+              context={context}
+              fileModal={fileModal}
+              fileModalFunc={fileModalFunc}
+            />
+          )}
         </div>
         {children}
       </div>

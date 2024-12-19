@@ -1,28 +1,28 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react";
 
 const sampleCode = `function fibonacci(n) {
   if (n <= 1) return n;
   return fibonacci(n - 1) + fibonacci(n - 2);
 }
 
-console.log(fibonacci(10));`
+console.log(fibonacci(10));`;
 
 export default function CodeEditor() {
-  const [text, setText] = useState('')
-  const [currentIndex, setCurrentIndex] = useState(0)
+  const [text, setText] = useState("");
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
     if (currentIndex < sampleCode.length) {
       const timeout = setTimeout(() => {
-        setText(prevText => prevText + sampleCode[currentIndex])
-        setCurrentIndex(prevIndex => prevIndex + 1)
-      }, 50)
+        setText(prevText => prevText + sampleCode[currentIndex]);
+        setCurrentIndex(prevIndex => prevIndex + 1);
+      }, 50);
 
-      return () => clearTimeout(timeout)
+      return () => clearTimeout(timeout);
     }
-  }, [currentIndex])
+  }, [currentIndex]);
 
   return (
     <div className="rounded-lg bg-gray-800 p-4 shadow-lg overflow-hidden">
@@ -38,6 +38,5 @@ export default function CodeEditor() {
         <code className="text-sm sm:text-base text-green-400">{text}</code>
       </pre>
     </div>
-  )
+  );
 }
-

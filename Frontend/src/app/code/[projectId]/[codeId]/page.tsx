@@ -6,7 +6,6 @@ import Context from "@/ContextAPI";
 import Modal from "@/components/Modal";
 import FileModal from "@/components/FileModal";
 import PasswordModal from "@/components/PasswordModal";
-import { useBreakpoint } from "@/use-breakpoint";
 import { type File } from "@/Data";
 import { useRouter, usePathname } from "next/navigation";
 import {
@@ -14,30 +13,18 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import FeedbackModal from "@/components/FeedbackModal";
-import {
-  Play,
-  Lock,
-  Unlock,
-  Copy,
-  GitBranch,
-  Save,
-  Menu,
-} from "lucide-react";
+import { Play, Lock, Unlock, Copy, GitBranch, Save } from "lucide-react";
 import Loader from "@/components/Loader";
+import { useIsMobile } from "@/hooks/use-mobile";
 export default function Form() {
   const router = useRouter();
   const pathname = usePathname();
   const projectId = pathname.split("/")[2];
   const fileId = pathname.split("/")[3];
   const [presentFile, setPresentFile] = useState<File | null>(null);
-  // const isTabBigger = useBreakpoint("md");
+  const presentFileRef = useRef<File | null>(presentFile);
+  const isTabBigger = !useIsMobile();
   const context = useContext(Context);
   const editorRef = useRef<any>(null);
   const stdinRef = useRef<any>(null);
@@ -63,13 +50,15 @@ export default function Form() {
     fetchData();
     //eslint-disable-next-line
   }, []);
-
+  useEffect(() => {
+    presentFileRef.current = presentFile;
+  }, [presentFile]);
   useEffect(() => {
     const handleKeyDown = async (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key === "s") {
         event.preventDefault();
-        if (presentFile) {
-          await context.saver(presentFile);
+        if (presentFileRef.current !== null) {
+          await context.saver(presentFileRef.current);
         }
       }
     };
@@ -96,7 +85,6 @@ export default function Form() {
     handleStdOutChange();
     //eslint-disable-next-line
   }, [context.payload]);
-  
   function handleCodeChange(value: string | undefined, event: any) {
     if (value) {
       setPresentFile((prev: File | null) => {
@@ -127,7 +115,7 @@ export default function Form() {
   }
 
   return (
-    <div className="w-5/6 overflow-hidden">
+    <div className={"overflow-hidden w-full"}>
       {pwdmod && <PasswordModal setpwdmod={setpwdmod} pwdflag={pwdflag} />}
       {mod && (
         <Modal
@@ -141,67 +129,23 @@ export default function Form() {
         <ResizablePanel defaultSize={75}>
           <div className="h-8 flex justify-between items-center px-4 bg-gray-800 text-white">
             <div className="flex flex-row gap-2 items-center ">
-             
               <FeedbackModal context={context} />
               <h2 className="font-semibold text-xs">
                 Language: {presentFile?.lang.toUpperCase()}
               </h2>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-xs">
-                {context.saving ? "Saving..." : "Code Saved!"}
-              </span>
-              <Save
-                className={`h-3 w-3 ${context.saving ? "animate-pulse" : ""}`}
-              />
-            </div>
-            {/* {!isTabBigger ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <Menu className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem
-                    onClick={() => context.coderunner(presentFile)}
-                  >
-                    Run
-                  </DropdownMenuItem>
-                  {!context.editable && (
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setpwdflag(false);
-                        setpwdmod(true);
-                      }}
-                    >
-                      Unlock
-                    </DropdownMenuItem>
-                  )}
-                  {context.newProjectBool && (
-                    <DropdownMenuItem
-                      onClick={() => {
-                        setpwdflag(true);
-                        setpwdmod(true);
-                      }}
-                    >
-                      Lock
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuItem onClick={context.snipclone}>
-                    Copy Files
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setmod(true)}>
-                    Git Controls
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={context.saver}>
-                    Save
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : ( */}
-              <div className="flex space-x-2">
-                {/* {!context.editable && (
+            {isTabBigger && (
+              <div className="flex items-center space-x-2">
+                <span className="text-xs">
+                  {context.saving ? "Saving..." : "Code Saved!"}
+                </span>
+                <Save
+                  className={`h-3 w-3 ${context.saving ? "animate-pulse" : ""}`}
+                />
+              </div>
+            )}
+            <div className="flex space-x-2">
+              {/* {!context.editable && (
                   <Button
                     variant="default"
                     size="xs"
@@ -225,31 +169,31 @@ export default function Form() {
                     <Lock className="mr-2 h-4 w-4" /> Lock
                   </Button>
                 )} */}
-                <Button variant="default" size="xs" onClick={context.snipclone}>
-                  <Copy className="mr-2 h-4 w-4" /> Copy Files
-                </Button>
-                <Button
-                  variant="default"
-                  size="xs"
-                  onClick={() => setmod(true)}
-                >
-                  <GitBranch className="mr-2 h-4 w-4" /> Git Controls
-                </Button>
-                <Button
-                  variant="default"
-                  size="xs"
-                  onClick={() => context.saver(presentFile)}
-                >
-                  <Save className="mr-2 h-4 w-4" /> Save
-                </Button>
-                <Button
-                  variant="default"
-                  size="xs"
-                  onClick={() => context.coderunner(presentFile)}
-                >
-                  <Play className="mr-1 h-4 w-4" /> Run
-                </Button>
-              </div>
+              <Button variant="default" size="xs" onClick={context.snipclone}>
+                <Copy className="h-4 w-4" />
+                {isTabBigger && <span className="ml-2">Copy Files</span>}
+              </Button>
+              <Button variant="default" size="xs" onClick={() => setmod(true)}>
+                <GitBranch className="h-4 w-4" />
+                {isTabBigger && <span className="ml-2">Git Controls</span>}
+              </Button>
+              <Button
+                variant="default"
+                size="xs"
+                onClick={() => context.saver(presentFile)}
+              >
+                <Save className="h-4 w-4" />
+                {isTabBigger && <span className="ml-2">Save</span>}
+              </Button>
+              <Button
+                variant="default"
+                size="xs"
+                onClick={() => context.coderunner(presentFile)}
+              >
+                <Play className="h-4 w-4" />
+                {isTabBigger && <span className="ml-1">Run</span>}
+              </Button>
+            </div>
             {/* )} */}
           </div>
           <Editor

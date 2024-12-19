@@ -13,14 +13,14 @@ export default function Hero() {
             className="text-3xl font-extrabold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: .5 }}
+            transition={{ duration: 0.5 }}
           >
             <span className="block">Code Anywhere,</span>{" "}
             <motion.span
               className="text-blue-500 block"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: .5, duration: .5 }}
+              transition={{ delay: 0.5, duration: 0.5 }}
             >
               Execute Everywhere
             </motion.span>
@@ -29,7 +29,7 @@ export default function Hero() {
             className="mt-4 text-lg sm:text-xl text-gray-300"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1, duration: .5 }}
+            transition={{ delay: 1, duration: 0.5 }}
           >
             Experience the future of coding with our lightning-fast online
             compiler. Write, run, and debug your code in the cloud.
@@ -38,7 +38,7 @@ export default function Hero() {
             className="mt-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.5, duration: .5 }}
+            transition={{ delay: 1.5, duration: 0.5 }}
           >
             <Link
               href="/language"

@@ -50,7 +50,7 @@ export default function Modal({
   };
 
   const handleSubmit = async (event: any) => {
-    event.preventDefault();  // Prevent form submission
+    event.preventDefault(); // Prevent form submission
     if (filename === "") {
       toast.error("Please enter a filename");
       return;
@@ -61,7 +61,7 @@ export default function Modal({
     }
     const response = await context.addFile(language, filename);
     if (response.success) {
-      setModal(false);  // Close the dialog after successful file creation
+      setModal(false); // Close the dialog after successful file creation
     } else {
       toast.error("Error in creating file, please try again later!");
     }
@@ -69,7 +69,7 @@ export default function Modal({
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === "Enter") {
-      event.preventDefault();  // Prevent form submission on Enter key press
+      event.preventDefault(); // Prevent form submission on Enter key press
     }
   };
 
@@ -86,7 +86,11 @@ export default function Modal({
             Add File
           </DialogTitle>
           <div className="flex flex-col justify-center items-center">
-            <form onSubmit={handleSubmit} className="w-full" onKeyDown={handleKeyDown}>
+            <form
+              onSubmit={handleSubmit}
+              className="w-full"
+              onKeyDown={handleKeyDown}
+            >
               <Input
                 placeholder="Filename"
                 onChange={handleInputChange}
@@ -99,7 +103,7 @@ export default function Modal({
               <div className="flex flex-row space-x-4 mx-auto my-4 justify-center">
                 <Button
                   className="bg-red-900 text-white rounded-lg font-bold"
-                  onClick={() => setModal(false)}  // Manually close dialog on Cancel button click
+                  onClick={() => setModal(false)} // Manually close dialog on Cancel button click
                 >
                   Cancel
                 </Button>

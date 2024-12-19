@@ -63,7 +63,7 @@ export default function FeedbackModal({
             className="flex items-center bg-transparent justify-center rounded-md transition-all duration-200 hover:bg-purple-900 active:scale-95"
             aria-label="Bug Report"
           >
-            <Bug color="white" size={'20px'}/>
+            <Bug color="white" size={"20px"} />
             <span className="tooltip absolute top-[-40px] min-w-[100px] px-3 py-2 text-xs font-semibold text-white bg-gray-800 rounded shadow-lg opacity-0 transition-opacity duration-500 pointer-events-none group-hover:opacity-100">
               Bug Report
             </span>
