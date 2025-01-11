@@ -66,6 +66,7 @@ const executeCode = async (data: any): Promise<codeExecuterProps> => {
     " ";
 
   const languageExtensions: Record<string, string> = {
+    c: "c",
     cpp: "cpp",
     java: "java",
     go: "go",
@@ -148,7 +149,7 @@ const executeCode = async (data: any): Promise<codeExecuterProps> => {
         };
       }
     }
-    const err = error.toString();
+    const err = error.stderr ?? "Error in Running the code";
     return {
       success: false,
       fileId: fileId,
