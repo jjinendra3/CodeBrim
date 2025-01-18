@@ -20,11 +20,11 @@ export default function Navbar() {
                 Docs
               </Link>
               <Link
-                href="https://github.com/jjinendra3/codebrim"
+                href="https://jinendrajain.xyz"
                 target="_blank"
                 className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
               >
-                Open Source
+                About Me
               </Link>
             </div>
           </div>
