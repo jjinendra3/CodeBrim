@@ -20,8 +20,8 @@ jobs:
 
     - name: Deploy to EC2 and Restart Service
       run: |
-        ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_HOST }} << 'EOF'
-        cd Codebrim
+        ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+        cd CodeBrim
         git pull origin master
         sudo systemctl restart myapp.service
         sudo systemctl restart myapp.service
