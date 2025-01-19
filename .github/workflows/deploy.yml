@@ -1,0 +1,33 @@
+name: Deploy to EC2 and Restart Service
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
+
+    - name: Deploy to EC2 and Restart Service
+      run: |
+        ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_HOST }} << 'EOF'
+        cd Codebrim
+        git pull origin master
+        sudo systemctl restart myapp.service
+        sudo systemctl restart myapp.service
+        echo "Service restarted. Checking status every 5 seconds for 30 seconds:"
+        for i in {1..6}; do
+            sudo systemctl status myapp.service | grep -E "Active:|Loaded:"
+            sleep 5
+        done
+        EOF
