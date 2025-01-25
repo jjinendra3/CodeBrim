@@ -49,13 +49,16 @@ const CodeState: React.FC<CodeStateProps> = ({ children }) => {
 
   const newProject = async (lang: string) => {
     try {
+      const creating = toast.loading("Creating Project...");
       const response = await axios.get(
         `${BACKEND}/project/newcompiler/${lang}/`,
       );
       if (response.data.success === false) {
         throw response.data.error;
       }
-      toast.success("Project Created!");
+      toast.success("Project Created", {
+        id: creating,
+      });
       setNewProjectBool(true);
       setId(response.data.output.id);
       setUser(response.data.output);

@@ -2,7 +2,6 @@
 
 import { useContext, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Code } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import Context from "@/ContextAPI";
@@ -48,6 +47,7 @@ const languages = [
 
 export default function ChooseLanguage() {
   const context = useContext(Context);
+  const [clicked, setClicked] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
 
   return (
@@ -78,7 +78,11 @@ export default function ChooseLanguage() {
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
               <Button
-                onClick={async e => await context.newProject(lang.code)}
+                disabled={clicked}
+                onClick={async e => {
+                  setClicked(true);
+                  await context.newProject(lang.code);
+                }}
                 className={`w-full h-full p-6 rounded-xl transition-all duration-200 flex flex-col justify-center items-center ${
                   selectedLanguage === lang.code
                     ? "bg-blue-600 shadow-lg shadow-blue-500/50"
