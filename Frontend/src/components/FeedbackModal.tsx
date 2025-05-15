@@ -4,31 +4,24 @@ import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { useCodeStore } from "@/lib/codeStore";
 
-interface Feedback {
-  content: string;
-  happy: boolean | null;
-}
-
-export default function FeedbackModal({
-  context,
-}: {
-  context: { addFeedback: (feedback: Feedback) => Promise<void> };
-}) {
-  const [feedback, setFeedback] = useState<Feedback>({
+export default function FeedbackModal() {
+  const addFeedback = useCodeStore(state => state.addFeedback);
+  const [feedback, setFeedback] = useState<any>({
     content: "",
     happy: null,
   });
 
   const handleContentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFeedback(prev => ({
+    setFeedback((prev: any) => ({
       ...prev,
       content: e.target.value,
     }));
   };
 
   const handleHappyToggle = (isHappy: boolean) => {
-    setFeedback(prev => ({
+    setFeedback((prev: any) => ({
       ...prev,
       happy: isHappy,
     }));
@@ -46,7 +39,7 @@ export default function FeedbackModal({
     }
 
     try {
-      await context.addFeedback(feedback);
+      await addFeedback(feedback);
       toast.success("Feedback submitted successfully!");
       setFeedback({ content: "", happy: null });
     } catch (error) {

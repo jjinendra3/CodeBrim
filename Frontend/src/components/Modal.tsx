@@ -1,3 +1,4 @@
+import { useCodeStore } from "@/lib/codeStore";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 
@@ -5,13 +6,12 @@ export default function Modal({
   setmod,
   gitcontrols,
   setgitcontrols,
-  context,
 }: {
   setmod: any;
   gitcontrols: any;
   setgitcontrols: any;
-  context: any;
 }) {
+  const gitPush = useCodeStore(state => state.gitPush);
   const handleInputChange = (event: any) => {
     setgitcontrols({
       ...gitcontrols,
@@ -103,7 +103,7 @@ export default function Modal({
                 className="bg-blue-900 text-white rounded-lg px-4 py-2 font-bold"
                 onClick={() => {
                   resetInputs();
-                  context.gitpush(
+                  gitPush(
                     gitcontrols.repolink,
                     gitcontrols.commitmsg,
                     gitcontrols.branch,

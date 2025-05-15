@@ -1,12 +1,11 @@
 "use client";
-import React, { useState, useRef, useContext, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import Editor from "@monaco-editor/react";
-import Context from "@/ContextAPI";
 import Modal from "@/components/Modal";
 import FileModal from "@/components/FileModal";
 import PasswordModal from "@/components/PasswordModal";
-import { type File } from "@/Data";
+import { type File } from "@/type";
 import { useRouter, usePathname } from "next/navigation";
 import {
   ResizableHandle,
@@ -17,7 +16,19 @@ import FeedbackModal from "@/components/FeedbackModal";
 import { Play, Lock, Unlock, Copy, GitBranch, Save } from "lucide-react";
 import Loader from "@/components/Loader";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useCodeStore } from "@/lib/codeStore";
 export default function Form() {
+  const {
+    codeRunner,
+    getFileData,
+    saver,
+    snipClone,
+    payload,
+    setPayload,
+    saving,
+    editable,
+    queued,
+  } = useCodeStore();
   const router = useRouter();
   const pathname = usePathname();
   const projectId = pathname.split("/")[2];
@@ -25,7 +36,6 @@ export default function Form() {
   const [presentFile, setPresentFile] = useState<File | null>(null);
   const presentFileRef = useRef<File | null>(presentFile);
   const isTabBigger = !useIsMobile();
-  const context = useContext(Context);
   const editorRef = useRef<any>(null);
   const stdinRef = useRef<any>(null);
   const [pwdmod, setpwdmod] = useState(false);
@@ -40,7 +50,7 @@ export default function Form() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = await context.getFileData(fileId);
+      const response = await getFileData(fileId);
       if (response.success === 1) {
         setPresentFile(response.file);
       } else {
@@ -58,7 +68,7 @@ export default function Form() {
       if ((event.ctrlKey || event.metaKey) && event.key === "s") {
         event.preventDefault();
         if (presentFileRef.current !== null) {
-          await context.saver(presentFileRef.current);
+          await saver(presentFileRef.current);
         }
       }
     };
@@ -72,19 +82,19 @@ export default function Form() {
 
   useEffect(() => {
     const handleStdOutChange = () => {
-      if (context.payload && context.payload.fileId === fileId) {
+      if (payload && payload.fileId === fileId) {
         setPresentFile((prev: File | null) => {
           if (prev) {
-            return { ...prev, stdout: context.payload.stdout };
+            return { ...prev, stdout: payload.stdout };
           }
           return prev;
         });
-        context.setPayload(null);
+        setPayload(null);
       }
     };
     handleStdOutChange();
     //eslint-disable-next-line
-  }, [context.payload]);
+  }, [payload]);
   function handleCodeChange(value: string | undefined, event: any) {
     if (value) {
       setPresentFile((prev: File | null) => {
@@ -122,14 +132,13 @@ export default function Form() {
           setmod={setmod}
           gitcontrols={gitcontrols}
           setgitcontrols={setgitcontrols}
-          context={context}
         />
       )}
       <ResizablePanelGroup direction="vertical">
         <ResizablePanel defaultSize={75}>
           <div className="h-8 flex justify-between items-center px-4 bg-gray-800 text-white">
             <div className="flex flex-row gap-2 items-center ">
-              <FeedbackModal context={context} />
+              <FeedbackModal />
               <h2 className="font-semibold text-xs">
                 Language: {presentFile?.lang.toUpperCase()}
               </h2>
@@ -137,39 +146,21 @@ export default function Form() {
             {isTabBigger && (
               <div className="flex items-center space-x-2">
                 <span className="text-xs">
-                  {context.saving ? "Saving..." : "Code Saved!"}
+                  {saving ? "Saving..." : "Code Saved!"}
                 </span>
-                <Save
-                  className={`h-3 w-3 ${context.saving ? "animate-pulse" : ""}`}
-                />
+                <Save className={`h-3 w-3 ${saving ? "animate-pulse" : ""}`} />
               </div>
             )}
             <div className="flex space-x-2">
-              {/* {!context.editable && (
-                  <Button
-                    variant="default"
-                    size="xs"
-                    onClick={() => {
-                      setpwdflag(false);
-                      setpwdmod(true);
-                    }}
-                  >
-                    <Unlock className="mr-2 h-4 w-4" /> Unlock
-                  </Button>
-                )}
-                {context.newProjectBool && (
-                  <Button
-                    variant="default"
-                    size="xs"
-                    onClick={() => {
-                      setpwdflag(true);
-                      setpwdmod(true);
-                    }}
-                  >
-                    <Lock className="mr-2 h-4 w-4" /> Lock
-                  </Button>
-                )} */}
-              <Button variant="default" size="xs" onClick={context.snipclone}>
+              <Button
+                variant="default"
+                size="xs"
+                onClick={async () => {
+                  const response = await snipClone();
+                  if (!response) return;
+                  router.push(`/code/${response.id}`);
+                }}
+              >
                 <Copy className="h-4 w-4" />
                 {isTabBigger && <span className="ml-2">Copy Files</span>}
               </Button>
@@ -180,7 +171,10 @@ export default function Form() {
               <Button
                 variant="default"
                 size="xs"
-                onClick={() => context.saver(presentFile)}
+                onClick={() => {
+                  if (!presentFile) return;
+                  saver(presentFile);
+                }}
               >
                 <Save className="h-4 w-4" />
                 {isTabBigger && <span className="ml-2">Save</span>}
@@ -188,7 +182,10 @@ export default function Form() {
               <Button
                 variant="default"
                 size="xs"
-                onClick={() => context.coderunner(presentFile)}
+                onClick={async () => {
+                  if (!presentFile) return;
+                  await codeRunner(presentFile);
+                }}
               >
                 <Play className="h-4 w-4" />
                 {isTabBigger && <span className="ml-1">Run</span>}
@@ -202,7 +199,7 @@ export default function Form() {
             language={presentFile?.lang}
             onMount={handleEditorDidMount}
             onChange={handleCodeChange}
-            options={{ readOnly: !context.editable }}
+            options={{ readOnly: !editable }}
             className="border-t border-gray-700"
           />
         </ResizablePanel>
@@ -223,7 +220,7 @@ export default function Form() {
             </ResizablePanel>
             <ResizableHandle withHandle />
             <ResizablePanel>
-              {!(context.queued.fileId === fileId && context.queued.loading) ? (
+              {!(queued.fileId === fileId && queued.loading) ? (
                 <>
                   <div className="h-6 flex px-2 bg-gray-800">
                     <div className="float-left text-gray-300 font-mono">

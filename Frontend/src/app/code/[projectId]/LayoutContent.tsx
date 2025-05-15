@@ -4,16 +4,16 @@ import { Home } from "lucide-react";
 import FileModal from "@/components/FileModal";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { File } from "@/Data";
+import { File } from "@/type";
+import { useCodeStore } from "@/lib/codeStore";
 export default function LayoutContent({
-  context,
   fileModal,
   fileModalFunc,
 }: {
-  context: any;
   fileModal: any;
   fileModalFunc: any;
 }) {
+  const { files, editable } = useCodeStore();
   const router = useRouter();
   const fileId = usePathname().split("/")[3];
   const projectId = usePathname().split("/")[2];
@@ -22,18 +22,21 @@ export default function LayoutContent({
       <div className="p-4 space-y-4">
         <h1
           className="text-3xl font-bold text-center text-white cursor-pointer"
-          onClick={context.goHome}
+          onClick={() => router.push("/")}
         >
           CodeBrim
         </h1>
         <p className="text-sm text-center text-gray-400">Compiler on the Go!</p>
         <div className={`flex flex-col justify-center items-center gap-2`}>
-          <Button onClick={context.goHome} variant="ghost" className="w-full">
+          <Button
+            onClick={() => router.push("/")}
+            variant="ghost"
+            className="w-full"
+          >
             <Home className="mr-2 h-4 w-4" /> Home
           </Button>
-          {context.editable && (
+          {editable && (
             <FileModal
-              context={context}
               modal={fileModal}
               setModal={fileModalFunc}
             />
@@ -43,7 +46,7 @@ export default function LayoutContent({
 
       <div className="mt-4 space-y-2   pb-12">
         <div className="h-full w-full px-4 flex flex-col gap-2 overflow-y-auto scrollbar-hide">
-          {context.files.map((file: File) => (
+          {files.map((file: File) => (
             <Button
               key={file.id}
               variant="default"

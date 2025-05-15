@@ -1,9 +1,9 @@
 "use client";
-import { useContext, useState } from "react";
-import Context from "@/ContextAPI";
+import { useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { toast } from "react-toastify";
+import { useCodeStore } from "@/lib/codeStore";
 export default function Modal({
   setpwdmod,
   pwdflag,
@@ -11,7 +11,7 @@ export default function Modal({
   setpwdmod: any;
   pwdflag: boolean;
 }) {
-  const context = useContext(Context);
+  const { lockUser, user, setEditable } = useCodeStore();
   const [password, setpassword] = useState<string>("");
   const handleInputChange = (event: any) => {
     setpassword(event.target.value);
@@ -19,18 +19,18 @@ export default function Modal({
   async function handleSubmit(event: any) {
     event.preventDefault();
     if (pwdflag === false) {
-      if (password === context.user.password) {
-        context.setEditable(true);
+      if (password === user.password) {
+        setEditable(true);
       } else {
         toast.error("Wrong Password!");
       }
     } else {
-      await context.lockuser(password);
+      await lockUser(password);
     }
     setpwdmod(false);
   }
   return (
-    <Context.Provider value={context}>
+    <>
       <div className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none ">
         <div className=" bg-[#101518] border-2 border-green-300 p-5  rounded-lg w-1/2 text-text-col text-white">
           <div className="text-2xl font-extrabold text-center mb-4">
@@ -69,6 +69,6 @@ export default function Modal({
         </div>
       </div>
       <div className="opacity-25 fixed inset-0 z-40 bg-black"></div>
-    </Context.Provider>
+    </>
   );
 }

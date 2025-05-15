@@ -10,16 +10,16 @@ import {
   DialogTrigger,
   DialogTitle,
 } from "@radix-ui/react-dialog";
+import { useCodeStore } from "@/lib/codeStore";
 
 export default function Modal({
-  context,
   modal,
   setModal,
 }: {
-  context: any;
   modal: boolean;
   setModal: (value: boolean) => void;
 }) {
+  const addFile = useCodeStore(state => state.addFile);
   const [filename, setfilename] = useState<string>("");
   const [language, setlanguage] = useState<string>("");
 
@@ -59,9 +59,9 @@ export default function Modal({
       toast.error("Please enter a valid language");
       return;
     }
-    const response = await context.addFile(language, filename);
+    const response = await addFile(language, filename);
     if (response.success) {
-      setModal(false); // Close the dialog after successful file creation
+      setModal(false);
     } else {
       toast.error("Error in creating file, please try again later!");
     }
