@@ -1,6 +1,6 @@
 import React from "react";
 
-const Loader: React.FC = () => {
+const Loader = () => {
   return (
     <div className="flex justify-center items-center h-full">
       <div className="relative bg-gray-900 border h-full border-gray-700 text-green-500 font-mono text-base py-6 px-4 w-full rounded-md shadow-lg overflow-hidden">

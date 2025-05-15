@@ -1,23 +1,41 @@
+"use client";
+
 import { useCodeStore } from "@/lib/codeStore";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
+import { GitBranch } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
-export default function Modal({
-  setmod,
+export default function GitPushDialog({
   gitcontrols,
   setgitcontrols,
 }: {
-  setmod: any;
-  gitcontrols: any;
-  setgitcontrols: any;
+  gitcontrols: {
+    repolink: string;
+    commitmsg: string;
+    branch: string;
+    pan: string;
+  };
+  setgitcontrols: (val: any) => void;
 }) {
+  const isTabBigger = !useIsMobile();
+
   const gitPush = useCodeStore(state => state.gitPush);
-  const handleInputChange = (event: any) => {
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setgitcontrols({
       ...gitcontrols,
       [event.target.name]: event.target.value,
     });
   };
+
   const resetInputs = () => {
     setgitcontrols({
       repolink: "",
@@ -26,99 +44,109 @@ export default function Modal({
       pan: "",
     });
   };
+
+  const handleSubmit = () => {
+    gitPush(
+      gitcontrols.repolink,
+      gitcontrols.commitmsg,
+      gitcontrols.branch,
+      gitcontrols.pan,
+    );
+    resetInputs();
+  };
+
+  const handleCancel = () => {
+    resetInputs();
+  };
+
   return (
-    <>
-      <div className="justify-center items-center flex overflow-x-hidden overflow-y-auto fixed inset-0 z-50 outline-none focus:outline-none ">
-        <div className="relative my-6 mx-auto sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl bg-[#101518] p-5 rounded-lg text-text-col border-2 border-green-300 text-white">
-          <div className="text-2xl font-extrabold text-center mb-4">
+    <Dialog>
+      <DialogTrigger>
+        <GitBranch className="h-4 w-4" />
+        {isTabBigger && <span className="ml-2">Git Controls</span>}
+      </DialogTrigger>
+      <DialogContent className="bg-[#101518] text-white border-green-300">
+        <DialogHeader>
+          <DialogTitle className="text-2xl font-extrabold text-center">
             Push to Repository
-          </div>
-          <div className="flex flex-col ">
-            <div className="mb-4 font-bold text-center">
-              Please make the repository public before hitting Submit.
-            </div>
-            <label
-              htmlFor="repolink"
-              className="text-xs mb-1 font-bold align-left"
-            >
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="text-sm text-center mb-4 font-semibold text-gray-300">
+          Please make the repository public before hitting Submit.
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <div>
+            <label htmlFor="repolink" className="text-xs font-bold">
               Repository Link
             </label>
             <Input
               type="text"
               name="repolink"
-              id="repolink"
+              value={gitcontrols.repolink}
               onChange={handleInputChange}
-              className="w-full px-2 py-2 mb-2 border rounded focus:outline-none"
+              className="font-mono mt-1"
             />
-            <label
-              htmlFor="repolink"
-              className="text-xs mb-1 font-bold align-left"
-            >
-              {" Personal Access Token (Classic) (Provide access to repo)"}
+          </div>
+
+          <div>
+            <label htmlFor="pan" className="text-xs font-bold">
+              Personal Access Token (Classic)
             </label>
             <Input
               type="password"
               name="pan"
-              id="pan"
+              value={gitcontrols.pan}
               onChange={handleInputChange}
-              className="w-full px-2 py-2 mb-2 border rounded focus:outline-none"
+              className="mt-1"
             />
-            <label
-              htmlFor="commitmsg"
-              className="text-xs mb-1 font-bold align-left"
-            >
+          </div>
+
+          <div>
+            <label htmlFor="commitmsg" className="text-xs font-bold">
               Commit Message
             </label>
             <Input
               type="text"
               name="commitmsg"
+              value={gitcontrols.commitmsg}
               onChange={handleInputChange}
-              className="w-full px-2 py-2 mb-2 border rounded focus:outline-none"
+              className="mt-1"
             />
-            <label
-              htmlFor="branch"
-              className="text-xs mb-1 font-bold align-left"
-            >
+          </div>
+
+          <div>
+            <label htmlFor="branch" className="text-xs font-bold">
               Branch Name
             </label>
             <Input
               type="text"
-              disabled
-              value={"master"}
               name="branch"
-              onChange={handleInputChange}
-              className="w-full px-2 py-2 mb-2 border rounded focus:outline-none"
+              value="master"
+              disabled
+              className="mt-1 bg-gray-800 text-gray-400 cursor-not-allowed"
             />
-            <div className="flex flex-row space-x-4 mx-auto my-4">
-              <Button
-                className="bg-red-900 text-white rounded-lg px-4 py-2 font-bold"
-                onClick={() => {
-                  resetInputs();
-                  setmod(false);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                className="bg-blue-900 text-white rounded-lg px-4 py-2 font-bold"
-                onClick={() => {
-                  resetInputs();
-                  gitPush(
-                    gitcontrols.repolink,
-                    gitcontrols.commitmsg,
-                    gitcontrols.branch,
-                    gitcontrols.pan,
-                  );
-                  setmod(false);
-                }}
-              >
-                Submit
-              </Button>
-            </div>
           </div>
         </div>
-      </div>
-      <div className="opacity-25 fixed inset-0 z-40 bg-black"></div>
-    </>
+
+        <div className="flex justify-center gap-4 mt-6">
+          <Button
+            type="button"
+            className="bg-red-900 text-white font-bold"
+            onClick={handleCancel}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            className="bg-blue-900 text-white font-bold"
+            onClick={handleSubmit}
+          >
+            Submit
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

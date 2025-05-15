@@ -6,13 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { File } from "@/type";
 import { useCodeStore } from "@/lib/codeStore";
-export default function LayoutContent({
-  fileModal,
-  fileModalFunc,
-}: {
-  fileModal: any;
-  fileModalFunc: any;
-}) {
+export default function LayoutContent() {
   const { files, editable } = useCodeStore();
   const router = useRouter();
   const fileId = usePathname().split("/")[3];
@@ -35,12 +29,7 @@ export default function LayoutContent({
           >
             <Home className="mr-2 h-4 w-4" /> Home
           </Button>
-          {editable && (
-            <FileModal
-              modal={fileModal}
-              setModal={fileModalFunc}
-            />
-          )}
+          {editable && <FileModal />}
         </div>
       </div>
 

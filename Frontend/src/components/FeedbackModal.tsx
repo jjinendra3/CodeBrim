@@ -2,26 +2,32 @@ import { Smile, Frown, Send, Bug } from "lucide-react";
 import { useState } from "react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useCodeStore } from "@/lib/codeStore";
 
 export default function FeedbackModal() {
   const addFeedback = useCodeStore(state => state.addFeedback);
-  const [feedback, setFeedback] = useState<any>({
+  const [feedback, setFeedback] = useState({
     content: "",
-    happy: null,
+    happy: null as boolean | null,
   });
 
   const handleContentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFeedback((prev: any) => ({
+    setFeedback(prev => ({
       ...prev,
       content: e.target.value,
     }));
   };
 
   const handleHappyToggle = (isHappy: boolean) => {
-    setFeedback((prev: any) => ({
+    setFeedback(prev => ({
       ...prev,
       happy: isHappy,
     }));
@@ -39,7 +45,7 @@ export default function FeedbackModal() {
     }
 
     try {
-      await addFeedback(feedback);
+      await addFeedback(feedback.content);
       toast.success("Feedback submitted successfully!");
       setFeedback({ content: "", happy: null });
     } catch (error) {
@@ -51,60 +57,61 @@ export default function FeedbackModal() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <div className="flex justify-center items-center">
-          <Button
-            className="flex items-center bg-transparent justify-center rounded-md transition-all duration-200 hover:bg-purple-900 active:scale-95"
-            aria-label="Bug Report"
-          >
-            <Bug color="white" size={"20px"} />
-            <span className="tooltip absolute top-[-40px] min-w-[100px] px-3 py-2 text-xs font-semibold text-white bg-gray-800 rounded shadow-lg opacity-0 transition-opacity duration-500 pointer-events-none group-hover:opacity-100">
-              Bug Report
-            </span>
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          className="flex gap-2 items-center border-slate-600 text-white bg-slate-800 hover:bg-slate-700"
+        >
+          <Bug size={18} />
+          Report a Bug
+        </Button>
       </DialogTrigger>
 
-      <DialogContent className="bg-slate-800 border border-slate-700 grid grid-cols-6 gap-2 rounded-xl p-2 text-sm">
-        <h1 className="text-center text-white text-xl font-bold col-span-6">
-          Send Feedback
-        </h1>
+      <DialogContent className="bg-slate-800 border border-slate-700 rounded-xl p-6 text-sm max-w-md">
+        <DialogHeader>
+          <DialogTitle className="text-white text-lg text-center">
+            Send Feedback
+          </DialogTitle>
+        </DialogHeader>
 
-        <Input
-          value={feedback.content}
-          onChange={handleContentChange}
-          placeholder="Your feedback..."
-          className="bg-slate-700 text-slate-300 h-28 placeholder:text-slate-300 placeholder:opacity-50 border border-slate-600 col-span-6 resize-none outline-none rounded-lg p-2 focus:border-slate-300 w-full"
-        />
+        <div className="flex flex-col gap-3 mt-4">
+          <Input
+            value={feedback.content}
+            onChange={handleContentChange}
+            placeholder="Describe the issue or your feedback..."
+            className="bg-slate-700 text-white h-24 placeholder:text-slate-400 resize-none rounded-lg p-2 border border-slate-600"
+          />
 
-        <Button
-          onClick={() => handleHappyToggle(true)}
-          className={`col-span-1 flex justify-center items-center rounded-lg p-2 duration-300 bg-slate-700 border ${
-            feedback.happy === true ? "border-blue-500" : "border-slate-600"
-          }`}
-          aria-label="Happy Feedback"
-        >
-          <Smile size="20px" color="white" />
-        </Button>
+          <div className="flex justify-center gap-4">
+            <Button
+              onClick={() => handleHappyToggle(true)}
+              variant="ghost"
+              className={`bg-slate-700 p-2 rounded-lg border ${
+                feedback.happy === true ? "border-blue-500" : "border-slate-600"
+              }`}
+            >
+              <Smile size={20} color="white" />
+            </Button>
+            <Button
+              onClick={() => handleHappyToggle(false)}
+              variant="ghost"
+              className={`bg-slate-700 p-2 rounded-lg border ${
+                feedback.happy === false
+                  ? "border-blue-500"
+                  : "border-slate-600"
+              }`}
+            >
+              <Frown size={20} color="white" />
+            </Button>
+          </div>
 
-        <Button
-          onClick={() => handleHappyToggle(false)}
-          className={`col-span-1 flex justify-center items-center rounded-lg p-2 duration-300 bg-slate-700 border ${
-            feedback.happy === false ? "border-blue-500" : "border-slate-600"
-          }`}
-          aria-label="Unhappy Feedback"
-        >
-          <Frown size="20px" color="white" />
-        </Button>
-
-        <span className="col-span-2"></span>
-
-        <Button
-          onClick={handleSubmit}
-          className="col-span-2 flex justify-center items-center bg-slate-700 hover:bg-blue-600 text-white rounded-lg p-2 duration-300 border border-slate-600 hover:border-blue-400"
-          aria-label="Submit Feedback"
-        >
-          <Send size="20px" color="white" />
-        </Button>
+          <Button
+            onClick={handleSubmit}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg"
+          >
+            <Send size={18} className="mr-2" />
+            Submit
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

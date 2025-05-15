@@ -38,7 +38,6 @@ export default function Form() {
   const isTabBigger = !useIsMobile();
   const editorRef = useRef<any>(null);
   const stdinRef = useRef<any>(null);
-  const [pwdmod, setpwdmod] = useState(false);
   const [pwdflag, setpwdflag] = useState(false);
   const [mod, setmod] = useState<boolean>(false);
   const [gitcontrols, setgitcontrols] = useState<any>({
@@ -126,14 +125,6 @@ export default function Form() {
 
   return (
     <div className={"overflow-hidden w-full"}>
-      {pwdmod && <PasswordModal setpwdmod={setpwdmod} pwdflag={pwdflag} />}
-      {mod && (
-        <Modal
-          setmod={setmod}
-          gitcontrols={gitcontrols}
-          setgitcontrols={setgitcontrols}
-        />
-      )}
       <ResizablePanelGroup direction="vertical">
         <ResizablePanel defaultSize={75}>
           <div className="h-8 flex justify-between items-center px-4 bg-gray-800 text-white">
@@ -164,10 +155,10 @@ export default function Form() {
                 <Copy className="h-4 w-4" />
                 {isTabBigger && <span className="ml-2">Copy Files</span>}
               </Button>
-              <Button variant="default" size="xs" onClick={() => setmod(true)}>
-                <GitBranch className="h-4 w-4" />
-                {isTabBigger && <span className="ml-2">Git Controls</span>}
-              </Button>
+              <Modal
+                gitcontrols={gitcontrols}
+                setgitcontrols={setgitcontrols}
+              />
               <Button
                 variant="default"
                 size="xs"

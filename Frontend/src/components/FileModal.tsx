@@ -12,13 +12,7 @@ import {
 } from "@radix-ui/react-dialog";
 import { useCodeStore } from "@/lib/codeStore";
 
-export default function Modal({
-  modal,
-  setModal,
-}: {
-  modal: boolean;
-  setModal: (value: boolean) => void;
-}) {
+export default function Modal() {
   const addFile = useCodeStore(state => state.addFile);
   const [filename, setfilename] = useState<string>("");
   const [language, setlanguage] = useState<string>("");
@@ -61,7 +55,9 @@ export default function Modal({
     }
     const response = await addFile(language, filename);
     if (response.success) {
-      setModal(false);
+      toast.success("File created successfully!");
+      setfilename("");
+      setlanguage("");
     } else {
       toast.error("Error in creating file, please try again later!");
     }
@@ -74,7 +70,7 @@ export default function Modal({
   };
 
   return (
-    <Dialog open={modal} onOpenChange={setModal}>
+    <Dialog>
       <DialogTrigger asChild>
         <Button variant="ghost" className="w-full">
           <FilePlus className="mr-2 h-4 w-4" /> Add File
@@ -103,7 +99,7 @@ export default function Modal({
               <div className="flex flex-row space-x-4 mx-auto my-4 justify-center">
                 <Button
                   className="bg-red-900 text-white rounded-lg font-bold"
-                  onClick={() => setModal(false)} // Manually close dialog on Cancel button click
+                  onClick={() => {}}
                 >
                   Cancel
                 </Button>

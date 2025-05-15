@@ -6,7 +6,7 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useCodeStore } from "@/lib/codeStore";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 const languages = [
   {
     name: "C",

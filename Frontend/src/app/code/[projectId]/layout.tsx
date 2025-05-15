@@ -32,10 +32,9 @@ export default function CodePageLayoyut({
   const router = useRouter();
   const projectId = usePathname().split("/")[2];
   const fileId = usePathname().split("/")[3];
-  const [fileModal, setFileModal] = useState<boolean>(false);
-  const fileModalFunc = (value: boolean) => {
-    setFileModal(value);
-  };
+  // const fileModalFunc = (value: boolean) => {
+  //   setFileModal(value);
+  // };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -65,14 +64,11 @@ export default function CodePageLayoyut({
               side={"left"}
               className="bg-gray-800 border-r border-gray-50 h-full"
             >
-              <LayoutContent
-                fileModal={fileModal}
-                fileModalFunc={fileModalFunc}
-              />
+              <LayoutContent />
             </SheetContent>
           </Sheet>
         ) : (
-          <LayoutContent fileModal={fileModal} fileModalFunc={fileModalFunc} />
+          <LayoutContent />
         )}
       </div>
       {children}
