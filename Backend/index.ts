@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import { Server } from "socket.io";
+import { rollbar } from "./utils/rollbar";
 
 const http = require("http");
 const app = express();
@@ -20,6 +21,7 @@ app.use("/git", require("./routes/git"));
 app.use("/project", require("./routes/project"));
 app.use("/server", require("./routes/server"));
 
+app.use(rollbar.errorHandler());
 server.listen(5000, () => {
   console.log(`Server running on http://localhost:${5000}`);
 });

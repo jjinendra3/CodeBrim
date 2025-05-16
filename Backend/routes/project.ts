@@ -1,7 +1,8 @@
 import { Router } from "express";
-import prisma from "../db";
+import prisma from "../utils/db";
 import { v4 as uuidv4 } from "uuid";
 import { languageContent } from "./helper/languageContent";
+import { rollbar } from "../utils/rollbar";
 
 const app = Router();
 
@@ -190,6 +191,7 @@ app.post("/lock-user/:id", async (req, res) => {
 app.post("/add-feedback", async (req, res) => {
   const feedback = req.body.feedback;
   try {
+    await rollbar.log("Feedback", feedback);
     await prisma.feedback.create({
       data: {
         content: feedback.content,

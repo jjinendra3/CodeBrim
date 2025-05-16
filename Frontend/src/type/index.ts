@@ -15,6 +15,11 @@ type QueuedState = {
   fileId: string;
 };
 
+export type Feedback = {
+  content: string;
+  happy: boolean;
+};
+
 export type CodeState = {
   id: string | null;
   files: File[];
@@ -53,5 +58,5 @@ export type CodeState = {
   snipClone: () => Promise<any>;
   gitClone: (url: string) => Promise<any>;
   lockUser: (pwd: string) => Promise<any>;
-  addFeedback: (feedback: string) => Promise<any>;
+  addFeedback: (feedback: Feedback) => Promise<any>;
 };

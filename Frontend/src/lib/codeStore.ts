@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import axios from "axios";
 import { toast } from "sonner";
-import { CodeState, File } from "@/type";
+import { CodeState, Feedback, File } from "@/type";
 
 const BACKEND = process.env.NEXT_PUBLIC_BACKEND;
 
@@ -261,7 +261,7 @@ export const useCodeStore = create<CodeState>((set, get) => ({
     }
   },
 
-  addFeedback: async (feedback: string) => {
+  addFeedback: async (feedback: Feedback) => {
     try {
       const response = await axios.post(`${BACKEND}/project/add-feedback`, {
         feedback: feedback,

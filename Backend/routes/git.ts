@@ -1,5 +1,5 @@
 import { Router } from "express";
-import prisma from "../db";
+import prisma from "../utils/db";
 import { simpleGit } from "simple-git";
 import path from "path";
 import * as fs from "fs";

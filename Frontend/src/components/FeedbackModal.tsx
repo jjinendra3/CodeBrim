@@ -16,7 +16,7 @@ export default function FeedbackModal() {
   const addFeedback = useCodeStore(state => state.addFeedback);
   const [feedback, setFeedback] = useState({
     content: "",
-    happy: null as boolean | null,
+    happy: true,
   });
 
   const handleContentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,9 +45,9 @@ export default function FeedbackModal() {
     }
 
     try {
-      await addFeedback(feedback.content);
+      await addFeedback(feedback);
       toast.success("Feedback submitted successfully!");
-      setFeedback({ content: "", happy: null });
+      setFeedback({ content: "", happy: true });
     } catch (error) {
       console.error(error);
       toast.error("Failed to submit feedback. Please try again.");
