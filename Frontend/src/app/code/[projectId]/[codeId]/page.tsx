@@ -3,8 +3,6 @@ import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import Editor from "@monaco-editor/react";
 import Modal from "@/components/Modal";
-import FileModal from "@/components/FileModal";
-import PasswordModal from "@/components/PasswordModal";
 import { type File } from "@/type";
 import { useRouter, usePathname } from "next/navigation";
 import {
@@ -13,7 +11,7 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import FeedbackModal from "@/components/FeedbackModal";
-import { Play, Lock, Unlock, Copy, GitBranch, Save } from "lucide-react";
+import { Play, Copy, Save } from "lucide-react";
 import Loader from "@/components/Loader";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useCodeStore } from "@/lib/codeStore";
@@ -28,18 +26,16 @@ export default function Form() {
     saving,
     editable,
     queued,
+    presentFile,
+    setPresentFile,
   } = useCodeStore();
   const router = useRouter();
   const pathname = usePathname();
-  const projectId = pathname.split("/")[2];
   const fileId = pathname.split("/")[3];
-  const [presentFile, setPresentFile] = useState<File | null>(null);
   const presentFileRef = useRef<File | null>(presentFile);
   const isTabBigger = !useIsMobile();
   const editorRef = useRef<any>(null);
   const stdinRef = useRef<any>(null);
-  const [pwdflag, setpwdflag] = useState(false);
-  const [mod, setmod] = useState<boolean>(false);
   const [gitcontrols, setgitcontrols] = useState<any>({
     repolink: "",
     commitmsg: "commit",
@@ -59,9 +55,11 @@ export default function Form() {
     fetchData();
     //eslint-disable-next-line
   }, []);
+
   useEffect(() => {
     presentFileRef.current = presentFile;
   }, [presentFile]);
+
   useEffect(() => {
     const handleKeyDown = async (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key === "s") {
@@ -76,43 +74,31 @@ export default function Form() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-    //eslint-disable-next-line
-  }, []);
+  }, [saver]);
 
   useEffect(() => {
     const handleStdOutChange = () => {
-      if (payload && payload.fileId === fileId) {
-        setPresentFile((prev: File | null) => {
-          if (prev) {
-            return { ...prev, stdout: payload.stdout };
-          }
-          return prev;
-        });
+      if (payload && payload.id === fileId) {
+        if (presentFile) {
+          setPresentFile({ ...presentFile, stdout: payload.stdout });
+        }
         setPayload(null);
       }
     };
     handleStdOutChange();
-    //eslint-disable-next-line
-  }, [payload]);
+  }, [fileId, payload, presentFile, setPayload, setPresentFile]);
+
   function handleCodeChange(value: string | undefined, event: any) {
     if (value) {
-      setPresentFile((prev: File | null) => {
-        if (prev) {
-          return { ...prev, content: value };
-        }
-        return prev;
-      });
+      if (presentFile) {
+        setPresentFile({ ...presentFile, content: value });
+      }
     }
   }
 
   function handlestdinChange(value: string | undefined, event: any) {
-    if (value) {
-      setPresentFile((prev: File | null) => {
-        if (prev) {
-          return { ...prev, stdin: value };
-        }
-        return prev;
-      });
+    if (value && presentFile) {
+      setPresentFile({ ...presentFile, stdin: value });
     }
   }
   function handlestdDidMount(stdin: any, monaco: any) {
@@ -131,7 +117,8 @@ export default function Form() {
             <div className="flex flex-row gap-2 items-center ">
               <FeedbackModal />
               <h2 className="font-semibold text-xs">
-                Language: {presentFile?.lang.toUpperCase()}
+                Language:
+                {presentFile?.lang?.toUpperCase() ?? ""}
               </h2>
             </div>
             {isTabBigger && (
@@ -186,8 +173,8 @@ export default function Form() {
           </div>
           <Editor
             theme="vs-dark"
-            value={presentFile?.content}
-            language={presentFile?.lang}
+            value={presentFile?.content ?? undefined}
+            language={presentFile?.lang ?? undefined}
             onMount={handleEditorDidMount}
             onChange={handleCodeChange}
             options={{ readOnly: !editable }}
@@ -204,7 +191,7 @@ export default function Form() {
               <Editor
                 theme="vs-dark"
                 onMount={handlestdDidMount}
-                value={presentFile?.stdin}
+                value={presentFile?.stdin ?? ""}
                 onChange={handlestdinChange}
                 className="border-t border-gray-700"
               />
@@ -221,7 +208,7 @@ export default function Form() {
                   <Editor
                     theme="vs-dark"
                     onMount={handlestdDidMount}
-                    value={presentFile?.stdout}
+                    value={presentFile?.stdout ?? ""}
                     options={{ readOnly: true }}
                     className="border-t border-gray-700"
                   />

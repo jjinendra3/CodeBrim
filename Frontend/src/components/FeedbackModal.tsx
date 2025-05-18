@@ -58,7 +58,7 @@ export default function FeedbackModal() {
     <Dialog>
       <DialogTrigger asChild>
         <Button
-          variant="outline"
+          variant="default"
           className="flex gap-2 items-center border-slate-600 text-white bg-slate-800 hover:bg-slate-700"
         >
           <Bug size={18} />

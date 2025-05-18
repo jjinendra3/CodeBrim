@@ -1,13 +1,15 @@
 export type File = {
-  fileId: string;
   id: string;
-  filename: string;
-  content: string;
-  stdin: string;
-  stdout: string;
-  lang: string;
-  userId: string;
-  datetime: string | null;
+  name: string;
+  type: string;
+  content?: string | null;
+  lang: string | null;
+  stdin?: string | null;
+  stdout?: string | null;
+  parentId: string | null;
+  userId?: string | null;
+  datetime?: Date;
+  children?: File[];
 };
 
 type QueuedState = {
@@ -29,8 +31,9 @@ export type CodeState = {
   saving: boolean;
   payload: File | null;
   queued: QueuedState;
+  presentFile: File | null;
 
-  // Actions
+  setPresentFile: (presentFile: File | null) => void;
   setId: (id: string | null) => void;
   setFiles: (files: File[]) => void;
   setUser: (user: Record<string, any>) => void;
@@ -40,9 +43,11 @@ export type CodeState = {
   setPayload: (payload: File | null) => void;
   setQueued: (queued: QueuedState) => void;
 
-  // Methods
+
   newProject: (lang: string) => Promise<any>;
-  addFile: (lang: string, fileName: string) => Promise<any>;
+  addFile: (file: File) => Promise<any>;
+  deleteFile: (fileId: string) => Promise<any>;
+  updateFile: (file: File) => Promise<any>;
   getCode: (
     id: string,
   ) => Promise<{ success: number; user?: any; error?: any }>;

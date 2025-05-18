@@ -17,6 +17,8 @@ export const useCodeStore = create<CodeState>((set, get) => ({
     loading: false,
     fileId: "",
   },
+  presentFile: null,
+  setPresentFile: presentFile => set({ presentFile }),
   setId: id => set({ id }),
   setFiles: files => set({ files }),
   setUser: user => set({ user }),
@@ -53,26 +55,56 @@ export const useCodeStore = create<CodeState>((set, get) => ({
     }
   },
 
-  addFile: async (lang: string, fileName: string) => {
+  addFile: async (file: File) => {
     try {
-      const response = await axios.post(`${BACKEND}/project/add-file`, {
+      const { name, type, lang, parentId } = file;
+      const response = await axios.post(`${BACKEND}/project/add-item`, {
         projectId: get().id,
-        lang: lang,
-        filename: fileName,
+        lang,
+        name,
+        type,
+        parentId,
       });
-
-      set(state => ({
-        files: [...state.files, response.data.output],
-      }));
-
-      return response.data;
+      toast.success("File Added");
+      return response.data.output;
     } catch (error) {
       console.log(error);
       toast.error("Error creating new file");
       return undefined;
     }
   },
-
+  deleteFile: async (fileId: string) => {
+    try {
+      const response = await axios.delete(
+        `${BACKEND}/project/delete-item/${fileId}`,
+      );
+      if (response.data.success === false) {
+        throw response.data.error;
+      }
+      toast.success("File Deleted!");
+      return response.data;
+    } catch (error) {
+      console.log(error);
+      toast.error("Error deleting file");
+      return undefined;
+    }
+  },
+  updateFile: async (file: File) => {
+    try {
+      const response = await axios.put(`${BACKEND}/project/update-item`, {
+        file: file,
+      });
+      if (response.data.success === false) {
+        throw response.data.error;
+      }
+      toast.success("File Updated!");
+      return response.data;
+    } catch (error) {
+      console.log(error);
+      toast.error("Error updating file");
+      return undefined;
+    }
+  },
   getCode: async (id: string) => {
     try {
       set({ id });
@@ -98,6 +130,10 @@ export const useCodeStore = create<CodeState>((set, get) => ({
   getFileData: async (id: string) => {
     try {
       const response = await axios.get(`${BACKEND}/project/getfile/${id}`);
+      if (response.data.success === false) {
+        throw response.data.error;
+      }
+      set({ presentFile: response.data.file });
       return response.data;
     } catch (error) {
       console.log(error);

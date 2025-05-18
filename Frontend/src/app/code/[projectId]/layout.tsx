@@ -1,5 +1,4 @@
 "use client";
-import { useState } from "react";
 import { useEffect } from "react";
 import { useSocket } from "../../../../lib/socket";
 import { Menu } from "lucide-react";
@@ -31,17 +30,12 @@ export default function CodePageLayoyut({
 
   const router = useRouter();
   const projectId = usePathname().split("/")[2];
-  const fileId = usePathname().split("/")[3];
-  // const fileModalFunc = (value: boolean) => {
-  //   setFileModal(value);
-  // };
-
   useEffect(() => {
     const fetchData = async () => {
       const response = await getCode(projectId);
       if (response.success === 1) {
-        setFiles(response.user.files);
-        router.push(`/code/${projectId}/${response.user.files[0].id}`);
+        setFiles(response.user.items);
+        router.push(`/code/${projectId}/${response.user.items[0].id}`);
       }
     };
     fetchData();

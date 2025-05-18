@@ -61,9 +61,15 @@ export default function GitPushDialog({
 
   return (
     <Dialog>
-      <DialogTrigger>
-        <GitBranch className="h-4 w-4" />
-        {isTabBigger && <span className="ml-2">Git Controls</span>}
+      <DialogTrigger className="flex items-center gap-2" asChild>
+        <Button
+          variant="default"
+          size={"xs"}
+          className="flex gap-2 items-center"
+        >
+          <GitBranch className="h-4 w-4" />
+          {isTabBigger && <span>Git Controls</span>}
+        </Button>
       </DialogTrigger>
       <DialogContent className="bg-[#101518] text-white border-green-300">
         <DialogHeader>

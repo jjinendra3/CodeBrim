@@ -10,9 +10,9 @@ export default function Page() {
     const fetchData = async () => {
       const response = await getCode(pathName.split("/")[2]);
       if (response.success === 1) {
-        setFiles(response.user.files);
+        setFiles(response.user.items);
         router.push(
-          `/code/${pathName.split("/")[2]}/${response.user.files[0].id}`,
+          `/code/${pathName.split("/")[2]}/${response.user.items[0].id}`,
         );
       } else {
         router.push("/not-found");
