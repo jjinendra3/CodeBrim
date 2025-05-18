@@ -88,7 +88,7 @@ export default function ChooseLanguage() {
                     setClicked(false);
                     return;
                   }
-                  const fileId = response.user.items.find(
+                  const fileId = response.items.find(
                     (item: any) => item.type === "file",
                   ).id;
                   router.push(`code/${response.id}/${fileId}`);

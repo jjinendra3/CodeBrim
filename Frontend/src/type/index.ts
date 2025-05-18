@@ -1,14 +1,14 @@
 export type File = {
   id: string;
   name: string;
-  type: string;
-  content?: string | null;
+  type: "file" | "folder";
+  content?: string;
   lang: string | null;
-  stdin?: string | null;
-  stdout?: string | null;
+  stdin?: string;
+  stdout?: string;
   parentId: string | null;
-  userId?: string | null;
-  datetime?: Date;
+  userId: string;
+  datetime: Date;
   children?: File[];
 };
 
@@ -42,7 +42,6 @@ export type CodeState = {
   setSaving: (value: boolean) => void;
   setPayload: (payload: File | null) => void;
   setQueued: (queued: QueuedState) => void;
-
 
   newProject: (lang: string) => Promise<any>;
   addFile: (file: File) => Promise<any>;

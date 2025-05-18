@@ -53,7 +53,7 @@ export default function Footer() {
             <p className="text-sm">
               Developed by{" "}
               <Link
-                href={"https://jinendrajain.xyz"}
+                href={"https://jinendra.tech"}
                 className="font-semibold text-blue-500"
               >
                 Jinendra Jain

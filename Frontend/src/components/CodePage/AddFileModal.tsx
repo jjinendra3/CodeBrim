@@ -15,6 +15,7 @@ export default function AddFileModal({
   newItemName,
   setNewItemName,
   handleCreateNewItem,
+  parentId,
 }: {
   isCreatingItem: boolean;
   setIsCreatingItem: (isCreatingItem: boolean) => void;
@@ -22,16 +23,21 @@ export default function AddFileModal({
   newItemName: string;
   setNewItemName: (newItemName: string) => void;
   handleCreateNewItem: () => void;
+  parentId: string | null;
 }) {
   return (
     <Dialog open={isCreatingItem} onOpenChange={setIsCreatingItem}>
       <DialogContent className="sm:max-w-[425px] bg-gray-800">
-        <DialogHeader>
-          <DialogTitle className="text-gray-400">
-            {newItemType === "file" ? "New File" : "New Folder"}
-          </DialogTitle>
-        </DialogHeader>
+        <DialogTitle className="text-gray-400">
+          {newItemType === "file" ? "New File" : "New Folder"}
+        </DialogTitle>
         <div className="grid gap-4 py-4">
+          {!parentId && (
+            <p className="text-sm text-gray-400">
+              Creating a new {newItemType} in project root. Drag the newly
+              created item to your desired folder.
+            </p>
+          )}
           <Input
             placeholder={
               newItemType === "file" ? "filename.extension" : "folder name"

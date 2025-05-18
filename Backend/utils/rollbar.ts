@@ -1,5 +1,5 @@
-const Rollbar = require("rollbar");
-const dotenv = require("dotenv");
+import Rollbar from "rollbar";
+import dotenv from "dotenv";
 dotenv.config();
 
 export const rollbar = new Rollbar({

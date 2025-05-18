@@ -8,12 +8,13 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import LayoutContent from "./LayoutContent";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useCodeStore } from "@/lib/codeStore";
+import { File } from "@/type";
 export default function CodePageLayoyut({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { getCode, setPayload, setQueued, setFiles } = useCodeStore();
+  const { getCode, setPayload, setQueued, setFiles, files } = useCodeStore();
   const isBiggerThanTab = !useIsMobile();
   const socket = useSocket();
   useEffect(() => {
@@ -35,12 +36,18 @@ export default function CodePageLayoyut({
       const response = await getCode(projectId);
       if (response.success === 1) {
         setFiles(response.user.items);
-        router.push(`/code/${projectId}/${response.user.items[0].id}`);
+        const fileItem = response.user.items.find(
+          (item: File) => item.type === "file",
+        );
+        const fileId = fileItem ? fileItem.id : undefined;
+        if (!fileId) {
+          router.push(`/code/${projectId}`);
+        }
+        router.push(`/code/${projectId}/${fileId}`);
       }
     };
     fetchData();
-    //eslint-disable-next-line
-  }, []);
+  }, [getCode, projectId, router, setFiles]);
   return (
     <div className="flex h-screen">
       <div

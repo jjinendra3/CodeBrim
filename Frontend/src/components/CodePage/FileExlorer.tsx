@@ -1,51 +1,20 @@
 "use client";
 
-import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { useState, useEffect } from "react";
 import {
   ChevronRight,
   ChevronDown,
-  Folder,
-  FileJson,
   FileText,
-  FileCode,
-  FileType,
-  FileCog,
-  FileImage,
-  MoreVertical,
   Trash,
-  Edit,
-  Copy,
-  FolderPlus,
   FilePlus,
+  FolderPlus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuSeparator,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useCodeStore } from "@/lib/codeStore";
 import { File } from "@/type";
 import AddFileModal from "./AddFileModal";
 import { usePathname, useRouter } from "next/navigation";
+import Image from "next/image";
 
 export function FileExplorer() {
   const router = useRouter();
@@ -97,16 +66,18 @@ export function FileExplorer() {
   }, [files]);
 
   const toggleFolder = (folderId: string) => {
-    const newExpandedFolders = new Set(expandedFolders);
-    if (newExpandedFolders.has(folderId)) {
-      newExpandedFolders.delete(folderId);
-    } else {
-      newExpandedFolders.add(folderId);
-    }
-    setExpandedFolders(newExpandedFolders);
+    setExpandedFolders(prev => {
+      const newExpandedFolders = new Set(prev);
+      if (newExpandedFolders.has(folderId)) {
+        newExpandedFolders.delete(folderId);
+      } else {
+        newExpandedFolders.add(folderId);
+      }
+      return newExpandedFolders;
+    });
   };
 
-  const handleFileClick = async (fileId: string) => {
+  const handleFileClick = (fileId: string) => {
     console.log("File clicked:", fileId);
     router.push(`/code/${id}/${fileId}`);
   };
@@ -121,153 +92,123 @@ export function FileExplorer() {
     }
 
     const extension = file.name.split(".").pop()?.toLowerCase();
-
-    switch (extension) {
-      case "json":
-        return <FileJson size={16} />;
-      case "md":
-        return <FileText size={16} />;
-      case "ts":
-        return <FileCode size={16} className="text-blue-400" />;
-      case "tsx":
-        return <FileCode size={16} className="text-blue-400" />;
-      case "js":
-        return <FileCode size={16} className="text-yellow-400" />;
-      case "jsx":
-        return <FileCode size={16} className="text-yellow-400" />;
-      case "css":
-        return <FileType size={16} className="text-purple-400" />;
-      case "scss":
-        return <FileType size={16} className="text-pink-400" />;
-      case "html":
-        return <FileCode size={16} className="text-orange-400" />;
-      case "svg":
-      case "png":
-      case "jpg":
-      case "jpeg":
-        return <FileImage size={16} className="text-green-400" />;
-      case "config":
-        return <FileCog size={16} />;
-      default:
-        return <FileCode size={16} />;
-    }
-  };
-
-  const getFileTypeIcon = (file: File) => {
-    if (file.type === "folder") {
-      return <Folder size={16} className="text-gray-400" />;
+    if (!extension || extension === "txt") {
+      return <FileText size={16} />;
     }
 
-    const extension = file.name.split(".").pop()?.toLowerCase();
-
-    switch (extension) {
-      case "json":
-        return <FileJson size={16} className="text-yellow-300" />;
-      case "md":
-        return <FileText size={16} className="text-blue-300" />;
-      case "ts":
-        return <FileCode size={16} className="text-blue-400" />;
-      case "tsx":
-        return <FileCode size={16} className="text-blue-400" />;
-      case "js":
-        return <FileCode size={16} className="text-yellow-400" />;
-      case "jsx":
-        return <FileCode size={16} className="text-yellow-400" />;
-      case "css":
-        return <FileType size={16} className="text-purple-400" />;
-      case "scss":
-        return <FileType size={16} className="text-pink-400" />;
-      case "html":
-        return <FileCode size={16} className="text-orange-400" />;
-      case "svg":
-      case "png":
-      case "jpg":
-      case "jpeg":
-        return <FileImage size={16} className="text-green-400" />;
-      case "config":
-        return <FileCog size={16} />;
-      default:
-        return <FileCode size={16} />;
-    }
+    return (
+      <Image
+        src={`/languageIcon/${extension}.svg`}
+        alt={extension ?? "Language Icon"}
+        width={16}
+        height={16}
+      />
+    );
   };
 
   const handleCreateNewItem = async () => {
     if (!newItemName) return;
 
+    const newItemId = `new-${Date.now()}`;
+
     const newItem: File = {
-      id: `new-${Date.now()}`,
-      name:
-        newItemType === "file"
-          ? newItemName.includes(".")
-            ? newItemName
-            : `${newItemName}.txt`
-          : newItemName,
+      id: newItemId,
+      name: newItemType === "file"
+        ? newItemName.includes(".")
+          ? newItemName
+          : `${newItemName}.txt`
+        : newItemName,
       type: newItemType,
       parentId: currentParentId,
-      lang:
-        newItemType === "file"
-          ? newItemName.includes(".")
-            ? newItemName.split(".").pop() ?? "txt"
-            : "txt"
-          : null,
-      content: newItemType === "file" ? "" : null,
+      lang: newItemType === "file"
+        ? newItemName.includes(".")
+          ? newItemName.split(".").pop() ?? "txt"
+          : "txt"
+        : null,
+      content: newItemType === "file" ? "" : undefined,
       children: newItemType === "folder" ? [] : undefined,
+      userId: "",
+      datetime: new Date(),
     };
 
-    const response = await addFile(newItem);
-    if (!response) {
-      console.error("Failed to add file:", newItem);
-      return;
+    try {
+      const response = await addFile(newItem);
+
+      const finalId = response?.id || newItemId;
+
+      const newItemWithId = {
+        ...newItem,
+        id: finalId,
+      };
+
+      setFiles([...files, newItemWithId]);
+
+      if (currentParentId) {
+        setExpandedFolders(prev => {
+          const newSet = new Set(prev);
+          newSet.add(currentParentId);
+          return newSet;
+        });
+      }
+
+      if (newItemType === "folder") {
+        setExpandedFolders(prev => {
+          const newSet = new Set(prev);
+          newSet.add(finalId);
+          return newSet;
+        });
+      }
+
+      setIsCreatingItem(false);
+      setNewItemName("");
+    } catch (error) {
+      console.error("Failed to add item:", error);
     }
-    console.log("Response from addFile:", response);
-
-    const newItemWithId = {
-      ...newItem,
-      id: response.id || newItem.id,
-    };
-
-    const updatedFiles = [...files, newItemWithId];
-    setFiles(updatedFiles);
-
-    if (newItemType === "folder") {
-      setExpandedFolders(
-        new Set([...Array.from(expandedFolders), newItemWithId.id]),
-      );
-    }
-    setIsCreatingItem(false);
-    setNewItemName("");
   };
 
   const handleDeleteItem = async (itemId: string) => {
-    await deleteFile(itemId);
+    try {
+      await deleteFile(itemId);
 
-    const findAndRemoveItems = (
-      allFiles: File[],
-      itemToRemoveId: string,
-    ): File[] => {
-      const getDescendantIds = (fileId: string): string[] => {
-        const descendants: string[] = [];
+      const findAndRemoveItems = (
+        allFiles: File[],
+        itemToRemoveId: string,
+      ): File[] => {
+        const getDescendantIds = (fileId: string): string[] => {
+          const descendants: string[] = [];
 
-        allFiles.forEach(file => {
-          if (file.parentId === fileId) {
-            descendants.push(file.id);
-            descendants.push(...getDescendantIds(file.id));
-          }
-        });
+          allFiles.forEach(file => {
+            if (file.parentId === fileId) {
+              descendants.push(file.id);
+              descendants.push(...getDescendantIds(file.id));
+            }
+          });
 
-        return descendants;
+          return descendants;
+        };
+
+        const idsToRemove = [
+          itemToRemoveId,
+          ...getDescendantIds(itemToRemoveId),
+        ];
+
+        return allFiles.filter(file => !idsToRemove.includes(file.id));
       };
 
-      const idsToRemove = [itemToRemoveId, ...getDescendantIds(itemToRemoveId)];
+      const updatedFiles = findAndRemoveItems(files, itemId);
+      setFiles(updatedFiles);
 
-      return allFiles.filter(file => !idsToRemove.includes(file.id));
-    };
+      setExpandedFolders(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(itemId);
+        return newSet;
+      });
 
-    const updatedFiles = findAndRemoveItems(files, itemId);
-    setFiles(updatedFiles);
-
-    if (selectedFile === itemId) {
-      setSelectedFile(null);
+      if (selectedFile === itemId) {
+        setSelectedFile(null);
+      }
+    } catch (error) {
+      console.error("Failed to delete item:", error);
     }
   };
 
@@ -299,10 +240,18 @@ export function FileExplorer() {
 
     try {
       await updateFile(updatedItem);
-      const updatedFiles = files.map(file =>
-        file.id === draggedId ? { ...file, parentId: targetFolderId } : file,
+
+      setFiles(
+        files.map((file: File) =>
+          file.id === draggedId ? { ...file, parentId: targetFolderId } : file,
+        ),
       );
-      setFiles(updatedFiles);
+
+      setExpandedFolders(prev => {
+        const newSet = new Set(prev);
+        newSet.add(targetFolderId);
+        return newSet;
+      });
     } catch (error) {
       console.error("Failed to update file parent:", error);
     }
@@ -311,165 +260,117 @@ export function FileExplorer() {
   const renderFileTree = (items: File[], level = 0) => {
     return items.map(item => (
       <div key={item.id}>
-        <ContextMenu>
-          <ContextMenuTrigger>
-            <div
-              className={cn(
-                "flex items-center py-1 px-2 text-sm cursor-pointer hover:bg-[#2a2d2e] rounded",
-                fileId === item.id && "bg-[#37373d]",
-                dragOverItem === item.id &&
-                  "bg-[#3e3e42] border border-dashed border-[#007fd4]",
-              )}
-              style={{ paddingLeft: `${level * 12 + 4}px` }}
-              onClick={() => {
-                if (item.type === "folder") {
-                  toggleFolder(item.id);
-                } else {
-                  handleFileClick(item.id);
-                }
-              }}
-              draggable
-              onDragStart={e => {
-                e.stopPropagation();
-                setDraggedItem(item.id);
-              }}
-              onDragOver={e => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (item.type === "folder" && draggedItem !== item.id) {
-                  setDragOverItem(item.id);
-                }
-              }}
-              onDragLeave={() => {
-                setDragOverItem(null);
-              }}
-              onDrop={async e => {
-                e.preventDefault();
-                e.stopPropagation();
-                setDragOverItem(null);
+        <div
+          className={cn(
+            "flex items-center w-full cursor-pointer text-sm rounded-sm transition-colors",
+            "hover:bg-[#2a2d2e]",
+            fileId === item.id && "bg-[#37373d]",
+            dragOverItem === item.id &&
+              "bg-[#3e3e42] border border-dashed border-[#007fd4]",
+          )}
+          style={{
+            paddingLeft: `${level * 12 + 8}px`,
+            paddingTop: "4px",
+            paddingBottom: "4px",
+            paddingRight: "8px",
+          }}
+          onClick={e => {
+            e.stopPropagation();
+            if (item.type === "folder") {
+              toggleFolder(item.id);
+            } else {
+              handleFileClick(item.id);
+            }
+          }}
+          draggable
+          onDragStart={e => {
+            e.stopPropagation();
+            setDraggedItem(item.id);
+          }}
+          onDragOver={e => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (item.type === "folder" && draggedItem !== item.id) {
+              setDragOverItem(item.id);
+            }
+          }}
+          onDragLeave={() => {
+            setDragOverItem(null);
+          }}
+          onDrop={async e => {
+            e.preventDefault();
+            e.stopPropagation();
+            setDragOverItem(null);
 
-                if (
-                  draggedItem &&
-                  draggedItem !== item.id &&
-                  item.type === "folder"
-                ) {
-                  await handleDragDrop(draggedItem, item.id);
-                }
+            if (
+              draggedItem &&
+              draggedItem !== item.id &&
+              item.type === "folder"
+            ) {
+              await handleDragDrop(draggedItem, item.id);
+            }
 
-                setDraggedItem(null);
-              }}
-            >
-              <div className="flex items-center">
-                {item.type === "folder" && getFileIcon(item)}
-                <span className="w-5 flex justify-center mr-1">
-                  {getFileTypeIcon(item)}
+            setDraggedItem(null);
+          }}
+        >
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-1 min-w-0">
+              <span
+                className={cn(
+                  "flex items-center",
+                  item.type === "folder" ? "text-yellow-400" : "text-gray-300",
+                )}
+              >
+                <span className="w-4 flex justify-center items-center flex-shrink-0">
+                  {getFileIcon(item)}
                 </span>
-                <span className="truncate">{item.name}</span>
-              </div>
-              <div className="ml-auto opacity-0 group-hover:opacity-100">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-6 w-6">
-                      <MoreVertical size={14} />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-40">
-                    {item.type === "folder" && (
-                      <>
-                        <DropdownMenuItem
-                          onClick={e => {
-                            e.stopPropagation();
-                            setCurrentParentId(item.id);
-                            setNewItemType("file");
-                            setIsCreatingItem(true);
-                          }}
-                        >
-                          <FilePlus size={14} className="mr-2" />
-                          New File
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={e => {
-                            e.stopPropagation();
-                            setCurrentParentId(item.id);
-                            setNewItemType("folder");
-                            setIsCreatingItem(true);
-                          }}
-                        >
-                          <FolderPlus size={14} className="mr-2" />
-                          New Folder
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                      </>
-                    )}
-
-                    <DropdownMenuItem
-                      onClick={async e => {
-                        e.stopPropagation();
-                        await handleDeleteItem(item.id);
-                      }}
-                      className="text-red-500"
-                    >
-                      <Trash size={14} className="mr-2" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+              </span>
+              <span className="truncate text-gray-200 text-sm">
+                {item.name}
+              </span>
             </div>
-          </ContextMenuTrigger>
-          <ContextMenuContent className="w-48">
-            {item.type === "folder" && (
-              <>
-                <ContextMenuItem
-                  onClick={() => {
-                    setCurrentParentId(item.id);
-                    setNewItemType("file");
-                    setIsCreatingItem(true);
-                  }}
-                >
-                  <FilePlus size={14} className="mr-2" />
-                  New File
-                </ContextMenuItem>
-                <ContextMenuItem
-                  onClick={() => {
-                    setCurrentParentId(item.id);
-                    setNewItemType("folder");
-                    setIsCreatingItem(true);
-                  }}
-                >
-                  <FolderPlus size={14} className="mr-2" />
-                  New Folder
-                </ContextMenuItem>
-                <ContextMenuSeparator />
-              </>
-            )}
 
-            <ContextMenuSeparator />
-            <ContextMenuItem
-              onClick={async () => await handleDeleteItem(item.id)}
-              className="text-red-500"
+            <button
+              title="Delete"
+              aria-label="Delete"
+              className="opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:text-red-300 p-1"
+              onClick={async e => {
+                e.stopPropagation();
+                await handleDeleteItem(item.id);
+              }}
             >
-              <Trash size={14} className="mr-2" />
-              Delete
-            </ContextMenuItem>
-          </ContextMenuContent>
-        </ContextMenu>
+              <Trash size={12} />
+            </button>
+          </div>
+        </div>
 
-        {item.type === "folder" &&
-          item.children &&
-          expandedFolders.has(item.id) &&
-          renderFileTree(item.children, level + 1)}
+        {item.type === "folder" && expandedFolders.has(item.id) && (
+          <div
+            className={cn(
+              "ml-[16px] border-l border-[#2f2f2f]",
+              level > 0 ? "mt-0.5" : "",
+            )}
+          >
+            {item.children && item.children.length > 0 ? (
+              renderFileTree(item.children, level + 1)
+            ) : (
+              <div className="py-1 px-3 text-gray-500 text-xs italic">
+                Empty folder
+              </div>
+            )}
+          </div>
+        )}
       </div>
     ));
   };
-
   return (
-    <div className="w-full h-full border-r flex flex-col">
+    <div className="w-full flex-grow flex flex-col">
       <div className="p-2 text-xs font-semibold uppercase tracking-wider text-gray-400 flex justify-between items-center">
         Explorer
         <div className="flex gap-2 justify-center items-center">
           <FilePlus
             size={18}
+            className="cursor-pointer hover:text-blue-400"
             onClick={() => {
               setCurrentParentId(null);
               setNewItemType("file");
@@ -478,6 +379,7 @@ export function FileExplorer() {
           />
           <FolderPlus
             size={18}
+            className="cursor-pointer hover:text-yellow-400"
             onClick={() => {
               setCurrentParentId(null);
               setNewItemType("folder");
@@ -486,7 +388,7 @@ export function FileExplorer() {
           />
         </div>
       </div>
-      <div className="flex-1 overflow-auto">
+      <div className="flex flex-col overflow-auto">
         {renderFileTree(organizedFiles)}
       </div>
       <AddFileModal
@@ -496,6 +398,7 @@ export function FileExplorer() {
         newItemName={newItemName}
         setNewItemName={setNewItemName}
         handleCreateNewItem={handleCreateNewItem}
+        parentId={currentParentId}
       />
     </div>
   );

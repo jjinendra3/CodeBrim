@@ -118,7 +118,7 @@ export default function Form() {
               <FeedbackModal />
               <h2 className="font-semibold text-xs">
                 Language:
-                {presentFile?.lang?.toUpperCase() ?? ""}
+                {presentFile?.lang?.toUpperCase() ?? "TXT"}
               </h2>
             </div>
             {isTabBigger && (

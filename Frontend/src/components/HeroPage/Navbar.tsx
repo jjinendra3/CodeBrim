@@ -20,7 +20,7 @@ export default function Navbar() {
                 Docs
               </Link>
               <Link
-                href="https://jinendrajain.xyz"
+                href="https://jinendra.tech"
                 target="_blank"
                 className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
               >
