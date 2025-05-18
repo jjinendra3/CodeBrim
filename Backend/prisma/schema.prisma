@@ -17,19 +17,26 @@ model User {
   id       String   @id @default(cuid())
   datetime DateTime @default(now())
   password String?
-  files    Files[]
+  items    Files[]
 }
 
 model Files {
-  id       String   @id @default(cuid())
-  filename String
-  lang     String
-  content  String   @default("")
-  stdin    String   @default("")
-  stdout   String   @default("")
-  user     User?    @relation(fields: [userId], references: [id])
+  id      String  @id @default(cuid())
+  name    String
+  type    String
+  content String?
+  lang    String?
+  stdin   String?
+  stdout  String?
+
+  parent   Files?  @relation("FileHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  parentId String?
+  children Files[] @relation("FileHierarchy")
+
+  user   User?   @relation(fields: [userId], references: [id])
+  userId String?
+
   datetime DateTime @default(now())
-  userId   String?
 }
 
 model Feedback {

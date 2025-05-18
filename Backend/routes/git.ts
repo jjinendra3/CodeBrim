@@ -12,7 +12,8 @@ function isValidGitUrl(url: string): boolean {
 
 interface FileData {
   id: string;
-  filename: string;
+  name: string;
+  type: string;
   content?: string;
   userId?: string | null;
   lang: string;
@@ -62,7 +63,7 @@ async function processFolder(
         }
         const file_create = await prisma.files.create({
           data: {
-            filename: item.name,
+            name: item.name,
             content: content,
             lang: lang,
             user: {
@@ -70,9 +71,20 @@ async function processFolder(
                 id: userId,
               },
             },
+            type: "file",
           },
         });
-        files.push(file_create);
+        // Ensure compatibility with FileData interface
+        files.push({
+          id: file_create.id,
+          name: file_create.name,
+          type: file_create.type,
+          content: file_create.content ?? undefined,
+          userId: file_create.userId ?? undefined,
+          lang: file_create.lang ?? "",
+          stdin: file_create.stdin ?? "",
+          stdout: file_create.stdout ?? "",
+        });
       }
     }
     return files;
@@ -140,13 +152,13 @@ app.post("/gitpush/:id", async (req, res) => {
         id: req.params.id,
       },
       include: {
-        files: true,
+        items: true,
       },
     });
     if (!user) {
       throw new Error("No Such Code Snippet Found!");
     }
-    const files = user[0].files;
+    const files = user[0].items;
     foldername = user[0].id.toString();
     await fs.mkdirSync(foldername, { recursive: true });
     const git = simpleGit(foldername);
@@ -156,7 +168,7 @@ app.post("/gitpush/:id", async (req, res) => {
     const branchName = req.body.branch;
     await git.pull("origin", branchName);
     for (const file of files) {
-      fs.writeFileSync(`${foldername}/${file.filename}`, file.content);
+      fs.writeFileSync(`${foldername}/${file.name}`, file.content ?? "");
     }
     await git.add(".");
     await git.commit(req.body.commitmsg + "  (Pushed using CodeBrim)");

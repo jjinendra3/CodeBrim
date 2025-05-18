@@ -6,6 +6,39 @@ import { rollbar } from "../utils/rollbar";
 
 const app = Router();
 
+app.get("/newcompiler/:lang", async (req, res) => {
+  try {
+    const lang: string = req.params.lang;
+    const content: string = languageContent(lang);
+    const filename: string =
+      "main." +
+      (lang === "python" || lang === "javascript"
+        ? lang === "python"
+          ? "py"
+          : "js"
+        : lang);
+    const newUser = await prisma.user.create({
+      data: {
+        items: {
+          create: {
+            name: filename,
+            content: content,
+            lang: lang,
+            type: "file",
+          },
+        },
+      },
+      include: {
+        items: true,
+      },
+    });
+    return res.send({ success: 1, output: newUser });
+  } catch (error: any) {
+    const err = error.toString();
+    return res.send({ success: false, error: err });
+  }
+});
+
 app.post("/file-save", async (req, res) => {
   try {
     const file = req.body.presentFile;
@@ -21,54 +54,45 @@ app.post("/file-save", async (req, res) => {
   }
 });
 
-app.get("/newcompiler/:lang", async (req, res) => {
+app.put("/update-item", async (req, res) => {
   try {
-    const Id: string = uuidv4().replace(/-/g, "");
-    const newId: string = Id.slice(5, 10);
-    const lang: string = req.params.lang;
-    const content: string = languageContent(lang);
-    const filename: string =
-      "main." +
-      (lang === "python" || lang === "javascript"
-        ? lang === "python"
-          ? "py"
-          : "js"
-        : lang);
-    const newUser = await prisma.user.create({
-      data: {
-        id: newId,
-        files: {
-          create: {
-            filename: filename,
-            content: content,
-            lang: lang,
-          },
-        },
-      },
-      include: {
-        files: true,
-      },
+    const { file } = req.body;
+    const updatedFile = await prisma.files.update({
+      where: { id: file.id },
+      data: file,
     });
-    return res.send({ success: 1, output: newUser });
-  } catch (error: any) {
-    const err = error.toString();
-    return res.send({ success: false, error: err });
+
+    return res.send({ success: 1, output: updatedFile });
+  } catch (error) {
+    console.error("Error updating file:", error);
+    return res.send({ success: false, error: error });
   }
 });
 
-app.post("/add-file", async (req, res) => {
+app.post("/add-item", async (req, res) => {
   try {
-    const Id: string = uuidv4().replace(/-/g, "");
-    const projectId: string = req.body.projectId;
+    console.log("Adding new file");
+    const { projectId, name, type, parentId, lang } = req.body;
+    console.log(
+      "Project ID:",
+      projectId,
+      "Name:",
+      name,
+      "Type:",
+      type,
+      "Parent ID:",
+      parentId,
+      lang,
+    );
     const content: string = languageContent(req.body.lang);
-    const filename: string = req.body.filename;
     const newFile = await prisma.files.create({
       data: {
-        id: Id,
-        filename: filename,
+        name: name,
         content: content,
-        lang: req.body.lang,
+        lang: lang ?? "txt",
         userId: projectId,
+        type: type,
+        parentId: parentId,
       },
     });
     return res.send({ success: 1, output: newFile });
@@ -85,11 +109,7 @@ app.get("/getproject/:id", async (req, res) => {
         id: req.params.id,
       },
       include: {
-        files: {
-          orderBy: {
-            datetime: "asc",
-          },
-        },
+        items: true,
       },
     });
     if (!user) {
@@ -113,6 +133,23 @@ app.get("/getfile/:id", async (req, res) => {
   }
 });
 
+app.delete("/delete-item/:id", async (req, res) => {
+  try {
+    const file = await prisma.files.delete({
+      where: {
+        id: req.params.id,
+      },
+    });
+    if (file === null) {
+      throw new Error("No Such Code Snipper Found!");
+    }
+    return res.send({ success: 1, output: file });
+  } catch (error: any) {
+    const err = error.toString();
+    return res.send({ success: false, error: err });
+  }
+});
+
 app.get("/clone-snippet/:id", async (req, res) => {
   try {
     const user = await prisma.user.findMany({
@@ -120,7 +157,7 @@ app.get("/clone-snippet/:id", async (req, res) => {
         id: req.params.id,
       },
       include: {
-        files: true,
+        items: true,
       },
     });
     if (user.length === 0) {
@@ -131,16 +168,17 @@ app.get("/clone-snippet/:id", async (req, res) => {
     const newUser = await prisma.user.create({
       data: {
         id: newId,
-        files: {
+        items: {
           create: {
-            filename: user[0].files[0].filename,
-            content: user[0].files[0].content,
-            lang: user[0].files[0].lang,
+            name: user[0].items[0].name,
+            content: user[0].items[0].content,
+            lang: user[0].items[0].lang,
+            type: user[0].items[0].type,
           },
         },
       },
       include: {
-        files: true,
+        items: true,
       },
     });
     return res.send({ success: 1, output: newUser });
