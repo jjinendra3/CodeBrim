@@ -32,7 +32,9 @@ export type CodeState = {
   payload: File | null;
   queued: QueuedState;
   presentFile: File | null;
+  canLock: boolean;
 
+  setCanLock: (canLock: boolean) => void;
   setPresentFile: (presentFile: File | null) => void;
   setId: (id: string | null) => void;
   setFiles: (files: File[]) => void;
@@ -61,6 +63,6 @@ export type CodeState = {
   ) => Promise<any>;
   snipClone: () => Promise<any>;
   gitClone: (url: string) => Promise<any>;
-  lockUser: (pwd: string) => Promise<any>;
+  userPrivacy: (pwd: string | undefined) => Promise<any>;
   addFeedback: (feedback: Feedback) => Promise<any>;
 };

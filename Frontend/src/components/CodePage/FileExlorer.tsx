@@ -12,7 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useCodeStore } from "@/lib/codeStore";
 import { File } from "@/type";
-import AddFileModal from "./AddFileModal";
+import AddFileModal from "../Modals/AddFileModal";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 
@@ -78,7 +78,6 @@ export function FileExplorer() {
   };
 
   const handleFileClick = (fileId: string) => {
-    console.log("File clicked:", fileId);
     router.push(`/code/${id}/${fileId}`);
   };
 
@@ -113,18 +112,32 @@ export function FileExplorer() {
 
     const newItem: File = {
       id: newItemId,
-      name: newItemType === "file"
-        ? newItemName.includes(".")
-          ? newItemName
-          : `${newItemName}.txt`
-        : newItemName,
+      name:
+        newItemType === "file"
+          ? newItemName.includes(".")
+            ? newItemName
+            : `${newItemName}.txt`
+          : newItemName,
       type: newItemType,
       parentId: currentParentId,
-      lang: newItemType === "file"
-        ? newItemName.includes(".")
-          ? newItemName.split(".").pop() ?? "txt"
-          : "txt"
-        : null,
+      lang:
+        newItemType === "file"
+          ? (() => {
+              const supportedLangs = [
+                "go",
+                "java",
+                "cpp",
+                "c",
+                "js",
+                "py",
+                "python",
+              ];
+              const extension = newItemName.includes(".")
+                ? newItemName.split(".").pop()?.toLowerCase() ?? ""
+                : "";
+              return supportedLangs.includes(extension) ? extension : "txt";
+            })()
+          : null,
       content: newItemType === "file" ? "" : undefined,
       children: newItemType === "folder" ? [] : undefined,
       userId: "",

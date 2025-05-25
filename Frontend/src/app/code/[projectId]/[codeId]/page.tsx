@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import Editor from "@monaco-editor/react";
-import Modal from "@/components/Modal";
+import Modal from "@/components/Modals/GitModal";
 import { type File } from "@/type";
 import { useRouter, usePathname } from "next/navigation";
 import {
@@ -10,11 +10,12 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
-import FeedbackModal from "@/components/FeedbackModal";
-import { Play, Copy, Save } from "lucide-react";
+import FeedbackModal from "@/components/Modals/FeedbackModal";
+import { Play, Copy, Save, FileTextIcon } from "lucide-react";
 import Loader from "@/components/Loader";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useCodeStore } from "@/lib/codeStore";
+import { ClipLoader } from "react-spinners";
 export default function Form() {
   const {
     codeRunner,
@@ -53,8 +54,7 @@ export default function Form() {
       }
     };
     fetchData();
-    //eslint-disable-next-line
-  }, []);
+  }, [getFileData, fileId, router, setPresentFile]);
 
   useEffect(() => {
     presentFileRef.current = presentFile;
@@ -121,14 +121,6 @@ export default function Form() {
                 {presentFile?.lang?.toUpperCase() ?? "TXT"}
               </h2>
             </div>
-            {isTabBigger && (
-              <div className="flex items-center space-x-2">
-                <span className="text-xs">
-                  {saving ? "Saving..." : "Code Saved!"}
-                </span>
-                <Save className={`h-3 w-3 ${saving ? "animate-pulse" : ""}`} />
-              </div>
-            )}
             <div className="flex space-x-2">
               <Button
                 variant="default"
@@ -136,11 +128,15 @@ export default function Form() {
                 onClick={async () => {
                   const response = await snipClone();
                   if (!response) return;
-                  router.push(`/code/${response.id}`);
+                  window.open(
+                    `/code/${response.id}`,
+                    "_blank",
+                    "noopener,noreferrer",
+                  );
                 }}
               >
                 <Copy className="h-4 w-4" />
-                {isTabBigger && <span className="ml-2">Copy Files</span>}
+                {isTabBigger && <span className="ml-2">Clone Workspace</span>}
               </Button>
               <Modal
                 gitcontrols={gitcontrols}
@@ -154,12 +150,27 @@ export default function Form() {
                   saver(presentFile);
                 }}
               >
-                <Save className="h-4 w-4" />
-                {isTabBigger && <span className="ml-2">Save</span>}
+                {!saving ? (
+                  <Save className="h-4 w-4" />
+                ) : (
+                  <ClipLoader
+                    color="#ffffff"
+                    loading={saving}
+                    size={16}
+                    className="h-4 w-4"
+                  />
+                )}
+                {isTabBigger && (
+                  <span className="ml-2"> {saving ? "Saving..." : "Save"}</span>
+                )}
               </Button>
               <Button
                 variant="default"
                 size="xs"
+                disabled={
+                  (queued.fileId === fileId && queued.loading) ||
+                  presentFile?.lang === "txt"
+                }
                 onClick={async () => {
                   if (!presentFile) return;
                   await codeRunner(presentFile);
@@ -169,17 +180,34 @@ export default function Form() {
                 {isTabBigger && <span className="ml-1">Run</span>}
               </Button>
             </div>
-            {/* )} */}
           </div>
-          <Editor
-            theme="vs-dark"
-            value={presentFile?.content ?? undefined}
-            language={presentFile?.lang ?? undefined}
-            onMount={handleEditorDidMount}
-            onChange={handleCodeChange}
-            options={{ readOnly: !editable }}
-            className="border-t border-gray-700"
-          />
+          {presentFile?.type === "file" ? (
+            <Editor
+              theme="vs-dark"
+              value={presentFile?.content ?? undefined}
+              language={presentFile?.lang ?? undefined}
+              onMount={handleEditorDidMount}
+              onChange={handleCodeChange}
+              options={{ readOnly: !editable }}
+              className="border-t border-gray-700"
+            />
+          ) : (
+            <div className="flex-1 bg-gray-900 border-t border-gray-700 flex items-center justify-center h-full">
+              <div className="text-center space-y-4 p-8">
+                <div className="w-16 h-16 mx-auto bg-gray-800 rounded-full flex items-center justify-center border border-gray-600">
+                  <FileTextIcon className="w-8 h-8" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-lg font-medium text-gray-300">
+                    No File Selected
+                  </h3>
+                  <p className="text-sm text-gray-500 max-w-sm">
+                    Select a file from the explorer to start editing your code
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </ResizablePanel>
         <ResizableHandle withHandle />
         <ResizablePanel defaultSize={25}>

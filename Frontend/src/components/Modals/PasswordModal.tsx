@@ -1,26 +1,20 @@
 "use client";
 import { useState } from "react";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { toast } from "react-toastify";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { useCodeStore } from "@/lib/codeStore";
+import { Lock, LockKeyholeOpen } from "lucide-react";
 
-export default function PasswordDialog({
-  open,
-  setOpen,
-  pwdflag,
-}: {
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  pwdflag: boolean;
-}) {
-  const { lockUser, user, setEditable } = useCodeStore();
+export default function PasswordDialog() {
+  const { userPrivacy, user, setUser, canLock } = useCodeStore();
+  const [isOpen, setIsOpen] = useState(false);
   const [password, setPassword] = useState<string>("");
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -29,24 +23,40 @@ export default function PasswordDialog({
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!pwdflag) {
-      if (password === user.password) {
-        setEditable(true);
-      } else {
-        toast.error("Wrong Password!");
+
+    if (user.password && user.password === password) {
+      if (canLock) {
+        await userPrivacy(undefined);
       }
+      setUser({
+        ...user,
+        password: undefined,
+      });
     } else {
-      await lockUser(password);
+      await userPrivacy(password);
     }
-    setOpen(false);
+    setIsOpen(false);
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button variant="default" className="text-white hover:bg-gray-700">
+          {!user?.password ? (
+            <Lock className="h-4 w-4" />
+          ) : (
+            <LockKeyholeOpen className="h-4 w-4" />
+          )}
+        </Button>
+      </DialogTrigger>
       <DialogContent className="bg-[#101518] border-green-300 text-white">
         <DialogHeader>
           <DialogTitle className="text-2xl font-extrabold text-center">
-            Enter Password to Edit!
+            {user?.password
+              ? canLock
+                ? "Lock Project"
+                : "Enter Password to Unlock"
+              : "Lock Project"}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col space-y-4 mt-4">
@@ -60,11 +70,7 @@ export default function PasswordDialog({
             className="font-mono"
           />
           <div className="flex justify-center space-x-4 mt-2">
-            <Button
-              type="button"
-              className="bg-red-900 text-white font-bold"
-              onClick={() => setOpen(false)}
-            >
+            <Button type="button" className="bg-red-900 text-white font-bold">
               Cancel
             </Button>
             <Button type="submit" className="bg-blue-900 text-white font-bold">

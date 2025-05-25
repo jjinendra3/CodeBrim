@@ -18,6 +18,8 @@ export const useCodeStore = create<CodeState>((set, get) => ({
     fileId: "",
   },
   presentFile: null,
+  canLock: false,
+  setCanLock: canLock => set({ canLock }),
   setPresentFile: presentFile => set({ presentFile }),
   setId: id => set({ id }),
   setFiles: files => set({ files }),
@@ -271,28 +273,24 @@ export const useCodeStore = create<CodeState>((set, get) => ({
       return undefined;
     }
   },
-
-  lockUser: async (pwd: string) => {
-    toast("Locking your account...");
+  userPrivacy: async (pwd: string | undefined) => {
+    const isLocking = pwd === undefined;
+    toast(isLocking ? "Locking project..." : "Unlocking project...");
     try {
       const response = await axios.post(
-        `${BACKEND}/project/lock-user/${get().id}`,
+        `${BACKEND}/project/project-privacy/${get().id}`,
         {
           password: pwd,
         },
       );
-
       if (response.data.success === false) {
         throw response.data.error;
       }
-
       set({ user: response.data.output });
-      toast.success("Snippet Locked!");
+      toast.success(isLocking ? "Project locked!" : "Project unlocked!");
       return response.data.output;
     } catch (error) {
-      typeof error === "string"
-        ? toast.error(`${error.slice(0, 50)}`)
-        : toast.error(`Please try again later!`);
+      toast.error(`Please try again later!`);
       return undefined;
     }
   },

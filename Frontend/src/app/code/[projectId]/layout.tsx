@@ -9,12 +9,15 @@ import LayoutContent from "./LayoutContent";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useCodeStore } from "@/lib/codeStore";
 import { File } from "@/type";
+import ProtectedOverlay from "@/components/CodePage/ProtectedOverlay";
+
 export default function CodePageLayoyut({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { getCode, setPayload, setQueued, setFiles, files } = useCodeStore();
+  const { getCode, setPayload, setQueued, setFiles, user, setUser, canLock } =
+    useCodeStore();
   const isBiggerThanTab = !useIsMobile();
   const socket = useSocket();
   useEffect(() => {
@@ -35,6 +38,7 @@ export default function CodePageLayoyut({
     const fetchData = async () => {
       const response = await getCode(projectId);
       if (response.success === 1) {
+        setUser(response.user);
         setFiles(response.user.items);
         const fileItem = response.user.items.find(
           (item: File) => item.type === "file",
@@ -47,8 +51,11 @@ export default function CodePageLayoyut({
       }
     };
     fetchData();
-  }, [getCode, projectId, router, setFiles]);
-  return (
+  }, [getCode, projectId, router, setFiles, setUser]);
+
+  return user.password && !canLock ? (
+    <ProtectedOverlay />
+  ) : (
     <div className="flex h-screen">
       <div
         className={cn(

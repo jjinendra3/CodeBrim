@@ -1,15 +1,15 @@
 "use client";
 
 import { useCodeStore } from "@/lib/codeStore";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "./ui/dialog";
+} from "../ui/dialog";
 import { GitBranch } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -61,7 +61,7 @@ export default function GitPushDialog({
 
   return (
     <Dialog>
-      <DialogTrigger className="flex items-center gap-2" asChild>
+      <DialogTrigger asChild>
         <Button
           variant="default"
           size={"xs"}

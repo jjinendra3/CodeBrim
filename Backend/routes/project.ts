@@ -8,6 +8,7 @@ const app = Router();
 
 app.get("/newcompiler/:lang", async (req, res) => {
   try {
+    const id = uuidv4().replace(/-/g, "").slice(5, 10);
     const lang: string = req.params.lang;
     const content: string = languageContent(lang);
     const filename: string =
@@ -19,6 +20,7 @@ app.get("/newcompiler/:lang", async (req, res) => {
         : lang);
     const newUser = await prisma.user.create({
       data: {
+        id: id,
         items: {
           create: {
             name: filename,
@@ -71,19 +73,7 @@ app.put("/update-item", async (req, res) => {
 
 app.post("/add-item", async (req, res) => {
   try {
-    console.log("Adding new file");
     const { projectId, name, type, parentId, lang } = req.body;
-    console.log(
-      "Project ID:",
-      projectId,
-      "Name:",
-      name,
-      "Type:",
-      type,
-      "Parent ID:",
-      parentId,
-      lang,
-    );
     const content: string = languageContent(req.body.lang);
     const newFile = await prisma.files.create({
       data: {
@@ -207,7 +197,7 @@ app.post("/set-password/:id", async (req, res) => {
   }
 });
 
-app.post("/lock-user/:id", async (req, res) => {
+app.post("/project-privacy/:id", async (req, res) => {
   try {
     const user = await prisma.user.update({
       where: {

@@ -122,7 +122,7 @@ const executeCode = async (data: any): Promise<codeExecuterProps> => {
     return {
       success: typeof Runner != "string" ? false : true,
       fileId: fileId,
-      stdin: stdin.toString(),
+      stdin: stdin ? stdin.toString() : "",
       stdout:
         date +
         ">>>\n" +

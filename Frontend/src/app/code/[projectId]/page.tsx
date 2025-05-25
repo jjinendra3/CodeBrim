@@ -3,13 +3,14 @@ import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useCodeStore } from "@/lib/codeStore";
 export default function Page() {
-  const { getCode, setFiles } = useCodeStore();
+  const { getCode, setFiles, setUser, user, canLock } = useCodeStore();
   const pathName = usePathname();
   const router = useRouter();
   useEffect(() => {
     const fetchData = async () => {
       const response = await getCode(pathName.split("/")[2]);
       if (response.success === 1) {
+        setUser(response.user);
         setFiles(response.user.items);
         router.push(
           `/code/${pathName.split("/")[2]}/${response.user.items[0].id}`,
@@ -19,7 +20,6 @@ export default function Page() {
       }
     };
     fetchData();
-    //eslint-disable-next-line
-  }, []);
+  }, [getCode, pathName, router, setFiles, setUser]);
   return <div></div>;
 }

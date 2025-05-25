@@ -49,6 +49,7 @@ const languages = [
 export default function ChooseLanguage() {
   const router = useRouter();
   const newProject = useCodeStore(state => state.newProject);
+  const canSetLock = useCodeStore(state => state.setCanLock);
   const [clicked, setClicked] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
 
@@ -91,6 +92,7 @@ export default function ChooseLanguage() {
                   const fileId = response.items.find(
                     (item: any) => item.type === "file",
                   ).id;
+                  canSetLock(true);
                   router.push(`code/${response.id}/${fileId}`);
                 }}
                 className={`w-full h-full p-6 rounded-xl transition-all duration-200 flex flex-col justify-center items-center ${
