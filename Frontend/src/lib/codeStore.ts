@@ -167,7 +167,7 @@ export const useCodeStore = create<CodeState>((set, get) => ({
   saver: async (presentFile: File) => {
     try {
       set({ saving: true });
-      const response = await axios.post(`${BACKEND}/project/file-save`, {
+      const response = await axios.post(`${BACKEND}/project/update-item`, {
         presentFile,
       });
 
@@ -185,22 +185,17 @@ export const useCodeStore = create<CodeState>((set, get) => ({
   },
 
   gitPush: async (
-    link: string,
+    gitUrl: string,
     commitMsg: string,
     branch: string,
-    pat: string,
+    accessToken: string,
   ) => {
-    if (pat === "") {
-      toast.warning("Please provide your Github Personal Access Token");
-      return undefined;
-    }
-
     try {
       const response = await axios.post(`${BACKEND}/git/gitpush/${get().id}/`, {
-        url: link,
-        commitmsg: commitMsg,
-        branch: branch,
-        pan: pat,
+        gitUrl,
+        commitMsg,
+        branch,
+        accessToken,
       });
 
       if (response.data.success === false) {
@@ -271,6 +266,29 @@ export const useCodeStore = create<CodeState>((set, get) => ({
         ? toast.error(`${error.message.slice(0, 50)}`)
         : toast.error(`Please try again later!`);
       return undefined;
+    }
+  },
+  downloadZip: async () => {
+    try {
+      const response = await axios.get(
+        `${BACKEND}/project/download/${get().id}`,
+        {
+          responseType: "blob",
+        },
+      );
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `${get().id}-codebrim.zip`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success("Project downloaded successfully!");
+      return true;
+    } catch (error) {
+      console.error("Error downloading project:", error);
+      toast.error("Error downloading project, please try again later!");
+      return false;
     }
   },
   userPrivacy: async (pwd: string | undefined) => {

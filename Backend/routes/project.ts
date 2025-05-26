@@ -3,7 +3,13 @@ import prisma from "../utils/db";
 import { v4 as uuidv4 } from "uuid";
 import { languageContent } from "./helper/languageContent";
 import { rollbar } from "../utils/rollbar";
-
+import {
+  createFolderStructureRecursive,
+  createZipFromFolder,
+  deleteFolderRecursive,
+} from "./helper/fileFolderOperations";
+import * as fs from "fs";
+import path from "path";
 const app = Router();
 
 app.get("/newcompiler/:lang", async (req, res) => {
@@ -38,21 +44,6 @@ app.get("/newcompiler/:lang", async (req, res) => {
   } catch (error: any) {
     const err = error.toString();
     return res.send({ success: false, error: err });
-  }
-});
-
-app.post("/file-save", async (req, res) => {
-  try {
-    const file = req.body.presentFile;
-    await prisma.files.update({
-      where: {
-        id: file.id,
-      },
-      data: file,
-    });
-    return res.send({ success: 1 });
-  } catch (error) {
-    return res.send({ success: false, error: error });
   }
 });
 
@@ -140,6 +131,86 @@ app.delete("/delete-item/:id", async (req, res) => {
   }
 });
 
+app.get("/download/:id", async (req, res) => {
+  let tempFolderPath: string = "";
+  let zipFilePath: string = "";
+
+  try {
+    if (!req.params.id) {
+      return res
+        .status(400)
+        .json({ success: false, error: "User ID is required" });
+    }
+
+    const user = await prisma.user.findFirst({
+      where: {
+        id: req.params.id,
+      },
+      include: {
+        items: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: "No code snippets found for this user",
+      });
+    }
+
+    const timestamp = Date.now();
+    const folderName = `temp-${user.id}-${timestamp}`;
+    const zipFileName = `${folderName}.zip`;
+
+    tempFolderPath = path.resolve(folderName);
+    zipFilePath = path.resolve(zipFileName);
+
+    console.log(`Creating folder structure for user ${user.id}...`);
+
+    await createFolderStructureRecursive(user.items, tempFolderPath);
+    await createZipFromFolder(tempFolderPath, zipFilePath);
+
+    if (!fs.existsSync(zipFilePath)) {
+      throw new Error("Failed to create zip file");
+    }
+    const stats = fs.statSync(zipFilePath);
+    const filename = `code-snippets-codebrim-${user.id}.zip`;
+
+    res.setHeader("Content-Type", "application/zip");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.setHeader("Content-Length", stats.size);
+
+    res.download(zipFilePath, filename, async downloadError => {
+      await deleteFolderRecursive(tempFolderPath);
+      if (fs.existsSync(zipFilePath)) {
+        fs.unlinkSync(zipFilePath);
+      }
+      if (downloadError) {
+        console.error("Download error:", downloadError);
+        if (!res.headersSent) {
+          return res.status(500).json({
+            success: false,
+            error: "Failed to download file",
+          });
+        }
+      }
+    });
+  } catch (error: any) {
+    console.error("Download endpoint error:", error);
+
+    await deleteFolderRecursive(tempFolderPath);
+    if (fs.existsSync(zipFilePath)) {
+      fs.unlinkSync(zipFilePath);
+    }
+    if (!res.headersSent) {
+      return res.status(500).json({
+        success: false,
+        error: error.message || "Internal server error",
+      });
+    }
+  }
+});
+
 app.get("/clone-snippet/:id", async (req, res) => {
   try {
     const user = await prisma.user.findMany({
@@ -172,26 +243,6 @@ app.get("/clone-snippet/:id", async (req, res) => {
       },
     });
     return res.send({ success: 1, output: newUser });
-  } catch (error) {
-    return res.send({ success: false, error: error });
-  }
-});
-
-app.post("/set-password/:id", async (req, res) => {
-  try {
-    const user = await prisma.user.update({
-      where: {
-        id: req.params.id,
-      },
-      data: {
-        password: req.body.password,
-      },
-    });
-
-    if (user === null) {
-      throw new Error("No Such Code Snipper Found!");
-    }
-    return res.send({ success: 1, output: user });
   } catch (error) {
     return res.send({ success: false, error: error });
   }
@@ -231,4 +282,5 @@ app.post("/add-feedback", async (req, res) => {
     return res.send({ success: false, error: error });
   }
 });
+
 module.exports = app;

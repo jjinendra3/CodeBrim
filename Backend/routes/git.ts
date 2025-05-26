@@ -3,12 +3,13 @@ import prisma from "../utils/db";
 import { v4 as uuidv4 } from "uuid";
 import { simpleGit } from "simple-git";
 import * as fs from "fs";
+import { executeGitClone, isValidGitUrl } from "./helper/gitOperations";
 import {
-  deleteFolderRecursive,
-  executeGitClone,
-  isValidGitUrl,
   processFolder,
-} from "./helper/gitOperations";
+  createFolderStructureRecursive,
+  deleteFolderRecursive,
+} from "./helper/fileFolderOperations";
+import path from "path";
 
 const app = Router();
 
@@ -47,53 +48,114 @@ app.post("/clone", async (req, res) => {
 
 app.post("/gitpush/:id", async (req, res) => {
   let foldername: string = "";
-  let reponame: string = "";
+  const { gitUrl, accessToken, branch, commitMsg } = req.body;
   try {
+    if (!gitUrl || !accessToken || !branch || !commitMsg || !req.params.id) {
+      throw new Error(
+        "Missing required fields: url, pan, branch, commit message or user ID",
+      );
+    }
+
     if (!isValidGitUrl(req.body.url)) {
       throw new Error("Invalid Git Repository link");
     }
-    reponame = req.body.url.slice(0, -4).slice(19);
-    const user = await prisma.user.findMany({
+
+    const urlParts = req.body.url.replace(".git", "").split("/");
+    const reponame = urlParts.slice(-2).join("/");
+
+    const user = await prisma.user.findFirst({
       where: {
         id: req.params.id,
       },
       include: {
-        items: true,
+        items: {
+          orderBy: {
+            datetime: "asc",
+          },
+        },
       },
     });
+
     if (!user) {
-      throw new Error("No Such Code Snippet Found!");
+      throw new Error("User not found!");
     }
-    const files = user[0].items;
-    foldername = user[0].id.toString();
-    await fs.mkdirSync(foldername, { recursive: true });
+
+    if (!user.items || user.items.length === 0) {
+      throw new Error("No files found to push!");
+    }
+
+    const files = user.items;
+
+    const tempDir = path.join(process.cwd(), "temp");
+    foldername = path.join(tempDir, `push-${user.id}-${Date.now()}`);
+
+    fs.mkdirSync(tempDir, { recursive: true });
+    fs.mkdirSync(foldername, { recursive: true });
+
     const git = simpleGit(foldername);
-    await git
-      .init()
-      .addRemote("origin", `https://${req.body.pan}@github.com/${reponame}`);
+    await git.init();
+
+    const remoteUrl = `https://${req.body.pan}@github.com/${reponame}`;
+    await git.addRemote("origin", remoteUrl);
+
     const branchName = req.body.branch;
-    await git.pull("origin", branchName);
-    for (const file of files) {
-      fs.writeFileSync(`${foldername}/${file.name}`, file.content ?? "");
+
+    try {
+      await git.pull("origin", branchName);
+      console.log(`Pulled existing branch: ${branchName}`);
+    } catch (error) {
+      console.log(
+        `Branch ${branchName} doesn't exist remotely, will create new one`,
+      );
     }
+
+    await createFolderStructureRecursive(files, foldername);
+
     await git.add(".");
-    await git.commit(req.body.commitmsg + "  (Pushed using CodeBrim)");
-    await git.fetch();
-    const localBranches = await git.branchLocal();
-    const branchExists = localBranches.all.includes(branchName);
-    if (!branchExists) {
-      await git.checkoutLocalBranch(branchName);
-    } else {
-      await git.checkout(branchName);
+    const status = await git.status();
+    if (status.files.length === 0) {
+      throw new Error("No changes to commit");
     }
-    await git.push("origin", branchName);
+
+    await git.commit(req.body.commitmsg + " (Pushed using CodeBrim)");
+
+    try {
+      const localBranches = await git.branchLocal();
+      const branchExists = localBranches.all.includes(branchName);
+
+      if (!branchExists) {
+        await git.checkoutLocalBranch(branchName);
+      } else {
+        await git.checkout(branchName);
+      }
+    } catch (error) {
+      console.log("Branch checkout warning:", error);
+    }
+
+    await git.push("origin", branchName, { "--set-upstream": null });
+
     await deleteFolderRecursive(foldername);
-    return res.send({ success: true });
+
+    return res.json({
+      success: true,
+      message: `Successfully pushed to ${reponame}/${branchName}`,
+      filesCount: files.length,
+    });
   } catch (error: any) {
-    if (foldername != "") {
-      await deleteFolderRecursive(foldername);
+    console.error("Git push error:", error);
+
+    if (foldername && fs.existsSync(foldername)) {
+      try {
+        await deleteFolderRecursive(foldername);
+      } catch (cleanupError) {
+        console.error("Cleanup error:", cleanupError);
+      }
     }
-    return res.json({ success: false, error: error.message });
+
+    return res.status(400).json({
+      success: false,
+      error: error.message,
+    });
   }
 });
 

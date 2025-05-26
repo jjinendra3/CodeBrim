@@ -63,6 +63,7 @@ export type CodeState = {
   ) => Promise<any>;
   snipClone: () => Promise<any>;
   gitClone: (url: string) => Promise<any>;
+  downloadZip: () => Promise<any>;
   userPrivacy: (pwd: string | undefined) => Promise<any>;
   addFeedback: (feedback: Feedback) => Promise<any>;
 };

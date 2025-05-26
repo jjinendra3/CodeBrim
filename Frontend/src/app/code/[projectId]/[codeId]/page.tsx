@@ -1,8 +1,7 @@
 "use client";
-import React, { useState, useRef, useEffect } from "react";
+import React, { useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import Editor from "@monaco-editor/react";
-import Modal from "@/components/Modals/GitModal";
 import { type File } from "@/type";
 import { useRouter, usePathname } from "next/navigation";
 import {
@@ -11,11 +10,12 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import FeedbackModal from "@/components/Modals/FeedbackModal";
-import { Play, Copy, Save, FileTextIcon } from "lucide-react";
+import { Play, Copy, Save, FileTextIcon, Download } from "lucide-react";
 import Loader from "@/components/Loader";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useCodeStore } from "@/lib/codeStore";
 import { ClipLoader } from "react-spinners";
+import GitPushDialog from "@/components/Modals/GitModal";
 export default function Form() {
   const {
     codeRunner,
@@ -29,6 +29,7 @@ export default function Form() {
     queued,
     presentFile,
     setPresentFile,
+    downloadZip,
   } = useCodeStore();
   const router = useRouter();
   const pathname = usePathname();
@@ -37,13 +38,6 @@ export default function Form() {
   const isTabBigger = !useIsMobile();
   const editorRef = useRef<any>(null);
   const stdinRef = useRef<any>(null);
-  const [gitcontrols, setgitcontrols] = useState<any>({
-    repolink: "",
-    commitmsg: "commit",
-    branch: "master",
-    pan: "",
-  });
-
   useEffect(() => {
     const fetchData = async () => {
       const response = await getFileData(fileId);
@@ -113,7 +107,7 @@ export default function Form() {
     <div className={"overflow-hidden w-full"}>
       <ResizablePanelGroup direction="vertical">
         <ResizablePanel defaultSize={75}>
-          <div className="h-8 flex justify-between items-center px-4 bg-gray-800 text-white">
+          <div className="h-8 flex justify-between items-center px-2 bg-gray-800 text-white">
             <div className="flex flex-row gap-2 items-center ">
               <FeedbackModal />
               <h2 className="font-semibold text-xs">
@@ -121,7 +115,7 @@ export default function Form() {
                 {presentFile?.lang?.toUpperCase() ?? "TXT"}
               </h2>
             </div>
-            <div className="flex space-x-2">
+            <div className="flex gap-2">
               <Button
                 variant="default"
                 size="xs"
@@ -138,10 +132,11 @@ export default function Form() {
                 <Copy className="h-4 w-4" />
                 {isTabBigger && <span className="ml-2">Clone Workspace</span>}
               </Button>
-              <Modal
-                gitcontrols={gitcontrols}
-                setgitcontrols={setgitcontrols}
-              />
+              <GitPushDialog />
+              <Button variant="default" size="xs" onClick={downloadZip}>
+                <Download className="h-4 w-4" />
+                {isTabBigger && <span className="ml-2"> Download Project</span>}
+              </Button>
               <Button
                 variant="default"
                 size="xs"
