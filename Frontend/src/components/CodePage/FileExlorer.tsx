@@ -9,7 +9,7 @@ import {
   FilePlus,
   FolderPlus,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, supportedLanguages } from "@/lib/utils";
 import { useCodeStore } from "@/lib/codeStore";
 import { File } from "@/type";
 import AddFileModal from "../Modals/AddFileModal";
@@ -91,7 +91,7 @@ export function FileExplorer() {
     }
 
     const extension = file.name.split(".").pop()?.toLowerCase();
-    if (!extension || extension === "txt") {
+    if (!extension || !supportedLanguages.includes(extension)) {
       return <FileText size={16} />;
     }
 

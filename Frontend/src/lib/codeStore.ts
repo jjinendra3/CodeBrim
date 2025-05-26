@@ -47,7 +47,7 @@ export const useCodeStore = create<CodeState>((set, get) => ({
         newProjectBool: true,
         id: response.data.output.id,
         user: response.data.output,
-        files: response.data.output.files,
+        files: response.data.output.items,
       });
 
       return response.data.output;
@@ -247,26 +247,26 @@ export const useCodeStore = create<CodeState>((set, get) => ({
     }
   },
 
-  gitClone: async (url: string) => {
+  gitClone: async (repoUrl: string) => {
     toast("Please wait... Cloning your code now!");
     try {
-      const response = await axios.post(`${BACKEND}/git/gitclone`, {
-        url: url,
+      const response = await axios.post(`${BACKEND}/git/clone`, {
+        repoUrl,
       });
-
       if (response.data.success === false) {
         throw response.data.error;
       }
-
       set({
         newProjectBool: true,
-        id: response.data.response.id,
-        files: response.data.response.files,
+        id: response.data.output.id,
+        user: response.data.output,
+        files: response.data.output.files,
       });
 
       toast.success("Code Cloned!");
-      return response.data.response;
+      return response.data.output;
     } catch (error: any) {
+      console.log(error);
       typeof error.message === "string"
         ? toast.error(`${error.message.slice(0, 50)}`)
         : toast.error(`Please try again later!`);

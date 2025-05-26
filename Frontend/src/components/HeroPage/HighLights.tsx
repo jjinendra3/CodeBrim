@@ -2,18 +2,13 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Code, Zap, Globe, Lock } from "lucide-react";
+import { Code, Zap, Globe, Lock, GitBranch } from "lucide-react";
 
 const features = [
   {
     icon: Code,
     title: "Multiple Languages",
     description: "Support for C, C++, JavaScript, Python, Java and Go.",
-  },
-  {
-    icon: Zap,
-    title: "Instant Execution",
-    description: "Run your code with zero setup time anywhere, anytime!",
   },
   {
     icon: Globe,
@@ -25,6 +20,11 @@ const features = [
     icon: Lock,
     title: "Secure Environment",
     description: "Your code and data are always protected",
+  },
+  {
+    icon: GitBranch,
+    title: "Git Integration",
+    description: "Clone and push your code to Git repositories effortlessly.",
   },
 ];
 

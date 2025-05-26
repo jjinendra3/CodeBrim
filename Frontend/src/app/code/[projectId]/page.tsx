@@ -20,6 +20,7 @@ export default function Page() {
       }
     };
     fetchData();
-  }, [getCode, pathName, router, setFiles, setUser]);
+    //eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   return <div></div>;
 }

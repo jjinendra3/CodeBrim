@@ -2,7 +2,7 @@
 import CodeEditor from "@/components/HeroPage/HeroCodeAnimation";
 import FeatureHighlights from "@/components/HeroPage/HighLights";
 import { motion } from "framer-motion";
-import { Code } from "lucide-react";
+import { Code, GitBranch } from "lucide-react";
 import Link from "next/link";
 export default function Hero() {
   return (
@@ -34,20 +34,34 @@ export default function Hero() {
             Experience the future of coding with our lightning-fast online
             compiler. Write, run, and debug your code in the cloud.
           </motion.p>
-          <motion.div
-            className="mt-8"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.5, duration: 0.5 }}
-          >
-            <Link
-              href="/language"
-              className="inline-flex items-center justify-center rounded-md bg-blue-600 px-5 py-3 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200"
+          <div className="mt-8 flex gap-2">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.5, duration: 0.5 }}
             >
-              <Code className="mr-2 h-5 w-5" />
-              Start Coding
-            </Link>
-          </motion.div>
+              <Link
+                href="/language"
+                className="inline-flex items-center justify-center rounded-md bg-blue-600 px-3 py-2 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200"
+              >
+                <Code className="mr-2 h-4 w-4" />
+                Start Coding
+              </Link>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.5, duration: 0.5 }}
+            >
+              <Link
+                href="/gitclone"
+                className="inline-flex items-center justify-center rounded-md bg-green-600 px-3 py-2 text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200"
+              >
+                <GitBranch className="mr-2 h-5 w-5" />
+                Clone a Repo
+              </Link>
+            </motion.div>
+          </div>
         </div>
         <div className="mt-8 lg:mt-0">
           <CodeEditor />
