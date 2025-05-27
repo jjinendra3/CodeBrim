@@ -111,7 +111,6 @@ ROLLBAR_TOKEN=your_rollbar_token
 **Frontend/.env.local**
 
 ```env
-PRIVATE_KEY=your_private_key
 NEXT_PUBLIC_BACKEND_URL=http://localhost:5000
 ```
 
