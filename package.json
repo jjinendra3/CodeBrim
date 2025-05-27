@@ -2,17 +2,14 @@
   "scripts": {
     "dev:frontend": "cd Frontend && npm run dev",
     "dev:backend": "cd Backend && npm run dev",
-
     "dev": "concurrently -n \"FRONTEND,BACKEND\" -c \"bgBlue,bgYellow\" -p \"[{name}]\" \"npm run dev:frontend\" \"npm run dev:backend\"",
-    
+   
     "start:frontend": "cd Frontend && npm run build && npm run start",
     "start:backend": "cd Backend && npm start",
-    
     "start": "concurrently -n \"FRONTEND,BACKEND\" -c \"bgBlue,bgYellow\" -p \"[{name}]\" \"npm run start:frontend\" \"npm run start:backend\"",
-   
+    
     "install:frontend": "cd Frontend && npm i && npm run build",
     "install:backend": "cd Backend && npm i",
-   
     "install": "npm i && npm run install:backend && npm run install:frontend",
    
     "format": "prettier --write ."
