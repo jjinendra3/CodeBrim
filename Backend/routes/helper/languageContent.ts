@@ -13,6 +13,6 @@ export function languageContent(lang: string) {
     case "java":
       return `class Main { \n\tpublic static void main(String[] args) { \n\t\tSystem.out.println("Hello World!"); \n\t} \n}`;
     default:
-      return "txt";
+      return "Hello World!";
   }
 }

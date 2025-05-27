@@ -23,7 +23,7 @@ function buildDockerImage(lang: string) {
 
 function runImage(lang: string, stdin: string) {
   return new Promise((resolve, reject) => {
-    const dockerRunCommand = `sudo docker run -i --ulimit cpu=1 my-${lang}-app`;
+    const dockerRunCommand = `sudo docker run --rm -i --ulimit cpu=1 my-${lang}-app`;
     const child = exec(
       dockerRunCommand,
       (error: any, stdout: any, stderr: any) => {
@@ -122,7 +122,7 @@ const executeCode = async (data: any): Promise<codeExecuterProps> => {
     return {
       success: typeof Runner != "string" ? false : true,
       fileId: fileId,
-      stdin: stdin.toString(),
+      stdin: stdin ? stdin.toString() : "",
       stdout:
         date +
         ">>>\n" +

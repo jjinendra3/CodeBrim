@@ -8,7 +8,7 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="mb-4 md:mb-0">
             <p className="text-sm">
-              &copy; 2024 CodeBrim. All rights reserved.
+              &copy; 2025 CodeBrim. All rights reserved.
             </p>
           </div>
           <div className="flex items-center space-x-4">
@@ -53,7 +53,7 @@ export default function Footer() {
             <p className="text-sm">
               Developed by{" "}
               <Link
-                href={"https://jinendrajain.xyz"}
+                href={"https://jinendra.tech"}
                 className="font-semibold text-blue-500"
               >
                 Jinendra Jain

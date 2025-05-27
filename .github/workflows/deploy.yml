@@ -23,10 +23,13 @@ jobs:
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
           cd CodeBrim
           git pull origin master
+          npm install
+          cd Backend
+          npx prisma generate
           sudo systemctl restart myapp.service
           sudo systemctl restart myapp.service
           echo "Service restarted. Checking status every 5 seconds for 30 seconds:"
-          for i in {1..6}; do
+          for i in {1..3}; do
               sudo systemctl status myapp.service | grep -E "Active:|Loaded:"
               sleep 5
           done
