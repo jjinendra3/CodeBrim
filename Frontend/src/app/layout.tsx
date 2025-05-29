@@ -93,6 +93,7 @@ export default function RootLayout({
           duration={1000}
           position="bottom-right"
           theme="dark"
+          expand={true}
         />
         {children}
       </body>

@@ -31,8 +31,8 @@ export const useCodeStore = create<CodeState>((set, get) => ({
   setQueued: queued => set({ queued }),
 
   newProject: async (lang: string) => {
+    const creating = toast.loading("Creating Project...");
     try {
-      const creating = toast.loading("Creating Project...");
       const response = await axios.get(
         `${BACKEND}/project/newcompiler/${lang}/`,
       );
@@ -52,7 +52,9 @@ export const useCodeStore = create<CodeState>((set, get) => ({
 
       return response.data.output;
     } catch (error) {
-      toast.error("Error creating new project");
+      toast.error(error as string, {
+        id: creating,
+      });
       return undefined;
     }
   },
@@ -93,17 +95,17 @@ export const useCodeStore = create<CodeState>((set, get) => ({
   },
   updateFile: async (file: File) => {
     try {
+      set({ saving: true });
       const response = await axios.put(`${BACKEND}/project/update-item`, {
         file: file,
       });
       if (response.data.success === false) {
         throw response.data.error;
       }
-      toast.success("File Updated!");
+      set({ saving: false, presentFile: file });
       return response.data;
     } catch (error) {
-      console.log(error);
-      toast.error("Error updating file");
+      set({ saving: false });
       return undefined;
     }
   },
@@ -147,7 +149,7 @@ export const useCodeStore = create<CodeState>((set, get) => ({
   codeRunner: async (file: File) => {
     try {
       toast("Running your Code, please wait!");
-      await get().saver(file);
+      await get().updateFile(file);
       const response = await axios.post(`${BACKEND}/code/runcode/`, {
         files: file,
       });
@@ -161,26 +163,6 @@ export const useCodeStore = create<CodeState>((set, get) => ({
       console.log(error);
       toast.error("Error running your code, please try again later!");
       return undefined;
-    }
-  },
-
-  saver: async (presentFile: File) => {
-    try {
-      set({ saving: true });
-      const response = await axios.post(`${BACKEND}/project/update-item`, {
-        presentFile,
-      });
-
-      if (response.data.success === false) {
-        throw response.data.error;
-      }
-
-      set({ saving: false });
-      return response;
-    } catch (error) {
-      console.log(error);
-      toast.error("Error saving your work");
-      return error;
     }
   },
 
@@ -268,6 +250,7 @@ export const useCodeStore = create<CodeState>((set, get) => ({
       return undefined;
     }
   },
+
   downloadZip: async () => {
     try {
       const response = await axios.get(
@@ -291,6 +274,7 @@ export const useCodeStore = create<CodeState>((set, get) => ({
       return false;
     }
   },
+
   userPrivacy: async (pwd: string | undefined) => {
     const isLocking = pwd === undefined;
     toast(isLocking ? "Locking project..." : "Unlocking project...");
