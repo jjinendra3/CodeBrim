@@ -15,6 +15,7 @@ import { File } from "@/type";
 import AddFileModal from "../Modals/AddFileModal";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
+import { Button } from "../ui/button";
 
 export function FileExplorer() {
   const router = useRouter();
@@ -105,6 +106,31 @@ export function FileExplorer() {
     );
   };
 
+  const getDefaultParentFolder = (): string | null => {
+    const expandedFolderIds = Array.from(expandedFolders);
+    if (expandedFolderIds.length > 0) {
+      let deepestFolder = null;
+      let maxDepth = -1;
+
+      expandedFolderIds.forEach(folderId => {
+        const depth = getFileDepth(folderId);
+        if (depth > maxDepth) {
+          maxDepth = depth;
+          deepestFolder = folderId;
+        }
+      });
+
+      return deepestFolder;
+    }
+    return null;
+  };
+
+  const getFileDepth = (fileId: string): number => {
+    const file = files.find(f => f.id === fileId);
+    if (!file || !file.parentId) return 0;
+    return 1 + getFileDepth(file.parentId);
+  };
+
   const handleCreateNewItem = async () => {
     if (!newItemName) return;
 
@@ -174,6 +200,7 @@ export function FileExplorer() {
 
       setIsCreatingItem(false);
       setNewItemName("");
+      setCurrentParentId(null);
     } catch (error) {
       console.error("Failed to add item:", error);
     }
@@ -225,26 +252,32 @@ export function FileExplorer() {
     }
   };
 
+  const isDescendant = (
+    potentialParentId: string,
+    potentialChildId: string,
+  ): boolean => {
+    if (potentialParentId === potentialChildId) return true;
+
+    const child = files.find(file => file.id === potentialChildId);
+    if (!child || !child.parentId) return false;
+
+    return isDescendant(potentialParentId, child.parentId);
+  };
+
   const handleDragDrop = async (draggedId: string, targetFolderId: string) => {
     if (!draggedId || !targetFolderId || draggedId === targetFolderId) return;
 
     const draggedItem = files.find(file => file.id === draggedId);
-    if (!draggedItem) return;
+    const targetFolder = files.find(file => file.id === targetFolderId);
 
-    const isDescendant = (
-      parentId: string | null,
-      potentialChildId: string,
-    ): boolean => {
-      if (!parentId) return false;
-      if (parentId === potentialChildId) return true;
+    if (!draggedItem || !targetFolder || targetFolder.type !== "folder") return;
 
-      const child = files.find(file => file.id === parentId);
-      return child && child.parentId
-        ? isDescendant(child.parentId, potentialChildId)
-        : false;
-    };
-
-    if (isDescendant(draggedId, targetFolderId)) return;
+    if (
+      draggedItem.type === "folder" &&
+      isDescendant(draggedId, targetFolderId)
+    ) {
+      return;
+    }
 
     const updatedItem = {
       ...draggedItem,
@@ -270,9 +303,33 @@ export function FileExplorer() {
     }
   };
 
+  const handleDropToRoot = async (draggedId: string) => {
+    if (!draggedId) return;
+
+    const draggedItem = files.find(file => file.id === draggedId);
+    if (!draggedItem || !draggedItem.parentId) return;
+
+    const updatedItem = {
+      ...draggedItem,
+      parentId: null,
+    };
+
+    try {
+      await updateFile(updatedItem);
+
+      setFiles(
+        files.map((file: File) =>
+          file.id === draggedId ? { ...file, parentId: null } : file,
+        ),
+      );
+    } catch (error) {
+      console.error("Failed to move item to root:", error);
+    }
+  };
+
   const renderFileTree = (items: File[], level = 0) => {
     return items.map(item => (
-      <div key={item.id}>
+      <div key={item.id} className="group">
         <div
           className={cn(
             "flex items-center w-full cursor-pointer text-sm rounded-sm transition-colors",
@@ -343,17 +400,52 @@ export function FileExplorer() {
               </span>
             </div>
 
-            <button
-              title="Delete"
-              aria-label="Delete"
-              className="opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:text-red-300 p-1"
-              onClick={async e => {
-                e.stopPropagation();
-                await handleDeleteItem(item.id);
-              }}
-            >
-              <Trash size={12} />
-            </button>
+            <div className="flex items-center gap-1">
+              {item.type === "folder" && expandedFolders.has(item.id) && (
+                <>
+                  <Button
+                    variant="default"
+                    title="Add file to folder"
+                    aria-label="Add file to folder"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-blue-400 hover:text-blue-300 p-1 h-fit bg-inherit hover:bg-inherit"
+                    onClick={e => {
+                      e.stopPropagation();
+                      setCurrentParentId(item.id);
+                      setNewItemType("file");
+                      setIsCreatingItem(true);
+                    }}
+                  >
+                    <FilePlus size={12} />
+                  </Button>
+                  <Button
+                    variant={"default"}
+                    title="Add folder to folder"
+                    aria-label="Add folder to folder"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-yellow-400 hover:text-yellow-300 p-1 h-fit bg-inherit hover:bg-inherit"
+                    onClick={e => {
+                      e.stopPropagation();
+                      setCurrentParentId(item.id);
+                      setNewItemType("folder");
+                      setIsCreatingItem(true);
+                    }}
+                  >
+                    <FolderPlus size={12} />
+                  </Button>
+                </>
+              )}
+              <Button
+                variant="default"
+                title="Delete"
+                aria-label="Delete"
+                className="opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:text-red-300 p-1 h-fit bg-inherit hover:bg-inherit"
+                onClick={async e => {
+                  e.stopPropagation();
+                  await handleDeleteItem(item.id);
+                }}
+              >
+                <Trash size={12} />
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -367,8 +459,31 @@ export function FileExplorer() {
             {item.children && item.children.length > 0 ? (
               renderFileTree(item.children, level + 1)
             ) : (
-              <div className="py-1 px-3 text-gray-500 text-xs italic">
-                Empty folder
+              <div
+                className="py-1 px-3 text-gray-500 text-xs italic"
+                onDragOver={e => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (draggedItem) {
+                    setDragOverItem(item.id);
+                  }
+                }}
+                onDragLeave={() => {
+                  setDragOverItem(null);
+                }}
+                onDrop={async e => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setDragOverItem(null);
+
+                  if (draggedItem && draggedItem !== item.id) {
+                    await handleDragDrop(draggedItem, item.id);
+                  }
+
+                  setDraggedItem(null);
+                }}
+              >
+                Empty folder - drop files here
               </div>
             )}
           </div>
@@ -376,16 +491,57 @@ export function FileExplorer() {
       </div>
     ));
   };
+
   return (
     <div className="w-full flex-grow flex flex-col">
-      <div className="p-2 text-xs font-semibold uppercase tracking-wider text-gray-400 flex justify-between items-center">
+      <div
+        className={cn(
+          "p-2 text-xs font-semibold uppercase tracking-wider text-gray-400 flex justify-between items-center transition-colors",
+          dragOverItem === "root" &&
+            "bg-[#3e3e42] border-b border-dashed border-[#007fd4]",
+        )}
+        onDragOver={e => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (draggedItem) {
+            setDragOverItem("root");
+          }
+        }}
+        onDragLeave={e => {
+          e.preventDefault();
+          e.stopPropagation();
+
+          const rect = e.currentTarget.getBoundingClientRect();
+          const x = e.clientX;
+          const y = e.clientY;
+          if (
+            x < rect.left ||
+            x > rect.right ||
+            y < rect.top ||
+            y > rect.bottom
+          ) {
+            setDragOverItem(null);
+          }
+        }}
+        onDrop={async e => {
+          e.preventDefault();
+          e.stopPropagation();
+          setDragOverItem(null);
+
+          if (draggedItem) {
+            await handleDropToRoot(draggedItem);
+          }
+
+          setDraggedItem(null);
+        }}
+      >
         Explorer
         <div className="flex gap-2 justify-center items-center">
           <FilePlus
             size={18}
             className="cursor-pointer hover:text-blue-400"
             onClick={() => {
-              setCurrentParentId(null);
+              setCurrentParentId(getDefaultParentFolder());
               setNewItemType("file");
               setIsCreatingItem(true);
             }}
@@ -394,15 +550,90 @@ export function FileExplorer() {
             size={18}
             className="cursor-pointer hover:text-yellow-400"
             onClick={() => {
-              setCurrentParentId(null);
+              setCurrentParentId(getDefaultParentFolder());
               setNewItemType("folder");
               setIsCreatingItem(true);
             }}
           />
         </div>
       </div>
-      <div className="flex flex-col overflow-auto">
-        {renderFileTree(organizedFiles)}
+      <div className="flex flex-col overflow-auto flex-grow relative">
+        {organizedFiles.length === 0 ? (
+          <div
+            className={cn(
+              "flex-grow flex items-center justify-center text-gray-500 text-sm italic transition-colors",
+              dragOverItem === "root" &&
+                "bg-[#3e3e42] border border-dashed border-[#007fd4]",
+            )}
+            onDragOver={e => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (draggedItem) {
+                setDragOverItem("root");
+              }
+            }}
+            onDragLeave={e => {
+              e.preventDefault();
+              e.stopPropagation();
+              setDragOverItem(null);
+            }}
+            onDrop={async e => {
+              e.preventDefault();
+              e.stopPropagation();
+              setDragOverItem(null);
+
+              if (draggedItem) {
+                await handleDropToRoot(draggedItem);
+              }
+
+              setDraggedItem(null);
+            }}
+          >
+            {draggedItem
+              ? "Drop here to move to root directory"
+              : "No files yet - create your first file or folder"}
+          </div>
+        ) : (
+          <>
+            {renderFileTree(organizedFiles)}
+            <div
+              className={cn(
+                "flex-grow min-h-[50px] transition-colors",
+                dragOverItem === "root" &&
+                  "bg-[#3e3e42] border border-dashed border-[#007fd4]",
+              )}
+              onDragOver={e => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (draggedItem) {
+                  setDragOverItem("root");
+                }
+              }}
+              onDragLeave={e => {
+                e.preventDefault();
+                e.stopPropagation();
+                setDragOverItem(null);
+              }}
+              onDrop={async e => {
+                e.preventDefault();
+                e.stopPropagation();
+                setDragOverItem(null);
+
+                if (draggedItem) {
+                  await handleDropToRoot(draggedItem);
+                }
+
+                setDraggedItem(null);
+              }}
+            >
+              {draggedItem && dragOverItem === "root" && (
+                <div className="flex items-center justify-center h-full text-gray-400 text-sm italic">
+                  Drop here to move to root directory
+                </div>
+              )}
+            </div>
+          </>
+        )}
       </div>
       <AddFileModal
         isCreatingItem={isCreatingItem}

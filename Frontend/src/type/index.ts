@@ -54,7 +54,6 @@ export type CodeState = {
   ) => Promise<{ success: number; user?: any; error?: any }>;
   getFileData: (id: string) => Promise<any>;
   codeRunner: (file: File) => Promise<any>;
-  saver: (presentFile: File) => Promise<any>;
   gitPush: (
     link: string,
     commitMsg: string,

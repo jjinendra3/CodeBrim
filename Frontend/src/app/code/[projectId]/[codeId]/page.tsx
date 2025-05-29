@@ -20,7 +20,6 @@ export default function Form() {
   const {
     codeRunner,
     getFileData,
-    saver,
     snipClone,
     payload,
     setPayload,
@@ -30,6 +29,7 @@ export default function Form() {
     presentFile,
     setPresentFile,
     downloadZip,
+    updateFile,
   } = useCodeStore();
   const router = useRouter();
   const pathname = usePathname();
@@ -59,7 +59,7 @@ export default function Form() {
       if ((event.ctrlKey || event.metaKey) && event.key === "s") {
         event.preventDefault();
         if (presentFileRef.current !== null) {
-          await saver(presentFileRef.current);
+          await updateFile(presentFileRef.current);
         }
       }
     };
@@ -68,7 +68,7 @@ export default function Form() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [saver]);
+  }, [updateFile]);
 
   useEffect(() => {
     const handleStdOutChange = () => {
@@ -104,14 +104,15 @@ export default function Form() {
   }
 
   return (
-    <div className={"overflow-hidden w-full"}>
+    <div className={"flex h-screen overflow-hidden w-full"}>
       <ResizablePanelGroup direction="vertical">
         <ResizablePanel defaultSize={75}>
           <div className="h-8 flex justify-between items-center px-2 bg-gray-800 text-white">
             <div className="flex flex-row gap-2 items-center ">
-              <FeedbackModal />
+              <div className={!isTabBigger ? "pl-8" : "pl-0"}>
+                <FeedbackModal />
+              </div>
               <h2 className="font-semibold text-xs">
-                Language:
                 {presentFile?.lang?.toUpperCase() ?? "TXT"}
               </h2>
             </div>
@@ -140,9 +141,9 @@ export default function Form() {
               <Button
                 variant="default"
                 size="xs"
-                onClick={() => {
+                onClick={async () => {
                   if (!presentFile) return;
-                  saver(presentFile);
+                  await updateFile(presentFile);
                 }}
               >
                 {!saving ? (
