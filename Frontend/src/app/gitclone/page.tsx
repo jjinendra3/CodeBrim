@@ -10,11 +10,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, GitBranch, Github, Terminal, ArrowRight } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Loader2, GitBranch, Terminal, ArrowRight } from "lucide-react";
+import { redirect, useRouter } from "next/navigation";
 import { useCodeStore } from "@/lib/codeStore";
 
 const Home = () => {
+  redirect("/maintenance");
   const gitClone = useCodeStore(state => state.gitClone);
   const [gitUrl, setGitUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);

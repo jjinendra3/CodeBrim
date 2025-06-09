@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { useSocket } from "../../../../lib/socket";
 import { Menu } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { redirect, usePathname, useRouter } from "next/navigation";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import LayoutContent from "./LayoutContent";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -16,6 +16,8 @@ export default function CodePageLayout({
 }: {
   children: React.ReactNode;
 }) {
+  redirect("/maintenance");
+
   const { getCode, setPayload, setQueued, setFiles, user, setUser, canLock } =
     useCodeStore();
   const isMobile = useIsMobile();
