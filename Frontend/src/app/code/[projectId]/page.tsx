@@ -1,9 +1,8 @@
 "use client";
 import { useEffect } from "react";
-import { redirect, usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useCodeStore } from "@/lib/codeStore";
 export default function Page() {
-  redirect("/maintenance");
   const { getCode, setFiles, setUser, user, canLock } = useCodeStore();
   const pathName = usePathname();
   const router = useRouter();

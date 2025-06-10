@@ -1,6 +1,6 @@
 # [CodeBrim](https://codebrim.online) - Compiler on the Go! 🚀
 
-**A robust code execution and sharing platform with distinctive collaboration capabilities**
+**CodeBrim lets developers run, edit, and share code projects online with full Git integration, multi-file support, and Docker-secure execution – no GitHub required.**
 
 [![Live Demo](https://img.shields.io/badge/Live-Demo-blue?style=for-the-badge)](https://codebrim.online)
 [![License](https://img.shields.io/badge/License-AGPL%20v3-green?style=for-the-badge)](LICENSE)
@@ -104,6 +104,7 @@ Create `.env` files in both Frontend and Backend directories:
 
 ```env
 DATABASE_URL=your_postgres_connection_string
+DIRECT_URL=your_postgres_orm_string
 RESETPWD=your_reset_password_secret
 ROLLBAR_TOKEN=your_rollbar_token
 ```
@@ -203,7 +204,7 @@ This project is licensed under the GNU Affero General Public License v3.0 - see 
 **Benevolent Dictator for Life: Jinendra Jain**
 
 - 🌐 [LinkedIn](https://linkedin.com/in/jjinendra3)
-- 🧑‍💻 [Github] (https://github.com/jjinendra3)
+- 🧑‍💻 [Github](https://github.com/jjinendra3)
 - 🐦 [Twitter](https://x.com/jjinendra3)
 - 🌟 [Portfolio](https://jinendra.tech)
 - 🚀 [Live Demo](https://codebrim.online)

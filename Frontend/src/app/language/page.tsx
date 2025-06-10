@@ -6,7 +6,7 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useCodeStore } from "@/lib/codeStore";
-import { redirect, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 const languages = [
   {
     name: "C",
@@ -47,7 +47,6 @@ const languages = [
 ];
 
 export default function ChooseLanguage() {
-  redirect("/maintenance");
   const router = useRouter();
   const newProject = useCodeStore(state => state.newProject);
   const canSetLock = useCodeStore(state => state.setCanLock);
