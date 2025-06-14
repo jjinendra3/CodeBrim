@@ -72,7 +72,7 @@ export default function Form() {
 
   useEffect(() => {
     const handleStdOutChange = () => {
-      if (payload && payload.id === fileId) {
+      if (payload && payload.fileId === fileId) {
         if (presentFile) {
           setPresentFile({ ...presentFile, stdout: payload.stdout });
         }

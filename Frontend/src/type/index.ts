@@ -1,4 +1,5 @@
 export type File = {
+  fileId?: string;
   id: string;
   name: string;
   type: "file" | "folder";
