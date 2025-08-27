@@ -18,16 +18,16 @@ func (n *Controllers) RegisterProjectRoutes(router *gin.Engine) {
 	project := router.Group("/project")
 
 	project.GET("/newcompiler/:lang", n.Service.NewCompiler)
-	// project.GET("/getproject/:id", n.Service.GetProjectByID)
-	// project.GET("/getfile/:id", n.Service.GetFileByID)
-	// project.GET("/download/:id", n.Service.DownloadProject)
-	// project.GET("/clone-snippet/:id", n.Service.CloneSnippet)
+	project.GET("/getproject/:id", n.Service.GetProjectByID)
+	project.GET("/getfile/:id", n.Service.GetFileByID)
+	project.GET("/download/:id", n.Service.DownloadProject)
+	project.GET("/clone-snippet/:id", n.Service.CloneSnippet)
 
-	// project.PUT("/update-item", n.Service.ResetDatabase)
+	project.PUT("/update-item", n.Service.UpdateFile)
+	project.PUT("/project-privacy/:id", n.Service.SetProjectPrivacy)
 
-	// project.POST("/add-item", n.Service.AddProject)
-	// project.POST("/project-privacy/:id", n.Service.SetProjectPrivacy)
-	// project.POST("/add-feedback", n.Service.AddFeedback)
+	project.POST("/add-item", n.Service.CreateFile)
+	project.POST("/add-feedback", n.Service.AddFeedback)
 
-	// project.DELETE("/delete-item/:id", n.Service.DeleteItem)
+	project.DELETE("/delete-item/:id", n.Service.DeleteFile)
 }
