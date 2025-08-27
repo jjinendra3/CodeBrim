@@ -4,24 +4,29 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
-	controllers "github.com/jjinendra3/codebrim/controllers/server"
+	projectControllers "github.com/jjinendra3/codebrim/controllers/project"
+	serverControllers "github.com/jjinendra3/codebrim/controllers/server"
 	"github.com/jjinendra3/codebrim/database"
-	services "github.com/jjinendra3/codebrim/services/server"
+	projectServices "github.com/jjinendra3/codebrim/services/project"
+	serverServices "github.com/jjinendra3/codebrim/services/server"
 )
 
 func main() {
-  router := gin.Default()
-  db:= database.InitDb();
-  if db==nil{
-		fmt.Println("Error in db");
+	router := gin.Default()
+	db := database.InitDb()
+	if db == nil {
+		fmt.Println("Error in db")
 		return
 	}
-  database.AutoMigrate(db);
+	database.AutoMigrate(db)
 
-  serverService := services.NewServerService(db)
+	serverService := serverServices.NewServerService(db)
+	serverController := serverControllers.NewServerControllers(serverService)
+	projectService := projectServices.NewProjectService(db)
+	projectController := projectControllers.NewProjectControllers(projectService)
 
-	serverController := controllers.NewServerControllers(serverService)
 	serverController.RegisterServerRoutes(router)
-  
-  router.Run(":5000")
+	projectController.RegisterProjectRoutes(router)
+
+	router.Run(":5000")
 }

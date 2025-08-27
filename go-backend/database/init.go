@@ -1,6 +1,7 @@
 package database
 
 import (
+	"database/sql"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -11,27 +12,34 @@ import (
 func InitDb() *gorm.DB {
 	_ = godotenv.Load()
 	dsn := os.Getenv("DATABASE_URL")
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+
+	sqlDB, err := sql.Open("pgx", dsn)
+	if err != nil {
+		return nil
+	}
+	db, err := gorm.Open(postgres.New(postgres.Config{
+		Conn: sqlDB,
+	}), &gorm.Config{})
 	if err != nil {
 		return nil
 	}
 	return db
 }
 
-func AutoMigrate(db *gorm.DB){
+func AutoMigrate(db *gorm.DB) {
 	db.AutoMigrate(&User{})
 	db.AutoMigrate(&File{})
 	db.AutoMigrate(&Feedback{})
 }
 
 func (User) TableName() string {
-    return "User"
+	return "User"
 }
 
 func (File) TableName() string {
-    return "Files"
+	return "Files"
 }
 
 func (Feedback) TableName() string {
-    return "Feedback"
+	return "Feedback"
 }

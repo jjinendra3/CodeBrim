@@ -1,74 +1,22 @@
 package server
 
 import (
-	"net/http"
-	"os"
-
 	"github.com/gin-gonic/gin"
 	"github.com/jjinendra3/codebrim/services/server"
 )
 
-type ServerControllers struct {
-	ServerService *server.ServerService
+type Controllers struct {
+	Service *server.Service
 }
 
-
-func NewServerControllers(serverService *server.ServerService) *ServerControllers {
-	return &ServerControllers{ServerService: serverService}
+func NewServerControllers(service *server.Service) *Controllers {
+	return &Controllers{Service: service}
 }
 
-func (n *ServerControllers) RegisterServerRoutes(router *gin.Engine){
-	
-	server := router.Group("/server");
+func (n *Controllers) RegisterServerRoutes(router *gin.Engine) {
 
-	server.GET("/wake-up/:pwd", n.WakeUp);
-	server.GET("/reset/:pwd",n.ResetDB);
-}
+	server := router.Group("/server")
 
-func (n* ServerControllers) WakeUp(c* gin.Context){
-	password:=c.Param("pwd");
-	actualPassword:=os.Getenv("RESET_PWD")
-	if password!=actualPassword{
-		c.JSON(http.StatusUnauthorized,gin.H{
-			"success":false,
-			"message": "Incorrect Password",
-		})
-		return
-	}
-	allUsers,err:=n.ServerService.GetAllUsers();
-	if err!=nil{
-		c.JSON(http.StatusInternalServerError,gin.H{
-			"success":false,
-			"message": err.Error(),
-		})
-		return
-	}
-	c.JSON(http.StatusAccepted,gin.H{
-		"success":true,
-		"users": allUsers,
-	})
-}
-
-func (n* ServerControllers) ResetDB(c* gin.Context){
-	password:=c.Param("pwd");
-	actualPassword:=os.Getenv("RESET_PWD")
-	if password!=actualPassword{
-		c.JSON(http.StatusUnauthorized,gin.H{
-			"success":false,
-			"message": "Incorrect Password",
-		})
-		return
-	}
-	err:=n.ServerService.ResetDatabase();
-	if err!=nil{
-		c.JSON(http.StatusInternalServerError,gin.H{
-			"success":false,
-			"message": err.Error(),
-		})
-		return
-	}
-	c.JSON(http.StatusAccepted,gin.H{
-		"success":true,
-		"message": "Database reset successfully",
-	})
+	server.GET("/wake-up/:pwd", n.Service.GetAllUsers)
+	server.GET("/reset/:pwd", n.Service.ResetDatabase)
 }
