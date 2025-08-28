@@ -1,8 +1,6 @@
 package git
 
 import (
-	"fmt"
-
 	"github.com/gin-gonic/gin"
 	"github.com/jjinendra3/codebrim/services/git"
 )
@@ -18,8 +16,8 @@ func NewGitControllers(service *git.Service) *Controllers {
 func (n *Controllers) RegisterGitRoutes(router *gin.Engine) {
 
 	git := router.Group("/git")
-	fmt.Print(git)
+
 	git.POST("/clone", n.Service.CloneRepo)
-	// git.POST("/gitpush/:id", n.Service.GetProjectByID)
+	git.POST("/gitpush/:id", n.Service.GitPush)
 
 }
