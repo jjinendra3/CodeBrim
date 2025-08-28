@@ -18,7 +18,7 @@ func (s *Service) UpdateFile(c *gin.Context) {
 	c.JSON(200, gin.H{"success": true, "output": fileData})
 }
 
-func (s *Service) SetProjectPrivacy (c *gin.Context){
+func (s *Service) SetProjectPrivacy(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
 		c.JSON(400, gin.H{"error": "ID parameter is required"})

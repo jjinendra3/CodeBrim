@@ -8,7 +8,7 @@ import (
 )
 
 func (s *Service) CreateFile(c *gin.Context) {
-	var fileData struct{
+	var fileData struct {
 		ProjectId string `json:"projectId"`
 		Name      string `json:"name"`
 		Type      string `json:"type"`
@@ -22,13 +22,13 @@ func (s *Service) CreateFile(c *gin.Context) {
 	content := constants.LanguageContent(fileData.Lang)
 	id := uuid.New().String()
 	file := s.DB.Create(&database.File{
-		ID:      id,
-		UserID:  &fileData.ProjectId,
-		Name:    fileData.Name,
-		Type:    fileData.Type,
+		ID:       id,
+		UserID:   &fileData.ProjectId,
+		Name:     fileData.Name,
+		Type:     fileData.Type,
 		ParentID: &fileData.ParentId,
-		Lang:    &fileData.Lang,
-		Content: &content,
+		Lang:     &fileData.Lang,
+		Content:  &content,
 	})
 	if file.Error != nil {
 		c.JSON(500, gin.H{"error": file.Error.Error()})
@@ -38,7 +38,7 @@ func (s *Service) CreateFile(c *gin.Context) {
 }
 
 func (s *Service) AddFeedback(c *gin.Context) {
-	var feedback struct{
+	var feedback struct {
 		Content string `json:"content"`
 		Happy   bool   `json:"happy"`
 	}
@@ -53,6 +53,6 @@ func (s *Service) AddFeedback(c *gin.Context) {
 	}).Error; err != nil {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
-	}	
+	}
 	c.JSON(200, gin.H{"success": true, "output": feedback})
 }

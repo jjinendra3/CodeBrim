@@ -9,21 +9,21 @@ import (
 	"gorm.io/gorm"
 )
 
-func InitDb() *gorm.DB {
+func InitDb() (*gorm.DB, error) {
 	_ = godotenv.Load()
 	dsn := os.Getenv("DATABASE_URL")
 
 	sqlDB, err := sql.Open("pgx", dsn)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 	db, err := gorm.Open(postgres.New(postgres.Config{
 		Conn: sqlDB,
 	}), &gorm.Config{})
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return db
+	return db, nil
 }
 
 func AutoMigrate(db *gorm.DB) {

@@ -118,85 +118,85 @@ func (s *Service) CloneSnippet(c *gin.Context) {
 	c.JSON(200, gin.H{"success": true, "output": newUser})
 }
 
-func (s *Service) DownloadProject(c *gin.Context){
+func (s *Service) DownloadProject(c *gin.Context) {
 	var tempFolderPath string
-		var zipFilePath string
+	var zipFilePath string
 
-		cleanup := func() {
-			if tempFolderPath != "" {
-				constants.DeleteFolderRecursive(tempFolderPath)
+	cleanup := func() {
+		if tempFolderPath != "" {
+			constants.DeleteFolderRecursive(tempFolderPath)
+		}
+		if zipFilePath != "" {
+			if _, err := os.Stat(zipFilePath); err == nil {
+				os.Remove(zipFilePath)
 			}
-			if zipFilePath != "" {
-				if _, err := os.Stat(zipFilePath); err == nil {
-					os.Remove(zipFilePath)
-				}
-			}
 		}
-		defer cleanup()
+	}
+	defer cleanup()
 
-		userID := c.Param("id")
-		if userID == "" {
-			c.JSON(http.StatusBadRequest, gin.H{
+	userID := c.Param("id")
+	if userID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"error":   "User ID is required",
+		})
+		return
+	}
+
+	var user database.User
+	if err := s.DB.Preload("Items").Where("id = ?", userID).First(&user).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{
 				"success": false,
-				"error":   "User ID is required",
+				"error":   "No code snippets found for this user",
 			})
 			return
 		}
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"error":   "Database error",
+		})
+		return
+	}
 
-		var user database.User
-		if err := s.DB.Preload("Items").Where("id = ?", userID).First(&user).Error; err != nil {
-			if err == gorm.ErrRecordNotFound {
-				c.JSON(http.StatusNotFound, gin.H{
-					"success": false,
-					"error":   "No code snippets found for this user",
-				})
-				return
-			}
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"success": false,
-				"error":   "Database error",
-			})
-			return
-		}
+	timestamp := time.Now().UnixNano()
+	folderName := fmt.Sprintf("temp-%s-%d", user.ID, timestamp)
+	zipFileName := fmt.Sprintf("%s.zip", folderName)
 
-		timestamp := time.Now().UnixNano()
-		folderName := fmt.Sprintf("temp-%s-%d", user.ID, timestamp)
-		zipFileName := fmt.Sprintf("%s.zip", folderName)
+	tempFolderPath = filepath.Clean(folderName)
+	zipFilePath = filepath.Clean(zipFileName)
 
-		tempFolderPath = filepath.Clean(folderName)
-		zipFilePath = filepath.Clean(zipFileName)
+	fmt.Printf("Creating folder structure for user %s...\n", user.ID)
 
-		fmt.Printf("Creating folder structure for user %s...\n", user.ID)
+	if err := constants.CreateFolderStructureRecursive(user.Items, tempFolderPath); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"error":   "Failed to create folder structure",
+		})
+		return
+	}
 
-		if err := constants.CreateFolderStructureRecursive(user.Items, tempFolderPath); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"success": false,
-				"error":   "Failed to create folder structure",
-			})
-			return
-		}
+	if err := constants.CreateZipFromFolder(tempFolderPath, zipFilePath); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"error":   "Failed to create zip file",
+		})
+		return
+	}
 
-		if err := constants.CreateZipFromFolder(tempFolderPath, zipFilePath); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"success": false,
-				"error":   "Failed to create zip file",
-			})
-			return
-		}
+	fileInfo, err := os.Stat(zipFilePath)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"error":   "Failed to create zip file",
+		})
+		return
+	}
 
-		fileInfo, err := os.Stat(zipFilePath)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"success": false,
-				"error":   "Failed to create zip file",
-			})
-			return
-		}
+	filename := fmt.Sprintf("code-snippets-codebrim-%s.zip", user.ID)
+	c.Header("Content-Type", "application/zip")
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+	c.Header("Content-Length", strconv.FormatInt(fileInfo.Size(), 10))
 
-		filename := fmt.Sprintf("code-snippets-codebrim-%s.zip", user.ID)
-		c.Header("Content-Type", "application/zip")
-		c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
-		c.Header("Content-Length", strconv.FormatInt(fileInfo.Size(), 10))
-
-		c.File(zipFilePath)
+	c.File(zipFilePath)
 }
