@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Page from "./maintenance/page";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/react";
 
@@ -96,8 +95,7 @@ export default function RootLayout({
           theme="dark"
           expand={true}
         />
-        {/* {children} */}
-        <Page />
+        {children}
       </body>
     </html>
   );
