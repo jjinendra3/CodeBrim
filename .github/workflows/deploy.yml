@@ -1,45 +1,42 @@
-name: Deploy Backend and Restart Service
+name: Deploy to EC2 and Restart Service
 
 on:
   push:
-    branches: [master]
-  workflow_dispatch:
-
-concurrency:
-  group: deploy-production
-  cancel-in-progress: false
+    branches:
+      - master
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
 
     steps:
-      - name: Set up SSH key
-        uses: webfactory/ssh-agent@v0.9.0
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
         with:
           ssh-private-key: ${{ secrets.EC2_SSH_KEY }}
 
-      - name: Trust the deploy host
+      - name: Deploy to EC2 and Restart Service
         run: |
-          mkdir -p ~/.ssh && chmod 700 ~/.ssh
-          ssh-keyscan -H "${{ secrets.EC2_HOST }}" >> ~/.ssh/known_hosts
-
-      - name: Deploy and restart
-        run: |
-          ssh -T ubuntu@${{ secrets.EC2_HOST }} bash -euo pipefail -s << 'EOF'
+          ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} bash -euo pipefail -s << 'EOF'
           export PATH="/home/ubuntu/.nvm/versions/node/v24.18.0/bin:$PATH"
 
-          cd /home/ubuntu/CodeBrim
-          git pull --ff-only origin master
-          echo "Deployed commit: $(git rev-parse --short HEAD)"
+          cd CodeBrim
+          git pull origin master
 
+          # Everything up to the restart runs while the old app keeps serving,
+          # so downtime is only the app's startup time.
           cd Backend
-          npm ci
+          npm install --no-audit --no-fund
           npx prisma generate
 
+          bash db/start-postgres.sh
+          npx prisma migrate deploy
+
+          sudo systemctl reset-failed myapp.service
           sudo systemctl restart myapp.service
-          sudo systemctl is-active --quiet myapp.service
 
           echo "Waiting for the app to answer on :5000 ..."
           for i in $(seq 1 24); do
