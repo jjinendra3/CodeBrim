@@ -34,6 +34,7 @@ jobs:
 
           bash db/start-postgres.sh
           npx prisma migrate deploy
+          DOCKER_SUDO=true bash dock/prepare-images.sh
 
           sudo systemctl reset-failed myapp.service
           sudo systemctl restart myapp.service

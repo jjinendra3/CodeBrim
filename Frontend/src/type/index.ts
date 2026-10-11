@@ -34,8 +34,10 @@ export type CodeState = {
   queued: QueuedState;
   presentFile: File | null;
   canLock: boolean;
+  socketId: string | null;
 
   setCanLock: (canLock: boolean) => void;
+  setSocketId: (socketId: string | null) => void;
   setPresentFile: (presentFile: File | null) => void;
   setId: (id: string | null) => void;
   setFiles: (files: File[]) => void;

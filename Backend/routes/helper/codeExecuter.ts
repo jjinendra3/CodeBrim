@@ -1,81 +1,170 @@
 import { codeExecuterProps } from "../../interface/codeExecuterInterface";
-const { exec } = require("child_process");
+import { execFile } from "child_process";
+import { randomUUID } from "crypto";
 import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
-import { javaFileNameExtracter } from "./javaFileNameExtracter";
+import { javaClassName } from "./javaFileNameExtracter";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-function buildDockerImage(lang: string) {
-  return new Promise((resolve, reject) => {
-    const dockerCommand = `sudo docker build --rm -t my-${lang}-app ./dock/${lang}`;
-    exec(dockerCommand, (error: any, stdout: any, stderr: any) => {
-      if (error) {
-        reject({ stderr, error });
-        return;
-      }
-      resolve(stdout);
-    });
-  });
+// Set DOCKER_SUDO=true on hosts where the app user can only run docker via sudo.
+const DOCKER =
+  process.env.DOCKER_SUDO === "true" ? ["sudo", "docker"] : ["docker"];
+
+// Limits for running the user's program (compiling is not limited by these).
+const RUN_CPU_SECONDS = 1;
+const RUN_WALL_SECONDS = 10;
+// Hard cap for the whole container, compile included, so no job can hold the queue.
+const CONTAINER_TIMEOUT_MS = 60_000;
+const MAX_OUTPUT_BYTES = 1024 * 1024;
+
+const limitRun = `ulimit -t ${RUN_CPU_SECONDS} && exec timeout -s KILL ${RUN_WALL_SECONDS}`;
+
+interface LanguageSetup {
+  image: string;
+  fileName: string;
+  script: string;
 }
 
-function runImage(lang: string, stdin: string) {
-  return new Promise((resolve, reject) => {
-    const dockerRunCommand = `sudo docker run --rm -i --network none --ulimit cpu=1 my-${lang}-app`;
-    const child = exec(
-      dockerRunCommand,
-      (error: any, stdout: any, stderr: any) => {
-        if (error) {
-          reject({ error, stderr });
-          return;
+// Images must exist locally (see dock/prepare-images.sh); keep the two in sync.
+function languageSetup(lang: string, code: string): LanguageSetup | null {
+  switch (lang) {
+    case "c":
+      return {
+        image: "gcc:latest",
+        fileName: "main.c",
+        script: `gcc -o /tmp/app main.c && ${limitRun} /tmp/app`,
+      };
+    case "cpp":
+      return {
+        image: "gcc:latest",
+        fileName: "main.cpp",
+        script: `g++ -o /tmp/app main.cpp && ${limitRun} /tmp/app`,
+      };
+    case "go":
+      // Built at deploy from dock/go; has the standard library precompiled.
+      return {
+        image: "codebrim-go",
+        fileName: "main.go",
+        script: `go build -o /tmp/app main.go && ${limitRun} /tmp/app`,
+      };
+    case "java": {
+      const className = javaClassName(code);
+      return {
+        // openjdk:11 was removed from Docker Hub; Temurin is its official successor.
+        image: "eclipse-temurin:11-jdk",
+        fileName: `${className}.java`,
+        script: `javac -d /tmp/classes ${className}.java && ${limitRun} java -cp /tmp/classes ${className}`,
+      };
+    }
+    case "python":
+      return {
+        image: "python:3",
+        fileName: "main.py",
+        script: `${limitRun} python3 main.py`,
+      };
+    case "javascript":
+      return {
+        image: "node:20",
+        fileName: "main.js",
+        script: `${limitRun} node main.js`,
+      };
+    default:
+      return null;
+  }
+}
+
+interface RunResult {
+  stdout: string;
+  stderr: string;
+  exitCode: number | null;
+  limit?: "time" | "output";
+}
+
+function runContainer(
+  setup: LanguageSetup,
+  codeDir: string,
+  stdin: string,
+): Promise<RunResult> {
+  const name = `codebrim-run-${randomUUID()}`;
+  const args = [
+    ...DOCKER.slice(1),
+    "run",
+    "--rm",
+    "-i",
+    "--name",
+    name,
+    "--network",
+    "none",
+    "--memory",
+    "256m",
+    "--memory-swap",
+    "256m",
+    "--pids-limit",
+    "128",
+    "--mount",
+    `type=bind,src=${codeDir},dst=/code,readonly`,
+    "-w",
+    "/code",
+    setup.image,
+    "sh",
+    "-c",
+    setup.script,
+  ];
+
+  return new Promise(resolve => {
+    const child = execFile(
+      DOCKER[0],
+      args,
+      { timeout: CONTAINER_TIMEOUT_MS, maxBuffer: MAX_OUTPUT_BYTES },
+      (error: any, stdout, stderr) => {
+        let limit: RunResult["limit"];
+        if (error?.code === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER") {
+          limit = "output";
+        } else if (error?.killed) {
+          limit = "time";
         }
-        resolve(stdout);
+        if (limit) {
+          execFile(DOCKER[0], [...DOCKER.slice(1), "rm", "-f", name], () => {});
+        }
+        resolve({
+          stdout: stdout.toString(),
+          stderr: stderr.toString(),
+          exitCode: error ? (typeof error.code === "number" ? error.code : null) : 0,
+          limit,
+        });
       },
     );
-    stdin = stdin === undefined || stdin === null ? (stdin = "") : stdin;
-    child.stdin.write(stdin);
-    child.stdin.end();
+    // docker may exit before reading stdin; without a handler EPIPE crashes the app.
+    child.stdin?.on("error", () => {});
+    child.stdin?.end(stdin ?? "");
   });
 }
 
-const extractBuildErrorMessage = (error: { stderr: Buffer }): string => {
-  const originalString = error.stderr.toString();
-  const firstMarker = "[4/4]";
-  const secondMarker = "> [4/4]";
-
-  const firstIndex = originalString.indexOf(firstMarker);
-  const secondIndex = originalString.indexOf(secondMarker);
-  if (firstIndex === -1 || secondIndex === -1) {
-    return originalString;
-  }
-
-  return originalString.slice(
-    firstIndex + firstMarker.length,
-    secondIndex - 24,
-  );
-};
+// 124/137: killed by the wall-clock timeout (or out of memory), 152: CPU limit.
+const TIMEOUT_EXIT_CODES = [124, 137, 152];
 
 const executeCode = async (data: any): Promise<codeExecuterProps> => {
   const fileId: string = data.files.id;
   const lang: string = data.files.lang;
-  const stdin: string = data.files.stdin;
+  const stdin: string = data.files.stdin ?? "";
   const date =
     dayjs.tz(new Date(), "Asia/Kolkata").format("ddd, DD-MM-YYYY HH:mm:ss") +
     " ";
+  const fail = (message: string, stderr = message): codeExecuterProps => ({
+    success: false,
+    fileId: fileId,
+    stdin: stdin,
+    stdout: date + ">>>\n" + message,
+    stderr: date + ">>>\n" + stderr,
+  });
 
-  const languageExtensions: Record<string, string> = {
-    c: "c",
-    cpp: "cpp",
-    java: "java",
-    go: "go",
-    python: "py",
-    javascript: "js",
-  };
-
-  const ext = languageExtensions[lang];
-  if (!ext || !lang) {
+  const setup = lang ? languageSetup(lang, data.files.content ?? "") : null;
+  if (!setup) {
     return {
       success: false,
       fileId: fileId,
@@ -84,79 +173,43 @@ const executeCode = async (data: any): Promise<codeExecuterProps> => {
       stderr: "Language not supported",
     };
   }
-  const fileName =
-    lang === "java" ? javaFileNameExtracter(data.files.content) : "main";
-  fs.writeFileSync(`./dock/${lang}/${fileName}.${ext}`, data.files.content);
+
+  const codeDir = fs.mkdtempSync(path.join(os.tmpdir(), "codebrim-"));
   try {
-    await buildDockerImage(lang);
-  } catch (error: any) {
-    if (error.stderr) {
-      error.stdout += error.stderr;
+    fs.writeFileSync(path.join(codeDir, setup.fileName), data.files.content);
+    const result = await runContainer(setup, codeDir, stdin);
+
+    if (result.limit === "output") {
+      return fail("Output limit exceeded (1 MB)");
     }
-    if (lang === "cpp" || lang === "java") {
-      const copiedString: string = extractBuildErrorMessage(error);
-      return {
-        success: false,
-        fileId: fileId,
-        stdin: stdin,
-        stdout: date + ">>>\n" + copiedString,
-        stderr: date + ">>>\n" + copiedString,
-      };
+    if (
+      result.limit === "time" ||
+      TIMEOUT_EXIT_CODES.includes(result.exitCode ?? -1)
+    ) {
+      return fail("Timeout Error");
+    }
+    if (result.exitCode !== 0) {
+      return fail(
+        result.stdout + result.stderr || "Error in Running the code",
+        "Run Error",
+      );
     }
     return {
-      success: false,
+      success: true,
       fileId: fileId,
       stdin: stdin,
       stdout:
         date +
         ">>>\n" +
-        "Failure in compiling the code, please try again later.",
-      stderr:
-        date +
-        ">>>\n" +
-        "Failure in compiling the code, please try again later.",
-    };
-  }
-  try {
-    const Runner: any = await runImage(lang, stdin);
-    return {
-      success: typeof Runner != "string" ? false : true,
-      fileId: fileId,
-      stdin: stdin ? stdin.toString() : "",
-      stdout:
-        date +
-        ">>>\n" +
-        (Runner !== ""
-          ? Runner.toString()
+        (result.stdout !== ""
+          ? result.stdout
           : "There is an issue in the code, please check!"),
-      stderr:
-        typeof Runner != "string"
-          ? "There is an issue, please try again later!"
-          : "",
+      stderr: "",
     };
-  } catch (error: any) {
-    if (error.error !== null) {
-      if (
-        error.error.code === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER" ||
-        error.error.code === 137
-      ) {
-        return {
-          success: false,
-          fileId: fileId,
-          stdin: stdin,
-          stdout: date + ">>>\n" + "Timeout Error",
-          stderr: date + ">>>\n" + "Timeout Error",
-        };
-      }
-    }
-    const err = error.stderr ?? "Error in Running the code";
-    return {
-      success: false,
-      fileId: fileId,
-      stdin: stdin,
-      stdout: date + ">>>\n" + err,
-      stderr: date + ">>>\n" + "Run Error",
-    };
+  } catch (error) {
+    return fail("There is an issue, please try again later!");
+  } finally {
+    fs.rmSync(codeDir, { recursive: true, force: true });
   }
 };
 export { executeCode };

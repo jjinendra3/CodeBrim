@@ -75,13 +75,12 @@ CodeBrim is a deployed robust code execution platform supporting Python, JavaScr
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
-- npm/bun
-- Docker (for local development)
-- PostgreSQL
-- Redis
+- Node.js 24
+- Docker (Docker Desktop on Windows/macOS) with Docker Compose
 
-### Installation
+Postgres and Redis run in Docker, and so does every code execution.
+
+### Local Development
 
 1. **Clone the repository**
 
@@ -93,37 +92,48 @@ cd codebrim
 2. **Install dependencies**
 
 ```bash
-bun install
+npm install
+cd Backend && npm install && cd ..
+cd Frontend && npm install && cd ..
 ```
 
-3. **Environment Setup**
-
-Create `.env` files in both Frontend and Backend directories:
-
-**Backend/.env**
-
-```env
-DATABASE_URL=your_postgres_connection_string
-RESETPWD=your_reset_password_secret
-ROLLBAR_TOKEN=your_rollbar_token
-```
-
-**Frontend/.env.local**
-
-```env
-NEXT_PUBLIC_BACKEND_URL=http://localhost:5000
-```
-
-4. **Start Docker Daemon**
-   Ensure Docker Daemon engine is running on your system as it's required for code execution.
-
-5. **Start Redis CLI on port 6379**
-   If using windows run `docker run -p 6379:6379 redis`
-
-6. **Start Development Server**
+3. **Start Postgres and Redis**
 
 ```bash
-bun dev
+docker compose up -d
+```
+
+4. **Environment setup**
+
+```bash
+cp Backend/.env.sample Backend/.env
+cp Frontend/.env.local.sample Frontend/.env.local
+```
+
+The samples already point at the services from `docker-compose.yml` and at the local backend:
+
+| Variable | File | Purpose |
+| --- | --- | --- |
+| `DATABASE_URL` | `Backend/.env` | Postgres connection string |
+| `DOCKER_SUDO` | `Backend/.env` | `true` if docker only works via `sudo` |
+| `NEXT_PUBLIC_BACKEND` | `Frontend/.env.local` | Backend URL, e.g. `http://localhost:5000` |
+
+5. **Create the database tables**
+
+```bash
+cd Backend && npx prisma migrate deploy && cd ..
+```
+
+6. **Prepare the code execution images** (one time, downloads ~6 GB; on Windows run it from Git Bash)
+
+```bash
+bash Backend/dock/prepare-images.sh
+```
+
+7. **Start the development servers**
+
+```bash
+npm run dev
 ```
 
 The application will be available at:
@@ -136,6 +146,24 @@ The application will be available at:
 ```bash
 bun start
 ```
+
+### Self-Hosting on a Linux Server
+
+One-time setup, from `Backend/`, with Docker and Redis installed on the server:
+
+```bash
+# Postgres in Docker, bound to 127.0.0.1, data in /var/lib/codebrim/postgres
+POSTGRES_PASSWORD=$(openssl rand -hex 24) bash db/start-postgres.sh   # keep the password
+
+# Backend/.env (or the service's EnvironmentFile)
+#   DATABASE_URL="postgresql://codebrim:<password>@127.0.0.1:5432/codebrim"
+#   DOCKER_SUDO="true"   # if the app user is not in the docker group
+
+npx prisma migrate deploy
+DOCKER_SUDO=true bash dock/prepare-images.sh
+```
+
+On every deploy, `.github/workflows/deploy.yml` pulls the code, applies migrations, prepares the images and restarts the service.
 
 ## 📖 Available Scripts
 

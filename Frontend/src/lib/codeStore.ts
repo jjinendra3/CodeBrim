@@ -19,7 +19,9 @@ export const useCodeStore = create<CodeState>((set, get) => ({
   },
   presentFile: null,
   canLock: false,
+  socketId: null,
   setCanLock: canLock => set({ canLock }),
+  setSocketId: socketId => set({ socketId }),
   setPresentFile: presentFile => set({ presentFile }),
   setId: id => set({ id }),
   setFiles: files => set({ files }),
@@ -152,6 +154,7 @@ export const useCodeStore = create<CodeState>((set, get) => ({
       await get().updateFile(file);
       const response = await axios.post(`${BACKEND}/code/runcode/`, {
         files: file,
+        socketId: get().socketId,
       });
 
       if (response.data.success) {
