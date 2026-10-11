@@ -1,4 +1,4 @@
-import { Queue } from "bullmq";
+import { Job, Queue } from "bullmq";
 import { Worker } from "bullmq";
 import { io } from "../../index";
 import { executeCode } from "./codeExecuter";
@@ -9,15 +9,15 @@ const myQueue = new Queue("codebrimQueue", {
     host: "127.0.0.1",
     port: 6379,
   },
+  defaultJobOptions: {
+    removeOnComplete: 100,
+    removeOnFail: 100,
+  },
 });
-let errResult: codeExecuterProps;
-
 const myWorker = new Worker(
   "codebrimQueue",
   async job => {
-    const result = await executeCode(job.data);
-    errResult = result;
-    return result;
+    return executeCode(job.data);
   },
   {
     connection: {
@@ -27,22 +27,39 @@ const myWorker = new Worker(
   },
 );
 
-myWorker.on("completed", async (_, result) => {
+// Send the result only to the browser that asked for it. Clients that don't
+// send a socket id (older frontends) still get the broadcast.
+function emitResult(job: Job | undefined, payload: object) {
+  const socketId = job?.data?.socketId;
+  (socketId ? io.to(socketId) : io).emit("codeResult", payload);
+}
+
+myWorker.on("completed", async (job, result: codeExecuterProps) => {
   const { fileId, stdin, stdout } = result;
   const dbupdate = await dBUpdate(fileId, stdin, stdout);
   if (dbupdate === false) {
-    return io.emit("codeResult", {
+    return emitResult(job, {
       success: false,
+      fileId,
       stdout: "Database Error",
       stderr: "Database Error",
     });
   }
-  return io.emit("codeResult", result);
+  return emitResult(job, result);
 });
 
-myWorker.on("failed", async (_, err) => {
-  await dBUpdate(errResult.fileId, errResult.stdin, errResult.stdout);
-  io.emit("codeResult", { success: false, error: err });
+myWorker.on("failed", async (job, err) => {
+  const file = job?.data?.files;
+  const stdout = "Error in backend, please try again in sometime!";
+  if (file?.id) {
+    await dBUpdate(file.id, file.stdin, stdout);
+  }
+  emitResult(job, {
+    success: false,
+    fileId: file?.id,
+    stdout,
+    stderr: err.message,
+  });
 });
 
 export { myQueue };

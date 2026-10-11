@@ -16,12 +16,23 @@ export default function CodePageLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { getCode, setPayload, setQueued, setFiles, user, setUser, canLock } =
-    useCodeStore();
+  const {
+    getCode,
+    setPayload,
+    setQueued,
+    setFiles,
+    user,
+    setUser,
+    canLock,
+    setSocketId,
+  } = useCodeStore();
   const isMobile = useIsMobile();
   const socket = useSocket();
   useEffect(() => {
     if (socket) {
+      // The backend sends results only to this socket; its id changes on reconnect.
+      if (socket.connected) setSocketId(socket.id);
+      socket.on("connect", () => setSocketId(socket.id));
       socket.on("codeResult", (payload: any) => {
         setPayload(payload);
         setQueued({

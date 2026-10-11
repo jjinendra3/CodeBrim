@@ -1,11 +1,7 @@
 FROM golang:1.22
 
-WORKDIR /usr/src/app
-
-COPY go.mod go.sum ./
-RUN go mod download && go mod verify
-
-COPY . .
-RUN go build -v -o /usr/local/bin/app ./...
-
-CMD ["app"]
+# Precompile commonly used standard packages so each run only compiles the
+# user's file. Built once at deploy as `codebrim-go`.
+RUN printf 'package main\nimport (\n_ "bufio"\n_ "fmt"\n_ "math"\n_ "os"\n_ "sort"\n_ "strconv"\n_ "strings"\n)\nfunc main() {}\n' > /tmp/warm.go \
+ && go build -o /dev/null /tmp/warm.go \
+ && rm /tmp/warm.go
