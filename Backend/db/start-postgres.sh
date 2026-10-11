@@ -1,14 +1,6 @@
 #!/usr/bin/env bash
 # Starts (or creates) the CodeBrim Postgres container on this host.
-# Safe to re-run: an existing container is just started again.
-#
-# Usage:
-#   POSTGRES_PASSWORD=<password> bash db/start-postgres.sh
-#
-# Data lives on the host at $PGDATA_DIR (default /var/lib/codebrim/postgres),
-# outside the container, so removing or upgrading the container keeps the data.
-# Point PGDATA_DIR at a separate EBS volume to make the data survive the
-# instance itself (detach the volume, attach it to the new server, re-run this).
+# Safe to re-run: an existing container is just started again..
 set -euo pipefail
 
 CONTAINER=codebrim-postgres
@@ -29,8 +21,6 @@ else
 
   sudo mkdir -p "$PGDATA_DIR"
 
-  # Published on 127.0.0.1 only: the database must never be reachable from the
-  # internet or from the containers that run user-submitted code.
   sudo docker run -d \
     --name "$CONTAINER" \
     --restart unless-stopped \
