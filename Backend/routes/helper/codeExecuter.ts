@@ -1,5 +1,5 @@
 import { codeExecuterProps } from "../../interface/codeExecuterInterface";
-import { execFile } from "child_process";
+import { spawn } from "child_process";
 import { randomUUID } from "crypto";
 import * as fs from "fs";
 import * as os from "os";
@@ -101,9 +101,9 @@ function runContainer(
     "--network",
     "none",
     "--memory",
-    "256m",
+    "512m",
     "--memory-swap",
-    "256m",
+    "512m",
     "--pids-limit",
     "128",
     "--mount",
@@ -117,31 +117,49 @@ function runContainer(
   ];
 
   return new Promise(resolve => {
-    const child = execFile(
-      DOCKER[0],
-      args,
-      { timeout: CONTAINER_TIMEOUT_MS, maxBuffer: MAX_OUTPUT_BYTES },
-      (error: any, stdout, stderr) => {
-        let limit: RunResult["limit"];
-        if (error?.code === "ERR_CHILD_PROCESS_STDIO_MAXBUFFER") {
-          limit = "output";
-        } else if (error?.killed) {
-          limit = "time";
-        }
-        if (limit) {
-          execFile(DOCKER[0], [...DOCKER.slice(1), "rm", "-f", name], () => {});
-        }
-        resolve({
-          stdout: stdout.toString(),
-          stderr: stderr.toString(),
-          exitCode: error ? (typeof error.code === "number" ? error.code : null) : 0,
-          limit,
-        });
-      },
-    );
+    const child = spawn(DOCKER[0], args);
+    const stdout: string[] = [];
+    const stderr: string[] = [];
+    let outputBytes = 0;
+    let limit: RunResult["limit"];
+    let settled = false;
+  
+    const stop = (reason: NonNullable<RunResult["limit"]>) => {
+      if (limit) return;
+      limit = reason;
+      spawn(DOCKER[0], [...DOCKER.slice(1), "rm", "-f", name]).on(
+        "error",
+        () => {},
+      );
+    };
+    const timer = setTimeout(() => stop("time"), CONTAINER_TIMEOUT_MS);
+
+    const collect = (into: string[]) => (chunk: string) => {
+      if (limit) return;
+      outputBytes += Buffer.byteLength(chunk);
+      if (outputBytes > MAX_OUTPUT_BYTES) return stop("output");
+      into.push(chunk);
+    };
+    child.stdout.setEncoding("utf8").on("data", collect(stdout));
+    child.stderr.setEncoding("utf8").on("data", collect(stderr));
+
+    const finish = (exitCode: number | null, extraStderr = "") => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve({
+        stdout: stdout.join(""),
+        stderr: stderr.join("") + extraStderr,
+        exitCode,
+        limit,
+      });
+    };
+    child.on("error", err => finish(null, err.message));
+    child.on("close", code => finish(code));
+
     // docker may exit before reading stdin; without a handler EPIPE crashes the app.
-    child.stdin?.on("error", () => {});
-    child.stdin?.end(stdin ?? "");
+    child.stdin.on("error", () => {});
+    child.stdin.end(stdin ?? "");
   });
 }
 
