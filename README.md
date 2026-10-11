@@ -104,7 +104,6 @@ Create `.env` files in both Frontend and Backend directories:
 
 ```env
 DATABASE_URL=your_postgres_connection_string
-DIRECT_URL=your_postgres_orm_string
 RESETPWD=your_reset_password_secret
 ROLLBAR_TOKEN=your_rollbar_token
 ```
